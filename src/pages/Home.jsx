@@ -45,6 +45,7 @@ const Home = () => {
 
     const handleSaveName = async () => {
         const deviceInfo = await getDeviceInfo();
+        console.log(saveUser + '\n');
         try {
             const response = await fetch(saveUser, {
                 method: "POST",
