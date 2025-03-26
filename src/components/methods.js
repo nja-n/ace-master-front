@@ -1,2 +1,2 @@
-export const game = "ws://localhost:8080/game";
-export const saveUser = "http://localhost:8080/cards/savePlayer";
+export const game = "ws://maglev.proxy.rlwy.net:40170/game";
+export const saveUser = "http://maglev.proxy.rlwy.net:40170/cards/savePlayer";
