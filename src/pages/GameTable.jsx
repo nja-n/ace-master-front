@@ -6,7 +6,7 @@ import {
     Button, CardMedia, LinearProgress, CircularProgress,
     Snackbar, SnackbarContent, AppBar, Toolbar, IconButton
 } from "@mui/material";
-import { game } from '../components/methods';
+import { game, getTimeRemains } from '../components/methods';
 import { useNavigate } from "react-router-dom";
 import { Refresh, ArrowBack } from "@mui/icons-material";
 
@@ -21,7 +21,6 @@ export default function GameTable() {
     const [playerId, setPlayerId] = useState(null);
 
     const [timeLeft, setTimeLeft] = useState(15);
-    const [currentTurn, setCurrentTurn] = useState(-1);
 
     const [snackbar, setSnackbar] = useState({ open: false, message: null });
 
@@ -49,18 +48,36 @@ export default function GameTable() {
 
     }, []);
 
-    useEffect(() => {
+    /*useEffect(() => {
         if (timeLeft > 0) {
             const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
             return () => clearTimeout(timer);
         }
-    }, [timeLeft]);
+    }, [timeLeft]);*/
 
     useEffect(() => {
-        if (gameData) {
+        /*if (gameData) {
             setCurrentTurn(gameData.turnIndex);
             setTimeLeft(15);
+        }*/
+        if (gameData?.sessionId) {
+            let url = getTimeRemains.replace('SESSION_ID', gameData.sessionId);
+            fetch(url)
+                .then((res) => res.json())
+                .then((time) => setTimeLeft(time));
         }
+        if (gameData && gameData?.turnIndex >= 0) {
+            const interval = setInterval(() => {
+                let url = getTimeRemains.replace('SESSION_ID', gameData.sessionId);
+                if (gameData?.sessionId) {
+                    fetch(url)
+                        .then((res) => res.json())
+                        .then((time) => setTimeLeft(time));
+                }
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+
     }, [gameData?.turnIndex]);
 
 
@@ -75,7 +92,7 @@ export default function GameTable() {
 
 
     const handleCardClick = (index, canPlay) => {
-        if (currentTurn === clientPlayer.gameIndex) {
+        if (gameData.turnIndex === clientPlayer.gameIndex) {
             if (canPlay) {
                 setSelectedCard(index === selectedCard ? null : index); // Toggle selection
             } else {
@@ -111,6 +128,11 @@ export default function GameTable() {
         setSelectedCard(null);
     };
 
+    const handleResetGame = () => {
+        ws.current.send(JSON.stringify({ way: "reset" }));
+        setSelectedCard(null);
+    };
+
     const snackbarClose = () => {
         setSnackbar({ ...snackbar, open: false });
     };
@@ -126,48 +148,56 @@ export default function GameTable() {
 
     if (gameData.looserPlayer) {
         return (
-            <Box
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                justifyContent="center"
-                height="100vh"
-                textAlign="center"
-            >
-            <AppBar position="static" sx={{ backgroundColor: "#1b5e20", width: "100%" }}>
-                <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-                    {/* Back Button */}
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        onClick={() => navigate("/")}
-                    >
-                        <ArrowBack />
-                    </IconButton>
+            <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+                {/* AppBar at the top */}
+                <AppBar position="static" sx={{ backgroundColor: "#1b5e20" }}>
+                    <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+                        {/* Back Button */}
+                        <IconButton
+                            edge="start"
+                            color="inherit"
+                            onClick={() => navigate("/")}
+                        >
+                            <ArrowBack />
+                        </IconButton>
 
-                    <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center" }}>
-                        Game Session
-                    </Typography>
+                        <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center" }}>
+                            Ace Master
+                        </Typography>
 
-                    {/* Refresh Button */}
-                    <IconButton color="inherit" onClick={() => window.location.reload()}>
-                        <Refresh />
-                    </IconButton>
-                </Toolbar>
-            </AppBar>
-                <Typography variant="h4" color="white">Game Over</Typography>
-                <Typography variant="h6" color="red">Loser: {gameData.looserPlayer.firstName}</Typography>
+                        {/* Refresh Button */}
+                        <IconButton color="inherit" onClick={() => window.location.reload()}>
+                            <Refresh />
+                        </IconButton>
+                    </Toolbar>
+                </AppBar>
 
-                <Box mt={3} display="flex" gap={2}>
-                    <Button variant="contained" color="primary" onClick={handleStartGame}>
-                        Start Again
-                    </Button>
-                    <Button variant="outlined" color="secondary" onClick={() => navigate("/")}>
-                        Back
-                    </Button>
+                {/* Centered Game Over Content */}
+                <Box
+                    sx={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        textAlign: "center",
+                    }}
+                >
+                    <Typography variant="h4" color="white">Game Over</Typography>
+                    <Typography variant="h6" color="red">Loser: {gameData.looserPlayer.firstName}</Typography>
+
+                    <Box mt={3} display="flex" gap={2}>
+                        <Button variant="contained" color="primary" onClick={handleResetGame}>
+                            Start Again
+                        </Button>
+                        <Button variant="outlined" color="secondary" onClick={() => navigate("/")}>
+                            Back
+                        </Button>
+                    </Box>
                 </Box>
             </Box>
         );
+
     }
     else {
         return (
@@ -195,7 +225,7 @@ export default function GameTable() {
                         </IconButton>
 
                         <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center" }}>
-                            Game Session
+                            Ace Master
                         </Typography>
 
                         {/* Refresh Button */}
@@ -209,7 +239,7 @@ export default function GameTable() {
                     {players.map((player) => (
                         <Grid item key={player.id} textAlign="center">
                             <Box position="relative" display="inline-flex">
-                                {currentTurn === player.gameIndex ? (
+                                {gameData.turnIndex === player.gameIndex ? (
                                     <>
                                         <CircularProgress size={60} color="secondary"
                                             variant="determinate" value={timeLeft * 100 / 15} />
@@ -269,7 +299,7 @@ export default function GameTable() {
                     <Box display="flex" gap={1} sx={{ flexDirection: "column" }}>
                         {/* <Typography color="white" variant="h6">Closed Cards</Typography> */}
                         <Card sx={{ width: 50, height: 80, backgroundColor: "white" }}>
-                            {/* <CardContent sx={{ fontSize: 24, textAlign: "center" }}>{currentTurn}</CardContent> */}
+                            {/* <CardContent sx={{ fontSize: 24, textAlign: "center" }}>{timeLeft}</CardContent> */}
                             <CardContent sx={{ fontSize: 24, textAlign: "center" }}>
                                 {closedCards ? closedCards.length : 'X'}
                                 <Box sx={{ fontSize: 10 }}>Nos</Box>
@@ -336,9 +366,16 @@ export default function GameTable() {
                     <Typography color="white" variant="h6">
                         {gameData.turnIndex < 0 && (
                             <Box display="flex" flexDirection="column" alignItems="center" width="100%">
-                                <Typography variant="body1" sx={{ mb: 1 }}>
-                                    Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
-                                </Typography>
+                                {gameData.countDown === 0 ||  gameData.countDown === '0'? (
+                                    <Typography variant="body1" sx={{ mb: 1 }}>
+                                        Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
+                                    </Typography>
+                                ) : (
+                                    <Typography variant="body1" sx={{ mb: 1 }}>
+                                        Starts in... ({gameData.countDown} Sec)
+                                    </Typography>
+                                )}
+
                                 <Box width="60%">
                                     <LinearProgress color="info" />
                                 </Box>
@@ -346,7 +383,7 @@ export default function GameTable() {
                         )}
                     </Typography>
                     <Typography color="white" variant="h6">
-                        {gameData.turnIndex < 0 && (
+                        {gameData.turnIndex < 0 && gameData.players.length > 2 && (
                             <Box >
                                 <Button
                                     variant="contained"
@@ -364,7 +401,7 @@ export default function GameTable() {
                                 sx={{
                                     width: selectedCard === i ? 80 : 56,  // Enlarged size on selection
                                     height: selectedCard === i ? 120 : 80,
-                                    backgroundColor: currentTurn === clientPlayer.gameIndex
+                                    backgroundColor: gameData.turnIndex === clientPlayer.gameIndex
                                         && (!hasMatchingCard || gameData.tableSuit == null || card.cardName === gameData.tableSuit) ? 'white' : "gray",
                                     cursor: "pointer",
                                     transition: "all 0.3s ease-in-out",
@@ -385,7 +422,7 @@ export default function GameTable() {
                     <Box >
                         <Grid item display="flex" flexDirection="column" alignItems="center">
                             <Box position="relative" display="inline-flex">
-                                {currentTurn === clientPlayer.gameIndex ? (
+                                {gameData.turnIndex === clientPlayer.gameIndex ? (
                                     <>
                                         <CircularProgress size={60} color="secondary"
                                             variant="determinate" value={timeLeft * 100 / 15} />
