@@ -9,6 +9,7 @@ const Home = () => {
     const [userName, setUserName] = useState("");
     const [storedName, setStoredName] = useState(localStorage.getItem("userName") || "");
     const [storedId, setStoredId] = useState(localStorage.getItem("userId") || "");
+    const [isEditing, setIsEditing] = useState(false);
     const navigate = useNavigate();
 
     const [anchorEl, setAnchorEl] = useState(null);
@@ -45,7 +46,6 @@ const Home = () => {
 
     const handleSaveName = async () => {
         const deviceInfo = await getDeviceInfo();
-        console.log(saveUser + '\n');
         try {
             const response = await fetch(saveUser, {
                 method: "POST",
@@ -70,7 +70,7 @@ const Home = () => {
             localStorage.setItem("userId", data.id); // Store the returned ID
             setStoredName(userName);
             setStoredId(data.id)
-            alert('Saved as New User');
+            alert('Player Name have been saved.');
         } catch (error) {
             alert('something went wrong, please try again');
             console.error("Error saving user:", error);
@@ -110,12 +110,12 @@ const Home = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "space-between",
-                //padding: "20px"
+                padding: "20px",
             }}
         >
-            <AppBar position="static" sx={{ backgroundColor: "#1b5e20", }}>
+            {/* AppBar */}
+            <AppBar position="static" sx={{ backgroundColor: "#1b5e20" }}>
                 <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-                    {/* App Name */}
                     <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                         Ace Master
                     </Typography>
@@ -124,71 +124,120 @@ const Home = () => {
                     <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
                         <Button color="inherit" onClick={() => handleMenuSelected(1)}>Chat</Button>
                         <Button color="inherit" onClick={() => handleMenuSelected(2)}>About</Button>
-                        {/* <Button color="inherit" onClick={() => handleMenuSelected(3)}>Feedback</Button> */}
                         <Button color="inherit" onClick={() => handleMenuSelected(4)}>Contact Us</Button>
                     </Box>
 
-                    {/* Mobile Menu Icon */}
-                    <IconButton
-                        edge="end"
-                        color="inherit"
-                        onClick={handleMenuOpen}
-                        sx={{ display: { xs: "block", sm: "none" } }}
-                    >
+                    {/* Mobile Menu */}
+                    <IconButton edge="end" color="inherit" onClick={handleMenuOpen} sx={{ display: { xs: "block", sm: "none" } }}>
                         <MoreVert />
                     </IconButton>
 
-                    {/* Mobile Dropdown Menu */}
                     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                         <MenuItem onClick={() => { handleMenuSelected(1); handleMenuClose(); }}>Chat</MenuItem>
                         <MenuItem onClick={() => { handleMenuSelected(2); handleMenuClose(); }}>About</MenuItem>
-                        {/* <MenuItem onClick={() => { handleMenuSelected(3); handleMenuClose(); }}>Feedback</MenuItem> */}
                         <MenuItem onClick={() => { handleMenuSelected(4); handleMenuClose(); }}>Contact Us</MenuItem>
                     </Menu>
                 </Toolbar>
             </AppBar>
-            {/* Top - User Name Display */}
-            <Typography variant="h4" color="white" sx={{ marginTop: "20px" }}>
-                {storedName || "Enter Your Name"}
-            </Typography>
 
-            {/* Center - Avatar */}
-            <Avatar
-                src="https://via.placeholder.com/150"
-                alt="Profile Avatar"
-                sx={{ width: 150, height: 150, border: "3px solid white" }}
-            />
-
-            {/* Input Field, Save Button, and Start Button */}
-            <Container sx={{ textAlign: "center", marginBottom: "40px" }}>
-                <TextField
-                    value={userName}
-                    onChange={(e) => handleChangeName(e.target.value)}
-                    placeholder="Enter your name"
-                    variant="outlined"
-                    sx={{ backgroundColor: "white", borderRadius: "5px", marginBottom: "10px" }}
-                />
-                <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={handleSaveName}
-                    sx={{ display: "block", margin: "10px auto", padding: "10px 20px" }}
-                    disabled={!userName}
+            {/* User Info */}
+            <Box sx={{ textAlign: "center", marginTop: "20px" }}>
+                <Avatar
+                    sx={{
+                        width: 150,
+                        height: 150,
+                        border: "3px solid white",
+                        fontSize: "50px",
+                        bgcolor: "#1b5e20",
+                        margin: "auto",
+                    }}
                 >
-                    Save
-                </Button>
+                    {(storedName || userName)?.charAt(0).toUpperCase() || "?"}
+                </Avatar>
+
+                {storedName && !isEditing ? (
+                    <>
+                        <Typography variant="h4" color="white" sx={{ marginTop: "10px" }}>
+                            {storedName}
+                        </Typography>
+                        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
+                            <Button
+                                variant="outlined"
+                                color="warning"
+                                onClick={() => {
+                                    setIsEditing(true);
+                                    setUserName(storedName);
+                                }}
+                            >
+                                Edit
+                            </Button>
+                        </Box>
+                    </>
+                ) : (
+                    <Box sx={{ marginTop: "20px", textAlign: "center" }}>
+                        <TextField
+                            value={userName}
+                            onChange={(e) => handleChangeName(e.target.value)}
+                            placeholder="Enter your name"
+                            variant="outlined"
+                            sx={{ backgroundColor: "white", borderRadius: "5px", marginBottom: "10px", width: "250px" }}
+                        />
+                        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 1 }}>
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                onClick={() => {
+                                    handleSaveName();
+                                    setIsEditing(false);
+                                }}
+                                disabled={!userName}
+                            >
+                                Save
+                            </Button>
+                            {storedName && (
+                                <Button
+                                    variant="outlined"
+                                    color="inherit"
+                                    onClick={() => {
+                                        setIsEditing(false);
+                                        setUserName(""); // or revert to storedName
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            )}
+                        </Box>
+                    </Box>
+                )}
+            </Box>
+
+            {/* Bottom Buttons */}
+            <Box sx={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 3,
+                marginBottom: "30px"
+            }}>
                 <Button
                     variant="contained"
                     color="primary"
                     onClick={handleStartGame}
-                    sx={{ display: "block", margin: "10px auto", padding: "10px 20px" }}
                     disabled={!storedName}
                 >
-                    Start Game
+                    Start Online
                 </Button>
-            </Container>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => alert('We are still working on it')}
+                    disabled={!storedName}
+                >
+                    Create Room
+                </Button>
+            </Box>
         </Box>
     );
+
 };
 
 export default Home;
