@@ -26,7 +26,6 @@ const Home = () => {
         const platform = navigator.platform;
         const screenWidth = window.screen.width;
         const screenHeight = window.screen.height;
-
         return { userAgent, platform, screenWidth, screenHeight };
     };
 
@@ -78,9 +77,20 @@ const Home = () => {
     };
 
     const handleStartGame = () => {
-        alert(localStorage.getItem("userId"));
-        navigate("/game");
+        if(window.confirm('Are you ready .?')) navigate("/game");
     };
+
+
+    const handleCreateGame = () =>{
+        alert('test')
+        let id = 12345;
+        navigate(`/game/${id}`);
+    }
+    
+
+    const handleJoinRoom = () =>{
+
+    }
 
     const handleMenuSelected = (i) => {
         switch (i) {
@@ -229,10 +239,18 @@ const Home = () => {
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => alert('We are still working on it')}
+                    onClick={handleCreateGame}
                     disabled={!storedName}
                 >
                     Create Room
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleJoinRoom}
+                    disabled={!storedName}
+                >
+                    Join Room
                 </Button>
             </Box>
         </Box>

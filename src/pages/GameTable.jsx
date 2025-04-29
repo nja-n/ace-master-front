@@ -7,7 +7,7 @@ import {
     Snackbar, SnackbarContent, AppBar, Toolbar, IconButton
 } from "@mui/material";
 import { game, getTimeRemains } from '../components/methods';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Refresh, ArrowBack } from "@mui/icons-material";
 
 // import { motion, AnimatePresence } from "framer-motion";
@@ -23,7 +23,10 @@ export default function GameTable() {
     const [timeLeft, setTimeLeft] = useState(15);
 
     const [snackbar, setSnackbar] = useState({ open: false, message: null });
-
+    
+    const {id} = useParams();
+    console.log(id);
+    
     const navigate = useNavigate();
 
     // const [movingCard, setMovingCard] = useState(null);
@@ -46,7 +49,7 @@ export default function GameTable() {
             ws.current.close();
         };
 
-    }, []);
+    }, [id]);
 
     /*useEffect(() => {
         if (timeLeft > 0) {
@@ -72,7 +75,12 @@ export default function GameTable() {
                 if (gameData?.sessionId) {
                     fetch(url)
                         .then((res) => res.json())
-                        .then((time) => setTimeLeft(time));
+                        .then((time) => {
+                            setTimeLeft(time);
+                            if(time < 1){
+                                setSelectedCard(null);
+                            }
+                        });
                 }
             }, 1000);
             return () => clearInterval(interval);
@@ -184,6 +192,10 @@ export default function GameTable() {
                     }}
                 >
                     <Typography variant="h4" color="white">Game Over</Typography>
+                    {gameData.players && gameData.players.map((player, i) => (
+                        <Typography variant="h6" color="red">{player.winningRank}: {player.firstName}</Typography>
+                    ))}
+
                     <Typography variant="h6" color="red">Loser: {gameData.looserPlayer.firstName}</Typography>
 
                     <Box mt={3} display="flex" gap={2}>
@@ -369,6 +381,7 @@ export default function GameTable() {
                                 {gameData.countDown === 0 ||  gameData.countDown === '0'? (
                                     <Typography variant="body1" sx={{ mb: 1 }}>
                                         Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
+                                        ****{gameData.sessionId}****
                                     </Typography>
                                 ) : (
                                     <Typography variant="body1" sx={{ mb: 1 }}>
@@ -434,7 +447,8 @@ export default function GameTable() {
                                                 position: "absolute",
                                                 top: "50%",
                                                 left: "50%",
-                                                transform: "translate(-50%, -50%)"
+                                                transform: "translate(-50%, -50%)",
+                                                color:  timeLeft>5 ? 'white' :'red'
                                             }}
                                         >
                                             {timeLeft > 0 ? timeLeft : playerName.slice(0, 1)}

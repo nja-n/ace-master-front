@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Typography, Button, Paper, Divider, CircularProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { versionHistory } from "../components/methods";
 
 const About = () => {
     const navigate = useNavigate();
@@ -12,7 +13,7 @@ const About = () => {
     useEffect(() => {
         const fetchVersionHistory = async () => {
             try {
-                const response = await fetch("/cards/version-history"); // Replace with your backend API
+                const response = await fetch(versionHistory); // Replace with your backend API
                 if (!response.ok) throw new Error("Failed to fetch version history");
 
                 console.log(response)
@@ -46,7 +47,7 @@ const About = () => {
                     About Ace Master
                 </Typography>
                 <Typography variant="body1" paragraph>
-                Ace Master is an exhilarating card game that challenges your strategic thinking and lightning-fast decision-making! Inspired by the classic Kazhutha game from Kerala, Ace Master brings a unique twist to traditional card battles. Compete with friends or AI opponents, outsmart your rivals, and rise through the ranks to claim the title of the ultimate and looser of the deck! Are you ready to test your skills and dominate the game? 🃏🔥
+                Ace Master is an exhilarating card game that challenges your strategic thinking and lightning-fast decision-making! Inspired by the classic Kazhutha game from Kerala, Ace Master brings a unique twist to traditional card battles. Compete with friends or AI opponents, outsmart your rivals, and rise through the ranks to claim the title of the ultimate and looser of the deck! 🃏🔥
                 </Typography>
 
                 <Divider sx={{ my: 2 }} />
@@ -54,7 +55,7 @@ const About = () => {
                 <Typography variant="h5" fontWeight="bold">
                     Developer
                 </Typography>
-                <Typography variant="body1">🚀 Developed by: <strong>AETHER & Team</strong></Typography>
+                <Typography variant="body1">🚀 Developed by: <strong>AEITHER DEV</strong></Typography>
                 <Typography variant="body2">📧 Email: <a href="mailto:aether.cash@hotmail.com">mail now</a></Typography>
 
                 <Divider sx={{ my: 2 }} />
@@ -70,9 +71,10 @@ const About = () => {
                         <Typography variant="h6" sx={{ mt: 2 }}>Version History</Typography>
                         {history.length > 0 ? (
                             history.map((entry, index) => (
-                                <Typography key={index} variant="body2">
-                                    🗓️ {entry.date} - {entry.description}
-                                </Typography>
+                                <Paper key={index} variant="body2">
+                                    🗓️ {entry.date} - {entry.version}
+                                    <Typography>{entry.description}</Typography>
+                                </Paper>
                             ))
                         ) : (
                             <Typography variant="body2">No version history available.</Typography>
