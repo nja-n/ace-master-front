@@ -12,6 +12,8 @@ import { Refresh, ArrowBack } from "@mui/icons-material";
 
 // import { motion, AnimatePresence } from "framer-motion";
 
+import shuffleSound from '../assets/sounds/riffle-card-shuffle.mp3';
+
 export default function GameTable() {
     const ws = useRef(null);
 
@@ -24,8 +26,7 @@ export default function GameTable() {
 
     const [snackbar, setSnackbar] = useState({ open: false, message: null });
     
-    const {id} = useParams();
-    console.log(id);
+    const {roomId} = useParams();
     
     const navigate = useNavigate();
 
@@ -33,23 +34,38 @@ export default function GameTable() {
     // const [startPos, setStartPos] = useState({ x: 0, y: 0 });
     // const cardRefs = useRef([]);
 
+    const audioShuffle = useRef(new Audio(shuffleSound));
+
     useEffect(() => {
         let playerNameLocal = localStorage.getItem("userName");
         let playerIdLocal = localStorage.getItem("userId");
 
         setPlayerName(playerNameLocal);
         setPlayerId(playerIdLocal);
-        ws.current = new WebSocket(`${game}?playerId=${playerIdLocal}`);
+
+        ws.current = new WebSocket(`${game}?playerId=${playerIdLocal}${roomId ? '&roomId=' + roomId : ''}`);
 
         ws.current.onmessage = (event) => {
             const data = JSON.parse(event.data);
             setGameData(data);
         };
+        ws.onopen = () => {
+            console.log("WebSocket connection established.");
+        };
+        
+        ws.onerror = (error) => {
+            console.error("WebSocket error: ", error);
+        };
+        
+        ws.onclose = () => {
+            console.log("WebSocket connection closed.");
+        };
+        
         return () => {
             ws.current.close();
         };
 
-    }, [id]);
+    }, []);
 
     /*useEffect(() => {
         if (timeLeft > 0) {
@@ -88,6 +104,13 @@ export default function GameTable() {
 
     }, [gameData?.turnIndex]);
 
+    useEffect(() => {
+        if (gameData?.countDown === 3) {
+            audioShuffle.current.play().catch((err) => {
+            console.warn("Failed to play sound:", err);
+          });
+        }
+    }, [gameData?.countDown]);    
 
     if (!gameData) {
         return <Typography color="white">Loading...</Typography>;
@@ -193,10 +216,13 @@ export default function GameTable() {
                 >
                     <Typography variant="h4" color="white">Game Over</Typography>
                     {gameData.players && gameData.players.map((player, i) => (
-                        <Typography variant="h6" color="red">{player.winningRank}: {player.firstName}</Typography>
+                        <Typography variant="h6" cosx={{
+                            color: player.winningRank === 0 ? 'red' : 'green'
+                          }}
+                        >{getOrdinalSuffix(player.winningRank)} : {player.firstName}</Typography>
                     ))}
 
-                    <Typography variant="h6" color="red">Loser: {gameData.looserPlayer.firstName}</Typography>
+                    {/* <Typography variant="h6" color="red">Loser: {gameData.looserPlayer.firstName}</Typography> */}
 
                     <Box mt={3} display="flex" gap={2}>
                         <Button variant="contained" color="primary" onClick={handleResetGame}>
@@ -343,6 +369,9 @@ export default function GameTable() {
                                     <CardContent sx={{ fontSize: 24, textAlign: "center", color: card.color }}>{card.cardLabel}</CardContent>
                                 </Card>
                             ))}
+                            {gameData.roomId && gameData.turnIndex < 0 &&
+                                <Typography color="white" variant="h6">Room Number : {gameData.roomId}</Typography>
+                            }
                         </Box>
                     </Box>
                 </Box>
@@ -381,7 +410,6 @@ export default function GameTable() {
                                 {gameData.countDown === 0 ||  gameData.countDown === '0'? (
                                     <Typography variant="body1" sx={{ mb: 1 }}>
                                         Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
-                                        ****{gameData.sessionId}****
                                     </Typography>
                                 ) : (
                                     <Typography variant="body1" sx={{ mb: 1 }}>
@@ -496,6 +524,9 @@ const cardStyles = {
 };
 
 function getOrdinalSuffix(rank) {
+    if(rank == 0) {
+        return 'Looser';
+    }
     const j = rank % 10,
         k = rank % 100;
     if (j === 1 && k !== 11) {

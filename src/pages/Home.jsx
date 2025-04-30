@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Avatar, Button, Container, Typography, Box, TextField } from "@mui/material";
+import {
+    Avatar, Button, Container, Typography, Box, TextField,
+    Dialog, DialogTitle, DialogContent, DialogActions
+} from "@mui/material";
 import { AppBar, Toolbar, IconButton, Menu, MenuItem, } from "@mui/material";
 import { MoreVert } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { saveUser } from '../components/methods';
+import { saveUser, createUniqueRoom, validateUniqueRoom } from '../components/methods';
 
 const Home = () => {
     const [userName, setUserName] = useState("");
@@ -18,7 +21,8 @@ const Home = () => {
     const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
 
-
+    const [joinModalOpen, setJoinModalOpen] = useState(false);
+    const [roomIdInput, setRoomIdInput] = useState('');
 
     const getDeviceInfo = async () => {
         // Get OS and Platform
@@ -77,20 +81,61 @@ const Home = () => {
     };
 
     const handleStartGame = () => {
-        if(window.confirm('Are you ready .?')) navigate("/game");
+        if (window.confirm('Are you ready .?')) navigate("/game");
     };
 
 
-    const handleCreateGame = () =>{
-        alert('test')
-        let id = 12345;
-        navigate(`/game/${id}`);
-    }
-    
+    const handleCreateGame = async () => {
+        if (window.confirm("Are you ready to create a Room?")) {
+            try {
+                const response = await fetch(createUniqueRoom);
+                if (!response.ok) throw new Error("Failed to create room");
 
-    const handleJoinRoom = () =>{
+                const roomId = await response.json();
+                navigate(`/game/${roomId}`);
+            } catch (error) {
+                console.error("Error creating room:", error);
+                alert("Failed to create room. Please try again.");
+            }
+        }
+    };
 
+    const handleJoinRoom = () => {
+        setJoinModalOpen(true);
     }
+
+    const handlePlay = async () => {
+        const trimmedRoomId = roomIdInput.trim();
+
+        if (trimmedRoomId === '') {
+            setRoomIdInput('');
+            alert('Please enter a valid Room ID');
+            return;
+        }
+
+        try {
+            const response = await fetch(validateUniqueRoom, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({ roomId: trimmedRoomId }),
+            });
+
+            const result = await response.text();
+
+            if (result === 'Y') {
+                navigate(`/game/${trimmedRoomId}`);
+                setJoinModalOpen(false);
+                setRoomIdInput('');
+            } else {
+                alert('Room ID not found or inactive.');
+            }
+        } catch (error) {
+            console.error('Error validating room:', error);
+            alert('An error occurred while validating the Room ID.');
+        }
+    };
 
     const handleMenuSelected = (i) => {
         switch (i) {
@@ -247,12 +292,36 @@ const Home = () => {
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => handleJoinRoom}
+                    onClick={handleJoinRoom}
                     disabled={!storedName}
                 >
                     Join Room
                 </Button>
             </Box>
+            <Dialog open={joinModalOpen} onClose={() => setJoinModalOpen(false)}>
+                <DialogTitle>Join a Game Room</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Room ID"
+                        type="text"
+                        inputProps={{ maxLength: 5, inputMode: 'numeric', pattern: '[0-9]*' }}
+                        fullWidth
+                        value={roomIdInput}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            if (/^\d*$/.test(value)) {
+                              setRoomIdInput(value);
+                            }
+                          }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setJoinModalOpen(false)}>Cancel</Button>
+                    <Button onClick={handlePlay} variant="contained" color="primary">Play</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 

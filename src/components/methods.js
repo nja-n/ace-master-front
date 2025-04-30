@@ -8,4 +8,6 @@ export const game = `${socket}://${server}/game`;
 export const saveUser = `${protocol}://${server}/cards/savePlayer`;
 export const getTimeRemains = `${protocol}://${server}/cards/SESSION_ID/remaining-time`;
 
-export const versionHistory = `${protocol}://${server}/cards/version-history`;
+export const versionHistory = `${protocol}://${server}/version/history`;
+export const createUniqueRoom = `${protocol}://${server}/cards/create-room`;
+export const validateUniqueRoom = `${protocol}://${server}/cards/validate-room`;

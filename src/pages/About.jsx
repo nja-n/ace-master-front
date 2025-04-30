@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Typography, Button, Paper, Divider, CircularProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { versionHistory } from "../components/methods";
+import { HorizontalRule } from "@mui/icons-material";
 
 const About = () => {
     const navigate = useNavigate();
@@ -53,7 +54,7 @@ const About = () => {
                 <Divider sx={{ my: 2 }} />
 
                 <Typography variant="h5" fontWeight="bold">
-                    Developer
+                    Developer Info
                 </Typography>
                 <Typography variant="body1">🚀 Developed by: <strong>AEITHER DEV</strong></Typography>
                 <Typography variant="body2">📧 Email: <a href="mailto:aether.cash@hotmail.com">mail now</a></Typography>
@@ -68,11 +69,12 @@ const About = () => {
                 ) : (
                     <>
                         <Typography variant="body1">🔹 Current Version: <strong>{version}</strong></Typography>
+                        <Divider sx={{ my:0, ml:2, }} />
                         <Typography variant="h6" sx={{ mt: 2 }}>Version History</Typography>
                         {history.length > 0 ? (
                             history.map((entry, index) => (
                                 <Paper key={index} variant="body2">
-                                    🗓️ {entry.date} - {entry.version}
+                                    🗓️ {entry.date} - 🔹 {entry.version}
                                     <Typography>{entry.description}</Typography>
                                 </Paper>
                             ))
