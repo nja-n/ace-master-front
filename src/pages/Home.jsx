@@ -165,12 +165,15 @@ const Home = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "space-between",
-                padding: "20px",
             }}
         >
             {/* AppBar */}
-            <AppBar position="static" sx={{ backgroundColor: "#1b5e20" }}>
-                <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+            <AppBar position="static" sx={{ backgroundColor: "#1b5e20",
+                marginTop:'15px',
+             }}>
+                <Toolbar sx={{ display: "flex", justifyContent: "space-between",
+                     marginLeft:'15px', marginRight:'15px',
+                 }}>
                     <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                         Ace Master
                     </Typography>
