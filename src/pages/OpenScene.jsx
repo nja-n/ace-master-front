@@ -9,9 +9,22 @@ const OpenScene = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        const splashTimestamp = localStorage.getItem('splashTimestamp');
+
+        if (splashTimestamp) {
+            const currentTime = Date.now();
+            const timeDiff = currentTime - splashTimestamp;
+
+            // If it's been more than 1 hour (3600000 ms), clear the localStorage
+            if (timeDiff > 3600000) {
+                localStorage.removeItem('splashTimestamp');
+            } else {
+                setShowSplash(false); // If not, skip splash screen
+            }
+        }
         const timer = setTimeout(() => {
             setShowSplash(false);
-            //navigate('/home');
+            localStorage.setItem('splashTimestamp', Date.now().toString());
         }, 2000);
 
         return () => clearTimeout(timer);
@@ -41,7 +54,7 @@ const OpenScene = () => {
                 </>
 
             ) : (
-                    <Home/>
+                <Home />
             )}
         </div>
     );

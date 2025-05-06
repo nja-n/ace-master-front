@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Button, Paper, Divider, CircularProgress } from "@mui/material";
+import { Box, Typography, Button, Paper, Divider, CircularProgress, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { versionHistory } from "../components/methods";
-import { HorizontalRule } from "@mui/icons-material";
+import { formatDate } from "../components/Utiliy";
 
 const About = () => {
     const navigate = useNavigate();
@@ -48,7 +48,7 @@ const About = () => {
                     About Ace Master
                 </Typography>
                 <Typography variant="body1" paragraph>
-                Ace Master is an exhilarating card game that challenges your strategic thinking and lightning-fast decision-making! Inspired by the classic Kazhutha game from Kerala, Ace Master brings a unique twist to traditional card battles. Compete with friends or AI opponents, outsmart your rivals, and rise through the ranks to claim the title of the ultimate and looser of the deck! 🃏🔥
+                    Ace Master is an exhilarating card game that challenges your strategic thinking and lightning-fast decision-making! Inspired by the classic Kazhutha game from Kerala, Ace Master brings a unique twist to traditional card battles. Compete with friends or AI opponents, outsmart your rivals, and rise through the ranks to claim the title of the ultimate and looser of the deck! 🃏🔥
                 </Typography>
 
                 <Divider sx={{ my: 2 }} />
@@ -68,14 +68,14 @@ const About = () => {
                     <CircularProgress size={24} sx={{ mt: 1 }} />
                 ) : (
                     <>
-                        <Typography variant="body1">🔹 Current Version: <strong>{version}</strong></Typography>
-                        <Divider sx={{ my:0, ml:2, }} />
-                        <Typography variant="h6" sx={{ mt: 2 }}>Version History</Typography>
+                        <Typography variant="body1" >🔹 Current Version: <strong>{version}</strong></Typography>
+                        <Divider sx={{ my: 0, ml: 2, }} />
+                        <Typography variant="h6" sx={{ mt: 2 }} fontWeight="bold">Version History</Typography>
                         {history.length > 0 ? (
                             history.map((entry, index) => (
                                 <Paper key={index} variant="body2">
-                                    🗓️ {entry.date} - 🔹 {entry.version}
-                                    <Typography>{entry.description}</Typography>
+                                    🗓️ {formatDate(entry.date)} - 🔹 {entry.version}
+                                    <Typography variant="h6">{entry.head}</Typography>
                                 </Paper>
                             ))
                         ) : (
@@ -86,15 +86,28 @@ const About = () => {
 
                 <Divider sx={{ my: 2 }} />
 
-                <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    sx={{ mt: 2 }}
-                    onClick={() => window.location.href = "mailto:aether.cash@hotmail.com"}
-                >
-                    Contact Us
-                </Button>
+                <Grid container spacing={2} sx={{ mt: 2 }}>
+                    <Grid item xs={6}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            onClick={() => window.location.href = "mailto:aether.cash@hotmail.com"}
+                        >
+                            Contact Us
+                        </Button>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Button
+                            variant="text"
+                            color="secondary"
+                            fullWidth target="_blank"
+                            onClick={() => window.open("/terms", "_blank")}
+                        >
+                            Terms & Conditions
+                        </Button>
+                    </Grid>
+                </Grid>
 
                 <Button
                     variant="outlined"

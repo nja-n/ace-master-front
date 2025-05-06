@@ -13,6 +13,10 @@ import { Refresh, ArrowBack } from "@mui/icons-material";
 // import { motion, AnimatePresence } from "framer-motion";
 
 import shuffleSound from '../assets/sounds/riffle-card-shuffle.mp3';
+import selectSound from '../assets/sounds/card-sounds-select.mp3';
+import placeSound from '../assets/sounds/card-sound-push.mp3';
+import flipCard1 from '../assets/sounds/flip-card.mp3';
+import flipCard2 from '../assets/sounds/page-flip.mp3';
 
 export default function GameTable() {
     const ws = useRef(null);
@@ -35,6 +39,10 @@ export default function GameTable() {
     // const cardRefs = useRef([]);
 
     const audioShuffle = useRef(new Audio(shuffleSound));
+    const audioPlace = useRef(new Audio(selectSound));
+    const audioSelect = useRef(new Audio(placeSound));
+    const audioFlip1 = useRef(new Audio(flipCard1));
+    const audioFlip2 = useRef(new Audio(flipCard2));
 
     useEffect(() => {
         let playerNameLocal = localStorage.getItem("userName");
@@ -110,7 +118,15 @@ export default function GameTable() {
             console.warn("Failed to play sound:", err);
           });
         }
-    }, [gameData?.countDown]);    
+    }, [gameData?.countDown]); 
+
+    useEffect(() => {
+        if (selectedCard !== null) {
+            audioFlip1.current.play().catch((err) => {
+            console.warn("Failed to play sound:", err);
+          });
+        }
+    }, [selectedCard]);   
 
     if (!gameData) {
         return <Typography color="white">Loading...</Typography>;
@@ -150,6 +166,9 @@ export default function GameTable() {
                 setMovingCard(null); // Clear animation after sending to backend
             }, 800);*/
             ws.current.send(JSON.stringify({ way: "push", player: playerId, card: selectedCardValue }));
+            audioPlace.current.play().catch((err) => {
+                console.warn("Failed to play sound:", err)
+            });
             setSelectedCard(null);
         }
     };

@@ -1,10 +1,10 @@
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import Home from './pages/Home';
 import GameTable from "./pages/GameTable";
 import About from './pages/About';
 import OpenScene from './pages/OpenScene';
+import TermsPage from './pages/TermsPage';
 
 
 function App() {
@@ -15,6 +15,7 @@ function App() {
         <Route path="/game/:roomId" element={<GameTable />} />
         <Route path="/game" element={<GameTable />} />
         <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<TermsPage />} />
       </Routes>
     </Router>
   );
