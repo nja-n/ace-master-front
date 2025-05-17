@@ -5,6 +5,7 @@ import GameTable from "./pages/GameTable";
 import About from './pages/About';
 import OpenScene from './pages/OpenScene';
 import TermsPage from './pages/TermsPage';
+import Tasks from './pages/Tasks';
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/game" element={<GameTable />} />
         <Route path="/about" element={<About />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/tasks" element={<Tasks />} />
       </Routes>
     </Router>
   );

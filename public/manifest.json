@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Ace Master",
+  "name": "Ace Master React App",
+  "description": "A simple React app to Play Ace Master Game.",
   "icons": [
     {
       "src": "favicon.ico",

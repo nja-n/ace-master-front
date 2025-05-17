@@ -17,6 +17,9 @@ import selectSound from '../assets/sounds/card-sounds-select.mp3';
 import placeSound from '../assets/sounds/card-sound-push.mp3';
 import flipCard1 from '../assets/sounds/flip-card.mp3';
 import flipCard2 from '../assets/sounds/page-flip.mp3';
+import audioWinFile from '../assets/sounds/win.mp3';
+//import tadaaFile from '../assets/sounds/tadaa.mp3';
+import fireConfetti, { ConfettiSideCannons } from '../components/custom-fire-confetti';
 
 export default function GameTable() {
     const ws = useRef(null);
@@ -29,9 +32,9 @@ export default function GameTable() {
     const [timeLeft, setTimeLeft] = useState(15);
 
     const [snackbar, setSnackbar] = useState({ open: false, message: null });
-    
-    const {roomId} = useParams();
-    
+
+    const { roomId } = useParams();
+
     const navigate = useNavigate();
 
     // const [movingCard, setMovingCard] = useState(null);
@@ -43,6 +46,10 @@ export default function GameTable() {
     const audioSelect = useRef(new Audio(placeSound));
     const audioFlip1 = useRef(new Audio(flipCard1));
     const audioFlip2 = useRef(new Audio(flipCard2));
+    const audioWin = useRef(new Audio(audioWinFile));
+    //const audioTadaa = useRef(tadaaFile);
+
+    const celebratedWinners = useRef(new Set());
 
     useEffect(() => {
         let playerNameLocal = localStorage.getItem("userName");
@@ -60,15 +67,15 @@ export default function GameTable() {
         ws.onopen = () => {
             console.log("WebSocket connection established.");
         };
-        
+
         ws.onerror = (error) => {
             console.error("WebSocket error: ", error);
         };
-        
+
         ws.onclose = () => {
             console.log("WebSocket connection closed.");
         };
-        
+
         return () => {
             ws.current.close();
         };
@@ -93,7 +100,7 @@ export default function GameTable() {
                 .then((res) => res.json())
                 .then((time) => setTimeLeft(time));
         }
-        if (gameData && gameData?.turnIndex >= 0) {
+        if (gameData && gameData?.turnIndex >= 0 && gameData.looserPlayer == null) {
             const interval = setInterval(() => {
                 let url = getTimeRemains.replace('SESSION_ID', gameData.sessionId);
                 if (gameData?.sessionId) {
@@ -101,7 +108,14 @@ export default function GameTable() {
                         .then((res) => res.json())
                         .then((time) => {
                             setTimeLeft(time);
-                            if(time < 1){
+                            if (time < 1) {
+                                if (gameData?.turnIndex === gameData.clientPlayer.gameIndex) {
+                                    setSnackbar({ open: true, message: "Time Out!" });
+                                    audioPlace.current.play().catch((err) => {
+                                        console.warn("Failed to play sound:", err)
+                                    });
+                                }
+
                                 setSelectedCard(null);
                             }
                         });
@@ -115,18 +129,39 @@ export default function GameTable() {
     useEffect(() => {
         if (gameData?.countDown === 3) {
             audioShuffle.current.play().catch((err) => {
-            console.warn("Failed to play sound:", err);
-          });
+                console.warn("Failed to play sound:", err);
+            });
         }
-    }, [gameData?.countDown]); 
+    }, [gameData?.countDown]);
 
     useEffect(() => {
         if (selectedCard !== null) {
             audioFlip1.current.play().catch((err) => {
-            console.warn("Failed to play sound:", err);
-          });
+                console.warn("Failed to play sound:", err);
+            });
         }
-    }, [selectedCard]);   
+    }, [selectedCard]);
+
+    useEffect(() => {
+        if (gameData?.players.length > 0) {
+            gameData.players.forEach(player => {
+                if (player.winningRank && !celebratedWinners.current.has(player.id)) {
+                    const rank = getOrdinalSuffix(player.winningRank);
+
+                    ConfettiSideCannons();
+                    fireConfetti();
+                    celebratedWinners.current.add(player.id);
+
+                    audioWin.current.play().catch((err) => {
+                        console.warn("Failed to play sound:", err);
+                    });
+                }
+            });
+        }
+        if (gameData?.turnIndex < -1) {
+            celebratedWinners.current.clear();
+        }
+    }, [gameData?.players]);
 
     if (!gameData) {
         return <Typography color="white">Loading...</Typography>;
@@ -134,7 +169,6 @@ export default function GameTable() {
     let { players, tableCards, closedCards } = gameData;
 
     const clientPlayer = gameData.clientPlayer;
-
     players = players.filter(player => !player.client);
 
 
@@ -225,33 +259,59 @@ export default function GameTable() {
                 {/* Centered Game Over Content */}
                 <Box
                     sx={{
-                        flex: 1,
+                        backgroundColor: "#2e7d32",
+                        minHeight: "100vh",
                         display: "flex",
                         flexDirection: "column",
-                        alignItems: "center",
                         justifyContent: "center",
-                        textAlign: "center",
+                        alignItems: "center",
+                        px: 4,
+                        py: 6,
                     }}
                 >
-                    <Typography variant="h4" color="white">Game Over</Typography>
-                    {gameData.players && gameData.players.map((player, i) => (
-                        <Typography variant="h6" cosx={{
-                            color: player.winningRank === 0 ? 'red' : 'green'
-                          }}
-                        >{getOrdinalSuffix(player.winningRank)} : {player.firstName}</Typography>
-                    ))}
+                    <Typography variant="h3" color="white" fontWeight="bold" gutterBottom>
+                        Game Over
+                    </Typography>
 
-                    {/* <Typography variant="h6" color="red">Loser: {gameData.looserPlayer.firstName}</Typography> */}
+                    {gameData.players && [...gameData.players]
+                        .sort((a, b) => a.winningRank - b.winningRank)
+                        .map((player, i) => (
+                            <Typography
+                                key={i}
+                                variant="h6"
+                                sx={{
+                                    color: player.winningRank === 0 ? "#ff5252" : "#c8e6c9",
+                                    fontWeight: player.winningRank === 0 ? "bold" : "medium",
+                                    mt: 1,
+                                }}
+                            >
+                                {getOrdinalSuffix(player.winningRank)} : {player.firstName} - {player.winningAmount} Points
+                            </Typography>
+                        ))}
 
-                    <Box mt={3} display="flex" gap={2}>
-                        <Button variant="contained" color="primary" onClick={handleResetGame}>
+                    <Box mt={5} display="flex" gap={3}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            size="large"
+                            onClick={handleResetGame}
+                            sx={{ fontWeight: "bold" }}
+                        >
                             Start Again
                         </Button>
-                        <Button variant="outlined" color="secondary" onClick={() => navigate("/")}>
+
+                        <Button
+                            variant="outlined"
+                            color="secondary"
+                            size="large"
+                            onClick={() => navigate("/")}
+                            sx={{ fontWeight: "bold", borderColor: "#fff", color: "#fff" }}
+                        >
                             Back
                         </Button>
                     </Box>
                 </Box>
+
             </Box>
         );
 
@@ -426,7 +486,7 @@ export default function GameTable() {
                     <Typography color="white" variant="h6">
                         {gameData.turnIndex < 0 && (
                             <Box display="flex" flexDirection="column" alignItems="center" width="100%">
-                                {gameData.countDown === 0 ||  gameData.countDown === '0'? (
+                                {gameData.countDown === 0 || gameData.countDown === '0' ? (
                                     <Typography variant="body1" sx={{ mb: 1 }}>
                                         Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
                                     </Typography>
@@ -495,7 +555,7 @@ export default function GameTable() {
                                                 top: "50%",
                                                 left: "50%",
                                                 transform: "translate(-50%, -50%)",
-                                                color:  timeLeft>5 ? 'white' :'red'
+                                                color: timeLeft > 5 ? 'white' : 'red'
                                             }}
                                         >
                                             {timeLeft > 0 ? timeLeft : playerName.slice(0, 1)}
@@ -543,7 +603,7 @@ const cardStyles = {
 };
 
 function getOrdinalSuffix(rank) {
-    if(rank == 0) {
+    if (rank == 0) {
         return 'Looser';
     }
     const j = rank % 10,

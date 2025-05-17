@@ -11,3 +11,7 @@ export const getTimeRemains = `${protocol}://${server}/cards/SESSION_ID/remainin
 export const versionHistory = `${protocol}://${server}/version/history`;
 export const createUniqueRoom = `${protocol}://${server}/cards/create-room`;
 export const validateUniqueRoom = `${protocol}://${server}/cards/validate-room`;
+
+export const loadCoinBalance = `${protocol}://${server}/cards/load-coin-balance`;
+
+export const fetchUser = `${protocol}://${server}/fetch-user`;

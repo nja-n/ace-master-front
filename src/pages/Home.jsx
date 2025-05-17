@@ -6,7 +6,9 @@ import {
 import { AppBar, Toolbar, IconButton, Menu, MenuItem, } from "@mui/material";
 import { MoreVert } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { saveUser, createUniqueRoom, validateUniqueRoom } from '../components/methods';
+import { saveUser, createUniqueRoom, validateUniqueRoom, loadCoinBalance } from '../components/methods';
+import AccountBalanceWallet from '@mui/icons-material/AccountBalanceWallet';
+
 
 const Home = () => {
     const [userName, setUserName] = useState("");
@@ -24,6 +26,10 @@ const Home = () => {
     const [joinModalOpen, setJoinModalOpen] = useState(false);
     const [roomIdInput, setRoomIdInput] = useState('');
 
+    const [coinBalance, setCoinBalance] = useState(0);
+
+    const [networkError, setNetworkError] = useState(false);
+
     const getDeviceInfo = async () => {
         // Get OS and Platform
         const userAgent = navigator.userAgent;
@@ -39,8 +45,23 @@ const Home = () => {
         if (savedName) {
             setStoredName(savedName);
             setStoredId(localStorage.getItem("userId"));
+
+            fetch(loadCoinBalance + '?id=' + storedId, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    setCoinBalance(data);
+                })
+                .catch((error) => {
+                    setNetworkError(true);
+                    console.error("Error loading coin balance:", error);
+                });
         }
-    }, []);
+    }, [storedId]);
 
     const handleChangeName = (value) => {
         const capitalizedValue = value.replace(/\b\w/g, (char) => char.toUpperCase());
@@ -81,7 +102,8 @@ const Home = () => {
     };
 
     const handleStartGame = () => {
-        if (window.confirm('Are you ready .?')) navigate("/game");
+        if(coinBalance < 100) {alert('You do not have enough coins to play. Please earn more coins by complete tasks.'); return;}
+        if (window.confirm('Are you ready .? Your coin of 100 has been used for this round')) navigate("/game");
     };
 
 
@@ -140,7 +162,8 @@ const Home = () => {
     const handleMenuSelected = (i) => {
         switch (i) {
             case 1:
-                alert('We are still working on it');
+                ///navigate('/tasks');
+                alert('Please wait a while. Server updates soon.!');
                 break;
             case 2:
                 navigate('/about');
@@ -169,7 +192,7 @@ const Home = () => {
         >
             {/* AppBar */}
             <AppBar position="static" sx={{ backgroundColor: "#1b5e20",
-                marginTop:'15px',
+                marginTop:'10px',
              }}>
                 <Toolbar sx={{ display: "flex", justifyContent: "space-between",
                      marginLeft:'15px', marginRight:'15px',
@@ -178,9 +201,15 @@ const Home = () => {
                         Ace Master
                     </Typography>
 
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                        <AccountBalanceWallet /> <Typography component="span" sx={{ fontWeight: "bold", color: "#ff9800" }}>{coinBalance}</Typography>
+                    </Typography>
+
                     {/* Desktop Buttons */}
                     <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
-                        <Button color="inherit" onClick={() => handleMenuSelected(1)}>Chat</Button>
+                        {/* <Button color="inherit" onClick={() => handleMenuSelected(1)}>Chat</Button> */}
+                        <Button color="inherit" onClick={() => handleMenuSelected(1)}>Task</Button>
                         <Button color="inherit" onClick={() => handleMenuSelected(2)}>About</Button>
                         <Button color="inherit" onClick={() => handleMenuSelected(4)}>Contact Us</Button>
                     </Box>
@@ -191,10 +220,11 @@ const Home = () => {
                     </IconButton>
 
                     <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                        <MenuItem onClick={() => { handleMenuSelected(1); handleMenuClose(); }}>Chat</MenuItem>
+                        <MenuItem onClick={() => { handleMenuSelected(1); handleMenuClose(); }}>Task</MenuItem>
                         <MenuItem onClick={() => { handleMenuSelected(2); handleMenuClose(); }}>About</MenuItem>
                         <MenuItem onClick={() => { handleMenuSelected(4); handleMenuClose(); }}>Contact Us</MenuItem>
                     </Menu>
+                    </Box>
                 </Toolbar>
             </AppBar>
 
@@ -274,13 +304,13 @@ const Home = () => {
                 display: "flex",
                 justifyContent: "center",
                 gap: 3,
-                marginBottom: "30px"
+                marginBottom: "7%"
             }}>
                 <Button
                     variant="contained"
-                    color="primary"
+                    color="warning"
                     onClick={handleStartGame}
-                    disabled={!storedName}
+                    disabled={!storedName || coinBalance < 100 || networkError}
                 >
                     Start Online
                 </Button>
@@ -288,7 +318,7 @@ const Home = () => {
                     variant="contained"
                     color="primary"
                     onClick={handleCreateGame}
-                    disabled={!storedName}
+                    disabled={!storedName || networkError}
                 >
                     Create Room
                 </Button>
@@ -296,11 +326,22 @@ const Home = () => {
                     variant="contained"
                     color="primary"
                     onClick={handleJoinRoom}
-                    disabled={!storedName}
+                    disabled={!storedName || networkError}
                 >
                     Join Room
                 </Button>
             </Box>
+            {networkError && <Box sx={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 3,
+                marginBottom: "7%"
+            }}>
+                <Typography variant="body2" color="white" bgcolor={'red'}
+                    padding={1} borderRadius={2} fontWeight={'bold'}>
+                    Server Error
+                </Typography>
+            </Box>}
             <Dialog open={joinModalOpen} onClose={() => setJoinModalOpen(false)}>
                 <DialogTitle>Join a Game Room</DialogTitle>
                 <DialogContent>
