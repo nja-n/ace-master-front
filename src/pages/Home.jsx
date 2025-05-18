@@ -52,12 +52,18 @@ const Home = () => {
                     "Content-Type": "application/json",
                 },
             })
-                .then((response) => response.json())
+                .then((response) => {
+                    console.log("Coin balance response:", response);
+                    
+                    response.json();
+                })
                 .then((data) => {
+                    console.log("Coin balance data:" + data);
                     setCoinBalance(data);
                 })
                 .catch((error) => {
                     setNetworkError(true);
+                    alert('Server Error, please try again later');
                     console.error("Error loading coin balance:", error);
                 });
         }
