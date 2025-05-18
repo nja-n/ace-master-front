@@ -53,12 +53,9 @@ const Home = () => {
                 },
             })
                 .then((response) => {
-                    console.log("Coin balance response:", response);
-                    
-                    response.json();
+                    return response.json();
                 })
                 .then((data) => {
-                    console.log("Coin balance data:" + data);
                     setCoinBalance(data);
                 })
                 .catch((error) => {
