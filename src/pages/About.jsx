@@ -3,6 +3,7 @@ import { Box, Typography, Button, Paper, Divider, CircularProgress, Grid } from 
 import { useNavigate } from "react-router-dom";
 import { versionHistory } from "../components/methods";
 import { formatDate } from "../components/Utiliy";
+import AdBanner from "../components/adBanner";
 
 const About = () => {
     const navigate = useNavigate();
@@ -43,6 +44,7 @@ const About = () => {
                 backgroundColor: "#2e7d32"
             }}
         >
+            <AdBanner/>
             <Paper elevation={3} sx={{ padding: 3, maxWidth: 600, width: "100%" }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
                     About Ace Master
