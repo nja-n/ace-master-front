@@ -182,6 +182,12 @@ const Home = () => {
         }
     };
 
+    const handleStartAiPlay = () => {
+        if (window.confirm('Are you ready to play with AI?')) {
+            navigate("/game/ai");
+        }
+    }
+
     return (
         <Box
             sx={{
@@ -309,6 +315,14 @@ const Home = () => {
                 gap: 3,
                 marginBottom: "7%"
             }}>
+                <Button
+                    variant="contained"
+                    color="info"
+                    onClick={handleStartAiPlay}
+                    disabled={!storedName || networkError}
+                >
+                    Play with AI
+                </Button>
                 <Button
                     variant="contained"
                     color="warning"

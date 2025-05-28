@@ -7,6 +7,7 @@ import { protocol, socket, server } from "./serverURL";
 export const game = `${socket}://${server}/game`;
 export const saveUser = `${protocol}://${server}/cards/savePlayer`;
 export const getTimeRemains = `${protocol}://${server}/cards/SESSION_ID/remaining-time`;
+export const gameAi = `${socket}://${server}/game-ai`;
 
 export const versionHistory = `${protocol}://${server}/version/history`;
 export const createUniqueRoom = `${protocol}://${server}/cards/create-room`;

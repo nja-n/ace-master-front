@@ -7,7 +7,6 @@ import About from './pages/About';
 import OpenScene from './pages/OpenScene';
 import TermsPage from './pages/TermsPage';
 import Tasks from './pages/Tasks';
-import AdSenseScript from './components/adSerive';
 
 
 function App() {
@@ -22,7 +21,6 @@ function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/tasks" element={<Tasks />} />
       </Routes>
-      <AdSenseScript /> 
       {/* </Container> */}
     </Router>
   );

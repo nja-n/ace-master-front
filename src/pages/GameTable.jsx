@@ -6,7 +6,7 @@ import {
     Button, CardMedia, LinearProgress, CircularProgress,
     Snackbar, SnackbarContent, AppBar, Toolbar, IconButton
 } from "@mui/material";
-import { game, getTimeRemains } from '../components/methods';
+import { game, getTimeRemains, gameAi } from '../components/methods';
 import { useNavigate, useParams } from "react-router-dom";
 import { Refresh, ArrowBack } from "@mui/icons-material";
 
@@ -58,7 +58,11 @@ export default function GameTable() {
         setPlayerName(playerNameLocal);
         setPlayerId(playerIdLocal);
 
-        ws.current = new WebSocket(`${game}?playerId=${playerIdLocal}${roomId ? '&roomId=' + roomId : ''}`);
+        if(roomId && isNaN(roomId)){
+            ws.current = new WebSocket(`${gameAi}?playerId=${playerIdLocal}`);
+        } else {
+            ws.current = new WebSocket(`${game}?playerId=${playerIdLocal}${roomId ? '&roomId=' + roomId : ''}`);
+        }
 
         ws.current.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -285,7 +289,9 @@ export default function GameTable() {
                                     mt: 1,
                                 }}
                             >
-                                {getOrdinalSuffix(player.winningRank)} : {player.firstName} - {player.winningAmount} Points
+                                {getOrdinalSuffix(player.winningRank)} : {player.firstName}
+                                    {player.winningAmount?' - ' + player.winningAmount + ' Points' : ''}
+                                    
                             </Typography>
                         ))}
 
@@ -415,13 +421,16 @@ export default function GameTable() {
                 }}>
                     <Box display="flex" gap={1} sx={{ flexDirection: "column" }}>
                         {/* <Typography color="white" variant="h6">Closed Cards</Typography> */}
-                        <Card sx={{ width: 50, height: 80, backgroundColor: "white" }}>
+                        {closedCards &&
+                        (
+                            <Card sx={{ width: 50, height: 80, backgroundColor: "white" }}>
                             {/* <CardContent sx={{ fontSize: 24, textAlign: "center" }}>{timeLeft}</CardContent> */}
                             <CardContent sx={{ fontSize: 24, textAlign: "center" }}>
                                 {closedCards ? closedCards.length : 'X'}
                                 <Box sx={{ fontSize: 10 }}>Nos</Box>
                             </CardContent>
                         </Card>
+                        )}
                     </Box>
                     <Box>
                         {/* <Typography color="white" variant="h6">Played Cards</Typography> */}

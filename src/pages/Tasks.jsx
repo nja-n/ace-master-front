@@ -8,6 +8,7 @@ import { MoreVert } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { fetchUser } from '../components/methods';
 import DailyTaskBox from "./fragments/DailyTaskBox";
+import AdBanner from "../components/adsterBanner";
 
 const Tasks = () => {
     const [user, setUser] = useState(null);
@@ -107,6 +108,7 @@ const Tasks = () => {
                     </Box>
                 </Toolbar>
             </AppBar>
+            <AdBanner/>
             <DailyTaskBox/>
 
             {/* User Info */}
