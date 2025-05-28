@@ -183,6 +183,8 @@ const Home = () => {
     };
 
     const handleStartAiPlay = () => {
+        alert('This feature is under development. Please wait for the next update.');
+        return;
         if (window.confirm('Are you ready to play with AI?')) {
             navigate("/game/ai");
         }
