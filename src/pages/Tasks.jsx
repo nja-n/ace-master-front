@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchUser } from '../components/methods';
 import DailyTaskBox from "./fragments/DailyTaskBox";
 import AdBanner from "../components/adsterBanner";
+import bgGreenTable from '../images/bg-green-table.png';
 
 const Tasks = () => {
     const [user, setUser] = useState(null);
@@ -69,7 +70,12 @@ const Tasks = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "space-between",
+                backgroundImage: `url(${bgGreenTable})`,
+                backgroundSize: "cover",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
             }}
+            
         >
             {/* AppBar */}
             <AppBar position="static" sx={{ backgroundColor: "#1b5e20",

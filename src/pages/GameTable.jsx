@@ -1,25 +1,38 @@
 import logo from '../images/back_thumb.jpg';
 
-import React, { useState, useEffect, useRef } from "react";
+import { ArrowBack, QuestionMark, Refresh } from "@mui/icons-material";
 import {
-    Box, Grid, Typography, Avatar, Card, CardContent,
-    Button, CardMedia, LinearProgress, CircularProgress,
-    Snackbar, SnackbarContent, AppBar, Toolbar, IconButton
+    AppBar,
+    Box,
+    Button,
+    Card, CardContent,
+    CardMedia,
+    Grid,
+    IconButton,
+    LinearProgress,
+    Snackbar, SnackbarContent,
+    Toolbar,
+    Typography
 } from "@mui/material";
-import { game, getTimeRemains, gameAi } from '../components/methods';
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Refresh, ArrowBack } from "@mui/icons-material";
+import { game, gameAi, getTimeRemains } from '../components/methods';
 
 // import { motion, AnimatePresence } from "framer-motion";
 
-import shuffleSound from '../assets/sounds/riffle-card-shuffle.mp3';
-import selectSound from '../assets/sounds/card-sounds-select.mp3';
 import placeSound from '../assets/sounds/card-sound-push.mp3';
+import selectSound from '../assets/sounds/card-sounds-select.mp3';
 import flipCard1 from '../assets/sounds/flip-card.mp3';
 import flipCard2 from '../assets/sounds/page-flip.mp3';
+import shuffleSound from '../assets/sounds/riffle-card-shuffle.mp3';
 import audioWinFile from '../assets/sounds/win.mp3';
 //import tadaaFile from '../assets/sounds/tadaa.mp3';
 import fireConfetti, { ConfettiSideCannons } from '../components/custom-fire-confetti';
+import GameTutorial from '../components/tutorial/GameTutorial';
+import AceMasterLogo from '../components/ui/GameLogoHeader';
+import GloriousButton from '../components/ui/GloriousButton';
+import PlayerAvatarWithTimer from '../components/ui/PlaterWithAvatar';
+import bgGreenTable from '../images/bg-green-table.png';
 
 export default function GameTable() {
     const ws = useRef(null);
@@ -32,6 +45,9 @@ export default function GameTable() {
     const [timeLeft, setTimeLeft] = useState(15);
 
     const [snackbar, setSnackbar] = useState({ open: false, message: null });
+
+
+    const [joyrideRef, setJoyrideRef] = useState(0);
 
     const { roomId } = useParams();
 
@@ -51,6 +67,9 @@ export default function GameTable() {
 
     const celebratedWinners = useRef(new Set());
 
+    const pressTimer = useRef(null);
+    const lastTapRef = useRef(0);
+
     useEffect(() => {
         let playerNameLocal = localStorage.getItem("userName");
         let playerIdLocal = localStorage.getItem("userId");
@@ -58,7 +77,7 @@ export default function GameTable() {
         setPlayerName(playerNameLocal);
         setPlayerId(playerIdLocal);
 
-        if(roomId && isNaN(roomId)){
+        if (roomId && isNaN(roomId)) {
             ws.current = new WebSocket(`${gameAi}?playerId=${playerIdLocal}`);
         } else {
             ws.current = new WebSocket(`${game}?playerId=${playerIdLocal}${roomId ? '&roomId=' + roomId : ''}`);
@@ -175,6 +194,32 @@ export default function GameTable() {
     const clientPlayer = gameData.clientPlayer;
     players = players.filter(player => !player.client);
 
+    const handleTouchStart = (index, canPlay) => {
+        handleCardClick(index, canPlay);
+        pressTimer.current = setTimeout(() => {
+            // Long press detected
+            if (canPlay) handlePlayCard(index);
+        }, 600); // long press threshold (ms)
+    };
+
+    const handleTouchEnd = (index, canPlay) => {
+        clearTimeout(pressTimer.current);
+
+        const now = Date.now();
+        const DOUBLE_TAP_DELAY = 300;
+
+        if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+            // Double tap detected
+            if (canPlay) {
+                handlePlayCard(index);
+            }
+        } else {
+            // Single tap fallback
+            handleCardClick(index, canPlay);
+        }
+
+        lastTapRef.current = now;
+    };
 
     const handleCardClick = (index, canPlay) => {
         if (gameData.turnIndex === clientPlayer.gameIndex) {
@@ -214,6 +259,7 @@ export default function GameTable() {
     const handleStartGame = () => {
         ws.current.send(JSON.stringify({ way: "start" }));
         setSelectedCard(null);
+        setJoyrideRef(3);
     };
 
     const handleResetGame = () => {
@@ -236,7 +282,19 @@ export default function GameTable() {
 
     if (gameData.looserPlayer) {
         return (
-            <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+            <Box sx={{
+                width: "100%",
+                height: "100vh",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "space-between",
+                backgroundColor: "#2e7d32",
+                backgroundImage: `url(${bgGreenTable})`,
+                backgroundSize: "cover",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+            }}>
                 {/* AppBar at the top */}
                 <AppBar position="static" sx={{ backgroundColor: "#1b5e20" }}>
                     <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
@@ -249,9 +307,7 @@ export default function GameTable() {
                             <ArrowBack />
                         </IconButton>
 
-                        <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center" }}>
-                            Ace Master
-                        </Typography>
+                        <AceMasterLogo />
 
                         {/* Refresh Button */}
                         <IconButton color="inherit" onClick={() => window.location.reload()}>
@@ -263,7 +319,7 @@ export default function GameTable() {
                 {/* Centered Game Over Content */}
                 <Box
                     sx={{
-                        backgroundColor: "#2e7d32",
+                        // backgroundColor: "#2e7d32",
                         minHeight: "100vh",
                         display: "flex",
                         flexDirection: "column",
@@ -274,7 +330,7 @@ export default function GameTable() {
                     }}
                 >
                     <Typography variant="h3" color="white" fontWeight="bold" gutterBottom>
-                        Game Over
+                        GAME OVER
                     </Typography>
 
                     {gameData.players && [...gameData.players]
@@ -289,14 +345,18 @@ export default function GameTable() {
                                     mt: 1,
                                 }}
                             >
-                                {getOrdinalSuffix(player.winningRank)} : {player.firstName}
-                                    {player.winningAmount?' - ' + player.winningAmount + ' Points' : ''}
-                                    
+                                {getOrdinalSuffix(player.winningRank)} : {player.firstName ? player.firstName : "You"}
+                                {player.winningAmount ? ' - ' + player.winningAmount + ' Points' : ''}
+
                             </Typography>
                         ))}
 
                     <Box mt={5} display="flex" gap={3}>
-                        <Button
+                        <GloriousButton
+                            onClick={() => handleResetGame()}
+                            text='Start Again'
+                        />
+                        {/* <Button
                             variant="contained"
                             color="primary"
                             size="large"
@@ -304,7 +364,7 @@ export default function GameTable() {
                             sx={{ fontWeight: "bold" }}
                         >
                             Start Again
-                        </Button>
+                        </Button> */}
 
                         <Button
                             variant="outlined"
@@ -333,10 +393,16 @@ export default function GameTable() {
                     alignItems: "center",
                     justifyContent: "space-between",
                     backgroundColor: "#2e7d32",
+                    backgroundImage: `url(${bgGreenTable})`,
+                    backgroundSize: "cover",
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "center",
                     //padding: 2,
                 }}
             >
-                <AppBar position="static" sx={{ backgroundColor: "#1b5e20", width: "100%" }}>
+                <GameTutorial joyrideRef={joyrideRef} sceneNum={2} />
+
+                <AppBar position="static" sx={{ backgroundColor: "#1976d200", width: "100%" }}>
                     <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
                         {/* Back Button */}
                         <IconButton
@@ -347,21 +413,36 @@ export default function GameTable() {
                             <ArrowBack />
                         </IconButton>
 
-                        <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center" }}>
+                        <AceMasterLogo />
+                        {/* <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center",fontFamily:'serif' }}>
                             Ace Master
-                        </Typography>
+                        </Typography> */}
 
                         {/* Refresh Button */}
-                        <IconButton color="inherit" onClick={() => window.location.reload()}>
-                            <Refresh />
-                        </IconButton>
+                        <Box>
+                            <IconButton color="inherit" onClick={() => setJoyrideRef(1)}>
+                                <QuestionMark />
+                            </IconButton>
+                            <IconButton color="inherit" onClick={() => window.location.reload()}>
+                                <Refresh />
+                            </IconButton>
+                        </Box>
                     </Toolbar>
                 </AppBar>
                 {/* Opponent Players */}
-                <Grid container justifyContent="center" spacing={10} sx={{ padding: 2 }}>
+                <Grid container justifyContent="center" spacing={10} sx={{ padding: 2 }}
+                    id="opponent-info">
                     {players.map((player) => (
                         <Grid item key={player.id} textAlign="center">
-                            <Box position="relative" display="inline-flex">
+                            <PlayerAvatarWithTimer
+                                gameData={gameData}
+                                clientPlayer={player}
+                                timeLeft={timeLeft}
+                                playerName={player.firstName}
+                                getOrdinalSuffix={getOrdinalSuffix}
+                                size={30}
+                            />
+                            {/* <Box position="relative" display="inline-flex">
                                 {gameData.turnIndex === player.gameIndex ? (
                                     <>
                                         <CircularProgress size={60} color="secondary"
@@ -386,7 +467,7 @@ export default function GameTable() {
                                         ? getOrdinalSuffix(player.winningRank)
                                         : playerName.charAt(0)}</Avatar>
                                 )}
-                            </Box>
+                            </Box> */}
                             <Typography color="white">{player.firstName}</Typography>
                             <Box display="flex" gap={1} sx={{ position: "relative", width: "60px", height: "90px" }}>
                                 {player.cards && player.cards.map((card, i) => (
@@ -416,49 +497,34 @@ export default function GameTable() {
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-around",
-                    backgroundColor: "#2e7d32",
+                    // backgroundColor: "#2e7d32",
                     //padding: 2,
                 }}>
-                    <Box display="flex" gap={1} sx={{ flexDirection: "column" }}>
+                    <Box display="flex" gap={1} sx={{ flexDirection: "column" }} id="closed-cards">
                         {/* <Typography color="white" variant="h6">Closed Cards</Typography> */}
                         {closedCards &&
-                        (
-                            <Card sx={{ width: 50, height: 80, backgroundColor: "white" }}>
-                            {/* <CardContent sx={{ fontSize: 24, textAlign: "center" }}>{timeLeft}</CardContent> */}
-                            <CardContent sx={{ fontSize: 24, textAlign: "center" }}>
-                                {closedCards ? closedCards.length : 'X'}
-                                <Box sx={{ fontSize: 10 }}>Nos</Box>
-                            </CardContent>
-                        </Card>
-                        )}
+                            (
+                                <Card sx={{ width: 50, height: 80, backgroundColor: "white" }}>
+                                    {/* <CardContent sx={{ fontSize: 24, textAlign: "center" }}>{timeLeft}</CardContent> */}
+                                    <CardContent sx={{ fontSize: 24, textAlign: "center" }}>
+                                        {closedCards ? closedCards.length : 'X'}
+                                        <Box sx={{ fontSize: 10 }}>Nos</Box>
+                                    </CardContent>
+                                </Card>
+                            )}
                     </Box>
                     <Box>
                         {/* <Typography color="white" variant="h6">Played Cards</Typography> */}
-                        <Box display="flex" gap={1} position='relative'>
-                            {/* <AnimatePresence>
-                                {movingCard && (
-                                    <motion.div
-                                    initial={{ x: startPos.x, y: startPos.y, opacity: 1 }}
-                                        animate={{ x: 100, y: 0, opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.8 }}
-                                        style={{ position: "absolute" }}
-                                    >
-                                        <Card sx={{ width: 50, height: 80, backgroundColor: "white" }}>
-                                            <CardContent sx={{ fontSize: 24, textAlign: "center", color: movingCard.color }}>
-                                                {movingCard.cardLabel}
-                                            </CardContent>
-                                        </Card>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence> */}
+                        <Box display="flex" gap={1} position='relative' id="played-cards">
                             {tableCards && tableCards.map((card, i) => (
                                 <Card key={i} sx={{ width: 50, height: 80, backgroundColor: "white" }}>
                                     <CardContent sx={{ fontSize: 24, textAlign: "center", color: card.color }}>{card.cardLabel}</CardContent>
                                 </Card>
                             ))}
                             {gameData.roomId && gameData.turnIndex < 0 &&
-                                <Typography color="white" variant="h6">Room Number : {gameData.roomId}</Typography>
+                                <Typography color="white" variant="h6"
+                                    fontWeight={"bold"} sx={{ position: 'absolute', top: 0, left: 0 }}>
+                                    Room Number : {gameData.roomId}</Typography>
                             }
                         </Box>
                     </Box>
@@ -468,35 +534,44 @@ export default function GameTable() {
                 <Box textAlign="center" sx={{ padding: 2 }} gap={1} display="flex" flexDirection="column">
                     <Typography color="white" variant="h6">
                         {selectedCard !== null && (//Your Cards
-                            <Box >
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={() => handlePlayCard()}
-                                >
-                                    Place
-                                </Button>
-                            </Box>
+                            <GloriousButton
+                                onClick={() => handlePlayCard()}
+                                text='PLACE'
+                            />
+                            // <Box >
+                            //     <Button
+                            //         variant="contained"
+                            //         color="primary"
+                            //         onClick={() => handlePlayCard()}
+                            //     >
+                            //         Place
+                            //     </Button>
+                            // </Box>
                         )}
                     </Typography>
-                    <Typography color="white" variant="h6">
+                    <Typography color="white" variant="h6" id="sort-button">
                         {!clientPlayer.sorted && gameData.turnIndex >= 0 && (
-                            <Box >
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={() => handleSortCard()}
-                                >
-                                    Sort
-                                </Button>
-                            </Box>
+                            <GloriousButton
+                                onClick={() => handleSortCard()}
+                                text='SORT'
+                            />
+                            // <Box >
+                            //     <Button
+                            //         variant="contained"
+                            //         color="primary"
+                            //         onClick={() => handleSortCard()}
+                            //     >
+                            //         Sort
+                            //     </Button>
+                            // </Box>
                         )}
                     </Typography>
                     <Typography color="white" variant="h6">
                         {gameData.turnIndex < 0 && (
-                            <Box display="flex" flexDirection="column" alignItems="center" width="100%">
+                            <Box display="flex" flexDirection="column" alignItems="center"
+                                width="100%" style={{ fontSize: 20, }}>
                                 {gameData.countDown === 0 || gameData.countDown === '0' ? (
-                                    <Typography variant="body1" sx={{ mb: 1 }}>
+                                    <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
                                         Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
                                     </Typography>
                                 ) : (
@@ -506,25 +581,28 @@ export default function GameTable() {
                                 )}
 
                                 <Box width="60%">
-                                    <LinearProgress color="info" />
+                                    <LinearProgress color="inherit" />
                                 </Box>
                             </Box>
                         )}
                     </Typography>
-                    <Typography color="white" variant="h6">
+                    <Typography color="white" variant="h6" id="start-button">
                         {gameData.turnIndex < 0 && gameData.players.length > 2 && (
-                            <Box >
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={() => handleStartGame()}
-                                >
-                                    Start
-                                </Button>
-                            </Box>
+                            <GloriousButton onClick={() => handleStartGame()}
+                                text='Start' />
+                            // <Box >
+                            //     <Button
+                            //         variant="contained"
+                            //         color="primary"
+                            //         onClick={() => handleStartGame()}
+                            //     >
+                            //         Start
+                            //     </Button>
+                            // </Box>
                         )}
                     </Typography>
-                    <Box display="flex" flexWrap="wrap" gap={1}>
+                    <Box display="flex" flexWrap="wrap" gap={1}
+                        id="card-selection">
                         {clientPlayer.cards && clientPlayer.cards.map((card, i) => (
                             <Card key={i} onClick={() => handleCardClick(i, (!hasMatchingCard || gameData.tableSuit == null || card.cardName === gameData.tableSuit))}
                                 sx={{
@@ -536,7 +614,10 @@ export default function GameTable() {
                                     transition: "all 0.3s ease-in-out",
                                     transform: selectedCard === i ? "translateY(-10px)" : "none", // Lift up effect
                                     zIndex: selectedCard === i ? 10 : 1 // Bring to front when selected
-                                }}>
+                                }}
+                                onTouchStart={() => handleTouchStart(i, (!hasMatchingCard || gameData.tableSuit == null || card.cardName === gameData.tableSuit))}
+                                onTouchEnd={() => handleTouchEnd(i, (!hasMatchingCard || gameData.tableSuit == null || card.cardName === gameData.tableSuit))}
+                            >
                                 {/* <CardMedia
                                             component="img"
                                             image={getCardImage(card.fileName)}
@@ -549,8 +630,16 @@ export default function GameTable() {
                         ))}
                     </Box>
                     <Box >
-                        <Grid item display="flex" flexDirection="column" alignItems="center">
-                            <Box position="relative" display="inline-flex">
+                        <Grid item display="flex" flexDirection="column" alignItems="center"
+                            id="player-info" sx={{ border: '2px dashed red' }} >
+                            <PlayerAvatarWithTimer
+                                gameData={gameData}
+                                clientPlayer={clientPlayer}
+                                timeLeft={timeLeft}
+                                playerName={playerName}
+                                getOrdinalSuffix={getOrdinalSuffix}
+                            />
+                            {/* <Box position="relative" display="inline-flex">
                                 {gameData.turnIndex === clientPlayer.gameIndex ? (
                                     <>
                                         <CircularProgress size={60} color="secondary"
@@ -571,11 +660,12 @@ export default function GameTable() {
                                         </Avatar>
                                     </>
                                 ) : (
+                                    // <CustomAvatar/>
                                     <Avatar sx={{ width: 64, height: 64, bgcolor: "#ffcc00" }}>{clientPlayer.winningRank
                                         ? getOrdinalSuffix(clientPlayer.winningRank)
                                         : playerName.charAt(0)}</Avatar>
                                 )}
-                            </Box>
+                            </Box> */}
                             <Typography color="white">{playerName}</Typography>
                         </Grid>
                     </Box>
@@ -618,15 +708,15 @@ function getOrdinalSuffix(rank) {
     const j = rank % 10,
         k = rank % 100;
     if (j === 1 && k !== 11) {
-        return `🥇 ${rank}st`;
+        return `🥇 ${rank}st\n-`;
     }
     if (j === 2 && k !== 12) {
-        return `🥈 ${rank}nd`;
+        return `🥈 ${rank}nd\n-`;
     }
     if (j === 3 && k !== 13) {
-        return `🥉 ${rank}rd`;
+        return `🥉 ${rank}rd\n-`;
     }
-    return `${rank}th`;
+    return `${rank}th\n-`;
 }
 
 

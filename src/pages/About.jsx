@@ -92,7 +92,7 @@ const About = () => {
                             variant="contained"
                             color="primary"
                             fullWidth
-                            onClick={() => window.location.href = "mailto:aether.cash@hotmail.com"}
+                            onClick={() => window.location.href = "mailto:aeither.dev@hotmail.com"}
                         >
                             Contact Us
                         </Button>
