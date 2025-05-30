@@ -17,6 +17,7 @@ import FacebookLogin from "./Login";
 import GameTutorial from "../components/tutorial/GameTutorial";
 import bgGreenTable from '../images/bg-home.png';
 import { getRandomProTip } from "../components/Utiliy";
+import RoomSessionModal from "../components/ui/RoomSession";
 
 
 const Home = () => {
@@ -42,6 +43,8 @@ const Home = () => {
     const [authenticated, setAuthenticated] = useState(storedId ? true : false);
 
     const [tutorialSeen, setTutorialSeen] = useState(true);
+
+    const [roomModalOpen, setRoomModalOpen] = useState(false);
 
     const getDeviceInfo = async () => {
         // Get OS and Platform
@@ -395,6 +398,26 @@ const Home = () => {
                     color="orange"
                 />
                 <GloriousButton
+    id="room-session-button"
+    onClick={!storedName || networkError ? null : () => setRoomModalOpen(true)}
+    text={'Room Session'}
+    color="darkblue"
+/>
+
+<RoomSessionModal
+    open={roomModalOpen}
+    onClose={() => setRoomModalOpen(false)}
+    onJoin={(roomId) => {
+        handleJoinRoom(roomId);
+        setRoomModalOpen(false);
+    }}
+    onCreate={() => {
+        handleCreateGame();
+        setRoomModalOpen(false);
+    }}
+/>
+
+                {/* <GloriousButton
 
                     onClick={!storedName || networkError ? null : handleCreateGame}
                     text={'Create Room'}
@@ -404,8 +427,8 @@ const Home = () => {
                     id="play-room-button"
                     onClick={!storedName || networkError ? null : handleJoinRoom}
                     text={'Join Room'}
-                    color="darkblue"
-                />
+                    color="darkblue" */}
+                {/* /> */}
                 {/* <Button
                     variant="contained"
                     color="info"
