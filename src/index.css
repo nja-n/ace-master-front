@@ -11,3 +11,107 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-1 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+@keyframes float-2 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(-180deg); }
+}
+
+@keyframes float-3 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-25px) rotate(180deg); }
+}
+
+@keyframes float-4 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-18px) rotate(-180deg); }
+}
+
+@keyframes float-5 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-22px) rotate(180deg); }
+}
+
+@keyframes float-6 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(-180deg); }
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out;
+}
+
+.animate-float-1 {
+  animation: float-1 4s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-2 4s ease-in-out infinite;
+}
+
+.animate-float-3 {
+  animation: float-3 4s ease-in-out infinite;
+}
+
+.animate-float-4 {
+  animation: float-4 4s ease-in-out infinite;
+}
+
+.animate-float-5 {
+  animation: float-5 4s ease-in-out infinite;
+}
+
+.animate-float-6 {
+  animation: float-6 4s ease-in-out infinite;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #ec4899, #8b5cf6);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #db2777, #7c3aed);
+}
+
+/* Prevent text selection during swipe */
+.cursor-grab * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}

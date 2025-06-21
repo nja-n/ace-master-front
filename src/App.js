@@ -8,6 +8,7 @@ import OpenScene from './pages/OpenScene';
 import TermsPage from './pages/TermsPage';
 import Tasks from './pages/Tasks';
 import ContactUs from './pages/ContactUs';
+import BirthDay from './pages/BirthDay';
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/contact" element={<ContactUs />} />
+        <Route path="/bday" element={<BirthDay />} />
       </Routes>
       </Container>
     </Router>
