@@ -38,8 +38,7 @@ const WelcomePage = ({ onStart }) => {
           </p>
 
           <p className="text-lg text-white/80 mb-10 max-w-lg mx-auto">
-            Swipe through 16 beautiful pages filled with birthday wishes, love, and joy. 
-            Each page is crafted with care to make your special day even more memorable.
+            Every moment you touch holds a feeling I haven't yet spoken - but you’ll feel it in every word, every color, every wish. Happy birthday, from all of me.
           </p>
 
           <button
