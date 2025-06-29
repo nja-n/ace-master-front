@@ -1,15 +1,32 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GalleryPage from '../components/bday/GalleryPage';
 import Header from '../components/bday/Header';
 import WelcomePage from '../components/bday/WelcomePage';
 import PhoneLogin from '../components/PhoneLogin';
+import { useNavigate } from 'react-router-dom';
 
 const BirthDay = () => {
     const [showWelcome, setShowWelcome] = useState(true);
     const [currentPage, setCurrentPage] = useState(0);
     const [showPhoneLogin, setShowPhoneLogin] = useState(true);
     const totalPages = 16;
+
+    useEffect(() => {
+    // Push current path again to history to trap back button
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      // User clicked "back", push them forward again
+      window.history.pushState(null, '', window.location.href);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
     const handleStart = () => {
         setShowWelcome(false);
