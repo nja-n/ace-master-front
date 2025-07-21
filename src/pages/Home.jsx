@@ -1,25 +1,32 @@
-import React, { useState, useEffect } from "react";
-import {
-    Avatar, Button, Typography, Box, TextField,
-    Dialog, DialogTitle, DialogContent, DialogActions,
-    Stack
-} from "@mui/material";
-import { AppBar, Toolbar, IconButton, Menu, MenuItem, } from "@mui/material";
 import { MoreVert } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-import { saveUser, createUniqueRoom, validateUniqueRoom, loadCoinBalance, userByToken } from '../components/methods';
-import CoinIcon from '../images/aeither_coin.png';
-import CustomAvatar from "../components/ui/CustomAvathar";
-import GloriousButton from "../components/ui/GloriousButton";
-import AceMasterLogo from "../components/ui/GameLogoHeader";
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import FacebookLogin from "./Login";
-import GameTutorial from "../components/tutorial/GameTutorial";
-import bgGreenTable from '../images/bg-home.png';
-import { getRandomProTip } from "../components/Utiliy";
-import RoomSessionModal from "../components/ui/RoomSession";
-import Login from "../components/Login";
+import {
+    AppBar,
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton, Menu, MenuItem,
+    Stack,
+    TextField,
+    Toolbar,
+    Typography
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiClient } from "../components/ApIClient";
+import Login from "../components/Login";
+import { getRandomProTip } from "../components/Utiliy";
+import { createUniqueRoom, saveUser, userByToken, validateUniqueRoom } from '../components/methods';
+import GameTutorial from "../components/tutorial/GameTutorial";
+import CustomAvatar from "../components/ui/CustomAvathar";
+import AceMasterLogo from "../components/ui/GameLogoHeader";
+import GloriousButton from "../components/ui/GloriousButton";
+import RoomSessionModal from "../components/ui/RoomSession";
+import CoinIcon from '../images/aeither_coin.png';
+import bgGreenTable from '../images/bg-home.png';
 
 
 const Home = () => {
