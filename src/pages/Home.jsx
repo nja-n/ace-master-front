@@ -7,7 +7,7 @@ import {
 import { AppBar, Toolbar, IconButton, Menu, MenuItem, } from "@mui/material";
 import { MoreVert } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { saveUser, createUniqueRoom, validateUniqueRoom, loadCoinBalance } from '../components/methods';
+import { saveUser, createUniqueRoom, validateUniqueRoom, loadCoinBalance, userByToken } from '../components/methods';
 import CoinIcon from '../images/aeither_coin.png';
 import CustomAvatar from "../components/ui/CustomAvathar";
 import GloriousButton from "../components/ui/GloriousButton";
@@ -18,12 +18,15 @@ import GameTutorial from "../components/tutorial/GameTutorial";
 import bgGreenTable from '../images/bg-home.png';
 import { getRandomProTip } from "../components/Utiliy";
 import RoomSessionModal from "../components/ui/RoomSession";
+import Login from "../components/Login";
+import { apiClient } from "../components/ApIClient";
 
 
 const Home = () => {
     const [userName, setUserName] = useState("");
-    const [storedName, setStoredName] = useState(localStorage.getItem("userName") || "");
-    const [storedId, setStoredId] = useState(localStorage.getItem("userId") || "");
+    const [storedName, setStoredName] = useState("");
+    const [storedId, setStoredId] = useState("");
+
     const [isEditing, setIsEditing] = useState(false);
     const navigate = useNavigate();
 
@@ -55,30 +58,33 @@ const Home = () => {
         return { userAgent, platform, screenWidth, screenHeight };
     };
 
+    useEffect(() => {
+        (async () => {
+            try {
+                const response = await apiClient(userByToken, {
+                    method: 'POST',
+                });
+
+                if (response != null && response.id) {
+                    const data = response;
+                    setStoredName(data.firstName);
+                    setStoredId(data.id);
+                    setAuthenticated(true);
+                    setCoinBalance(data.coinBalance || -1);
+                } else {
+                    console.error("Failed to fetch user by token:", response.statusText);
+                }
+            } catch (error) {
+                console.error("Error fetching user by token:", error);
+            }
+        })();
+    }, [authenticated]);
+
 
     useEffect(() => {
-        const savedName = localStorage.getItem("userName");
+        const savedName = localStorage.getItem("gameTutorialSeen");
         if (savedName) {
-            setStoredName(savedName);
-            setStoredId(localStorage.getItem("userId"));
-
-            fetch(loadCoinBalance + '?id=' + storedId, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            })
-                .then((response) => {
-                    return response.json();
-                })
-                .then((data) => {
-                    setCoinBalance(data);
-                })
-                .catch((error) => {
-                    setNetworkError(true);
-                    alert('Server Error, please try again later');
-                    console.error("Error loading coin balance:", error);
-                });
+            setTutorialSeen(true);
         } else {
             setTutorialSeen(false);
         }
@@ -116,15 +122,15 @@ const Home = () => {
             if (!response.ok) throw new Error("Failed to save user");
 
             const data = await response.json(); // Assuming the server returns { id: "12345" }
-            localStorage.setItem("userName", userName);
-            localStorage.setItem("userId", data.id); // Store the returned ID
+            // localStorage.setItem("userName", userName);
+            // localStorage.setItem("userId", data.id);
             setStoredName(userName);
             setStoredId(data.id)
             alert('Player Name have been saved.');
 
-            if (isNew) {
-                navigate(`/game/ai`);
-            }
+            // if (isNew) {
+            //     navigate(`/game/ai`);
+            // }
         } catch (error) {
             alert('something went wrong, please try again');
             console.error("Error saving user:", error);
@@ -202,7 +208,7 @@ const Home = () => {
                 navigate('/contact');
                 break;
             case 3:
-                window.location.href = "mailto:aether.cash@hotmail.com?subject=Contact Request&body=Hello, I need assistance with...";
+                window.location.href = "mailto:aeither.dev@hotmail.com?subject=Contact Request&body=Hello, I need assistance with...";
                 break;
             default:
                 alert('Please select correct action');
@@ -216,13 +222,11 @@ const Home = () => {
     }
 
     const handleGuestLogin = () => {
+        alert('Due to server update, Guest login is not available now. Please login with your mobile.');
+        return;
+
         setAuthenticated(true);
         alert('Please add your Name in desired Field');
-    };
-
-    const handleFacebookLogin = (fbData) => {
-        console.log("Facebook login data:", fbData);
-        alert('Facebook Logined with success');
     };
 
     return (
@@ -269,8 +273,9 @@ const Home = () => {
                         <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
                             {/* <Button color="inherit" onClick={() => handleMenuSelected(1)}>Chat</Button> */}
                             <Button color="inherit" onClick={() => handleMenuSelected(1)}>Task</Button>
+                            <Button color="inherit" onClick={() => handleMenuSelected(5)}>Leaderboard</Button>
                             <Button color="inherit" onClick={() => handleMenuSelected(2)}>About</Button>
-                            <Button color="inherit" onClick={() => handleMenuSelected(4)}>Contact Us</Button>
+                            {/* <Button color="inherit" onClick={() => handleMenuSelected(4)}>Contact Us</Button> */}
                         </Box>
 
                         {/* Mobile Menu */}
@@ -280,8 +285,9 @@ const Home = () => {
 
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                             <MenuItem onClick={() => { handleMenuSelected(1); handleMenuClose(); }}>Task</MenuItem>
+                            <MenuItem onClick={() => { handleMenuSelected(5); handleMenuClose(); }}>Leaderboard</MenuItem>
                             <MenuItem onClick={() => { handleMenuSelected(2); handleMenuClose(); }}>About</MenuItem>
-                            <MenuItem onClick={() => { handleMenuSelected(4); handleMenuClose(); }}>Contact Us</MenuItem>
+                            {/* <MenuItem onClick={() => { handleMenuSelected(4); handleMenuClose(); }}>Contact Us</MenuItem> */}
                         </Menu>
                     </Box>
                 </Toolbar>
@@ -398,24 +404,24 @@ const Home = () => {
                     color="orange"
                 />
                 <GloriousButton
-    id="room-session-button"
-    onClick={!storedName || networkError ? null : () => setRoomModalOpen(true)}
-    text={'Room Session'}
-    color="darkblue"
-/>
+                    id="room-session-button"
+                    onClick={!storedName || networkError ? null : () => setRoomModalOpen(true)}
+                    text={'Room Session'}
+                    color="darkblue"
+                />
 
-<RoomSessionModal
-    open={roomModalOpen}
-    onClose={() => setRoomModalOpen(false)}
-    onJoin={(roomId) => {
-        handleJoinRoom(roomId);
-        setRoomModalOpen(false);
-    }}
-    onCreate={() => {
-        handleCreateGame();
-        setRoomModalOpen(false);
-    }}
-/>
+                <RoomSessionModal
+                    open={roomModalOpen}
+                    onClose={() => setRoomModalOpen(false)}
+                    onJoin={(roomId) => {
+                        handleJoinRoom(roomId);
+                        setRoomModalOpen(false);
+                    }}
+                    onCreate={() => {
+                        handleCreateGame();
+                        setRoomModalOpen(false);
+                    }}
+                />
 
                 {/* <GloriousButton
 
@@ -539,8 +545,11 @@ const Home = () => {
                     </Typography>
 
                     <Stack spacing={2}>
-                        <FacebookLogin onLogin={handleFacebookLogin} />
 
+                        <Login onAuthenticated={() => setAuthenticated(true)} />
+                        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
+                            OR
+                        </Box>
                         <Button
                             variant="outlined"
                             onClick={handleGuestLogin}

@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { game, gameAi, getTimeRemains } from '../components/methods';
+import { game, gameAi, getTimeRemains, userByToken } from '../components/methods';
 
 // import { motion, AnimatePresence } from "framer-motion";
 
@@ -33,6 +33,7 @@ import AceMasterLogo from '../components/ui/GameLogoHeader';
 import GloriousButton from '../components/ui/GloriousButton';
 import PlayerAvatarWithTimer from '../components/ui/PlaterWithAvatar';
 import bgGreenTable from '../images/bg-green-table.png';
+import { apiClient } from '../components/ApIClient';
 
 export default function GameTable() {
     const ws = useRef(null);
@@ -71,16 +72,26 @@ export default function GameTable() {
     const lastTapRef = useRef(0);
 
     useEffect(() => {
-        let playerNameLocal = localStorage.getItem("userName");
-        let playerIdLocal = localStorage.getItem("userId");
+        (async () => {
+            /*let player = await apiClient(userByToken, {
+                method: "POST",
+            });*/
 
-        setPlayerName(playerNameLocal);
-        setPlayerId(playerIdLocal);
+            let player = {
+                firstName: "You",
+                id: 35,
+            }
+            setPlayerName(player.firstName);
+            setPlayerId(player.id);
+        })();
+    }, []);
 
+    useEffect(() => {
+        console.log("Connecting to WebSocket...", playerId);
         if (roomId && isNaN(roomId)) {
-            ws.current = new WebSocket(`${gameAi}?playerId=${playerIdLocal}`);
+            ws.current = new WebSocket(`${gameAi}?playerId=${playerId}`);
         } else {
-            ws.current = new WebSocket(`${game}?playerId=${playerIdLocal}${roomId ? '&roomId=' + roomId : ''}`);
+            ws.current = new WebSocket(`${game}?playerId=${playerId}${roomId ? '&roomId=' + roomId : ''}`);
         }
 
         ws.current.onmessage = (event) => {
@@ -102,8 +113,7 @@ export default function GameTable() {
         return () => {
             ws.current.close();
         };
-
-    }, []);
+    }, [playerId]);
 
     /*useEffect(() => {
         if (timeLeft > 0) {
