@@ -57,7 +57,7 @@ const About = () => {
                     Developer Info
                 </Typography>
                 <Typography variant="body1">🚀 Developed by: <strong>AEITHER DEV</strong></Typography>
-                <Typography variant="body2">📧 Email: <a href="mailto:aether.cash@hotmail.com">mail now</a></Typography>
+                <Typography variant="body2">📧 Email: <a href="mailto:aeither.dev@hotmail.com">mail now</a></Typography>
 
                 <Divider sx={{ my: 2 }} />
 
@@ -92,7 +92,7 @@ const About = () => {
                             variant="contained"
                             color="primary"
                             fullWidth
-                            onClick={() => window.location.href = "mailto:aeither.dev@hotmail.com"}
+                            onClick={() => navigate("/contact")}
                         >
                             Contact Us
                         </Button>

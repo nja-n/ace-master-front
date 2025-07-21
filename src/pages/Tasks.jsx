@@ -61,6 +61,26 @@ const Tasks = () => {
         }
     };
 
+    const testToken = async () => {
+        let storedId = 21;
+        await fetch(fetchUser + '?id=' + storedId, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: 'include', // Include credentials for CORS requests
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                setUser(data);
+            })
+            .catch((error) => {
+                console.error("Error loading user:", error);
+            });
+        alert('Token: ' + user?.token);
+        
+    }
+
     return (
         <Box
             sx={{
@@ -89,7 +109,7 @@ const Tasks = () => {
                     </Typography>
 
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                    <Typography variant="h6" sx={{ fontWeight: "bold" }} onClick={() => testToken()} style={{ cursor: 'pointer' }}>
                         Coin <Typography component="span" sx={{ fontWeight: "bold", color: "#ff9800" }}>{user?.coinBalance}</Typography>
                     </Typography>
 
