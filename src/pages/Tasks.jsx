@@ -6,23 +6,35 @@ import {
 import { AppBar, Toolbar, IconButton, Menu, MenuItem, } from "@mui/material";
 import { MoreVert } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { fetchUser } from '../components/methods';
+import { fetchDailyTasks, fetchUser } from '../components/methods';
 import DailyTaskBox from "./fragments/DailyTaskBox";
 import AdBanner from "../components/adsterBanner";
-import bgGreenTable from '../images/bg-green-table.png';
+import CommonHeader from "../components/ui/CommonHeader";
+import { useLoading } from "../components/LoadingContext";
+import { apiClient } from "../components/ApIClient";
 
 const Tasks = () => {
     const [user, setUser] = useState(null);
-    const [storedId, setStoredId] = useState(localStorage.getItem("userId") || "");
-    const navigate = useNavigate();
-
-    const [anchorEl, setAnchorEl] = useState(null);
-    const isMobile = window.innerWidth < 600;
-
-    const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-    const handleMenuClose = () => setAnchorEl(null);
+    const [storedId, setStoredId] = useState("");
+    const [dailyTask, setDailyTask] = useState([]);
+    const { setLoading } = useLoading();
 
     useEffect(() => {
+        setLoading(true);
+
+        const loadDailyTasks = async () => {
+            try {
+                const response = await apiClient(fetchDailyTasks);
+                setDailyTask(response);
+            } catch (error) {
+                console.error("Error loading daily tasks:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadDailyTasks();
+
+
             setStoredId(localStorage.getItem("userId"));
 
             fetch(fetchUser + '?id=' + storedId, {
@@ -40,102 +52,14 @@ const Tasks = () => {
                 });
     }, []);
 
-    
-
-    const handleMenuSelected = (i) => {
-        switch (i) {
-            case 1:
-                navigate('/tasks');
-                break;
-            case 2:
-                navigate('/about');
-                break;
-            case 3:
-                window.location.href = "mailto:aether.cash@hotmail.com?subject=Support Request&body=Hello, I need assistance with...";
-                break;
-            case 4:
-                window.location.href = "mailto:aether.cash@hotmail.com?subject=Contact Request&body=Hello, I need assistance with...";
-                break;
-            default:
-                alert('Please select correct action');
-        }
-    };
-
-    const testToken = async () => {
-        let storedId = 21;
-        await fetch(fetchUser + '?id=' + storedId, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            credentials: 'include', // Include credentials for CORS requests
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                setUser(data);
-            })
-            .catch((error) => {
-                console.error("Error loading user:", error);
-            });
-        alert('Token: ' + user?.token);
-        
-    }
-
     return (
         <Box
-            sx={{
-                backgroundColor: "#2e7d32",
-                height: "100vh",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "space-between",
-                backgroundImage: `url(${bgGreenTable})`,
-                backgroundSize: "cover",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "center",
-            }}
-            
+            sx={{ mx: "auto", mt: 5, px: 3 }}
         >
-            {/* AppBar */}
-            <AppBar position="static" sx={{ backgroundColor: "#1b5e20",
-                marginTop:'10px',
-             }}>
-                <Toolbar sx={{ display: "flex", justifyContent: "space-between",
-                     marginLeft:'15px', marginRight:'15px',
-                 }}>
-                    <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                        Ace Master
-                    </Typography>
-
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Typography variant="h6" sx={{ fontWeight: "bold" }} onClick={() => testToken()} style={{ cursor: 'pointer' }}>
-                        Coin <Typography component="span" sx={{ fontWeight: "bold", color: "#ff9800" }}>{user?.coinBalance}</Typography>
-                    </Typography>
-
-                    {/* Desktop Buttons */}
-                    <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
-                        {/* <Button color="inherit" onClick={() => handleMenuSelected(1)}>Chat</Button> */}
-                        <Button color="inherit" onClick={() => handleMenuSelected(1)}>Task</Button>
-                        <Button color="inherit" onClick={() => handleMenuSelected(2)}>About</Button>
-                        <Button color="inherit" onClick={() => handleMenuSelected(4)}>Contact Us</Button>
-                    </Box>
-
-                    {/* Mobile Menu */}
-                    <IconButton edge="end" color="inherit" onClick={handleMenuOpen} sx={{ display: { xs: "block", sm: "none" } }}>
-                        <MoreVert />
-                    </IconButton>
-
-                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                        <MenuItem onClick={() => { handleMenuSelected(1); handleMenuClose(); }}>Task</MenuItem>
-                        <MenuItem onClick={() => { handleMenuSelected(2); handleMenuClose(); }}>About</MenuItem>
-                        <MenuItem onClick={() => { handleMenuSelected(4); handleMenuClose(); }}>Contact Us</MenuItem>
-                    </Menu>
-                    </Box>
-                </Toolbar>
-            </AppBar>
+            <CommonHeader coinBalance={20000}/>
+            
             <AdBanner/>
-            <DailyTaskBox/>
+            <DailyTaskBox tasks={dailyTask}/>
 
             {/* User Info */}
             <Box sx={{ textAlign: "center", marginTop: "20px" }}>

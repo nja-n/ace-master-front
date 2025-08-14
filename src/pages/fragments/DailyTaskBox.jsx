@@ -1,54 +1,64 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, Typography, Button, Grid } from "@mui/material";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import { Box, Button, Card, CardContent, Grid, Typography } from "@mui/material";
+import { useState } from "react";
 import fireConfetti from "../../components/custom-fire-confetti";
+import CoinIcon from '../../images/aeither_coin.png';
+import { Ribbon } from "lucide-react";
+import GloriousButton from "../../components/ui/GloriousButton";
+import { apiClient } from "../../components/ApIClient";
+import { claimDailyTask } from "../../components/methods";
 
-const getCoinsForDay = (day) => {
-  const coinMap = [0, 100, 130, 180, 210, 240, 270];
-  return day <= 7 ? coinMap[day] : 300;
-};
-
-const DailyTaskRow = ({ currentDay }) => {
-  const days = [
-    { label: "Yesterday", day: currentDay - 1 },
-    { label: "Today", day: currentDay },
-    { label: "Tomorrow", day: currentDay + 1 },
-  ];
-
+const DailyTaskRow = ({ tasks }) => {
   const [claimed, setClaimed] = useState(false);
 
+  const getLabel = (index) => {
+    if (tasks.length === 3) {
+      return ["Yesterday", "Today", "Tomorrow"][index].toUpperCase();
+    } else {
+      return ["Today", "Tomorrow"][index].toUpperCase(); // Skip Yesterday if only 2
+    }
+  };
 
-
-  const handleClaim = () => {
-    // Call API to save claim
+  const handleClaim = async (reward) => {
+    const response = await apiClient(claimDailyTask, {
+      method: 'POST',
+    });
     setClaimed(true);
     fireConfetti();
-
-    
-    alert(`Claimed ${getCoinsForDay(currentDay)} coins`);
+    alert(`Claimed ${reward} coins`);
   };
 
   return (
     <Grid container spacing={2} justifyContent="center">
-      {days.map((d, idx) => (
+      {tasks.map((task, idx) => (
         <Grid item xs={12} sm={4} key={idx}>
           <Card variant="outlined">
             <CardContent style={{ textAlign: "center" }}>
-              <MonetizationOnIcon fontSize="large" color="primary" />
-              <Typography variant="h6">{d.label}</Typography>
-              <Typography variant="body2">Day {d.day}</Typography>
-              <Typography variant="body1" fontWeight="bold">
-                {getCoinsForDay(d.day)} Coins
+              <Box sx={{ display: 'flex', justifyContent: 'center', }}>
+                <img
+                  src={CoinIcon}
+                  alt="Coin"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#fff',
+                  }}
+                />
+              </Box>
+              <Typography variant="h6">{getLabel(idx)}</Typography>
+              <Typography variant="body2">🔥 Hot Streak: {task.streak}
               </Typography>
-              {d.label === "Today" ? (
-                <Button
-                  onClick={handleClaim}
-                  disabled={claimed}
-                  variant="contained"
-                  sx={{ marginTop: 1 }}
-                >
-                  {claimed ? "Claimed" : "Claim"}
-                </Button>
+              <Typography variant="body1" fontWeight="bold">
+                {task.reward} Coins
+              </Typography>
+              {getLabel(idx) === "TODAY" && task.status === "Y" ? (
+                <Box sx={{ mt: 2 }}>
+                  <GloriousButton
+                  onClick={() => handleClaim(task.reward)}
+                  color="green"
+                  text={claimed ? "Claimed" : "Claim"}
+                />
+                </Box>
               ) : null}
             </CardContent>
           </Card>

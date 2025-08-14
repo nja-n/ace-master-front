@@ -41,7 +41,7 @@ const OpenScene = () => {
                             justifyContent: 'center',
                             alignItems: 'center',
                             height: '100vh', // Ensure the container takes full height of the viewport
-                            background: 'linear-gradient(to bottom,rgb(5, 63, 5), #006400)', // Green gradient background
+                            //background: 'linear-gradient(to bottom,rgb(5, 63, 5), #006400)', // Green gradient background
                         }}
                     >
                         <CardMedia

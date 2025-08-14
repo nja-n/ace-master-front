@@ -6,46 +6,74 @@ import { AppBar, Box, Button, IconButton, Link, TextField, Toolbar, Typography }
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AceMasterLogo from "../components/ui/GameLogoHeader";
+import CommonHeader from "../components/ui/CommonHeader";
+import { apiClient } from "../components/ApIClient";
+import { feedback } from "../components/methods";
 
 const ContactUs = () => {
     const navigate = useNavigate();
     const [form, setForm] = useState({ name: "", email: "", message: "" });
+    const [errors, setErrors] = useState({ name: "", email: "", message: "" });
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // You can integrate backend or email API here
-        console.log("Submitted:", form);
-        alert("Thanks for your feedback!");
-        setForm({ name: "", email: "", message: "" });
+
+        let tempErrors = { name: "", email: "", message: "" };
+        let valid = true;
+
+        if (!form.name.trim()) {
+            tempErrors.name = "Name is required";
+            valid = false;
+        }
+
+        if (!form.email.trim()) {
+            tempErrors.email = "Email is required";
+            valid = false;
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(form.email)) {
+                tempErrors.email = "Invalid email format";
+                valid = false;
+            }
+        }
+
+        if (!form.message.trim()) {
+            tempErrors.message = "Message is required";
+            valid = false;
+        }
+
+        setErrors(tempErrors);
+
+        if (!valid) return;
+
+        const confirmed = window.confirm("Are you sure you want to submit this feedback?");
+        if (!confirmed) return;
+
+        try {
+            const response = await apiClient(feedback, {
+                method: "POST",
+                body: form,
+            });
+
+            setForm({ name: "", email: "", message: "" });
+            setErrors({ name: "", email: "", message: "" });
+        } catch (err) {
+            console.error("Error submitting form:", err);
+            alert("Failed to submit feedback. Please try again later.");
+        }
     };
 
+
+
     return (
-        <Box sx={{ maxWidth: 600, mx: "auto", mt: 5, px: 3 }}>
-            <AppBar position="static" sx={{ backgroundColor: "#000000", border: "2px solid #FFD700", boxShadow: "0 0 10px #FFD700", borderRadius: "12px", mb: 3 }}>
-                <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-                    {/* Back Button */}
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        onClick={() => navigate("/")}
-                    >
-                        <ArrowBack />
-                    </IconButton>
-
-                    <AceMasterLogo />
-
-                    {/* Empty space for alignment */}
-                    <Box sx={{ flexGrow: 1 }} />
-
-                    {/* Social Media Icons */}
-
-                </Toolbar>
-            </AppBar>
-            <Typography variant="h4" gutterBottom textAlign="center">
+        <Box sx={{ mx: "auto", mt: 5, px: 3 }}>
+            <CommonHeader />
+            <Typography variant="h4" gutterBottom textAlign="center"
+                color="#fff">
                 Contact Us
             </Typography>
 
@@ -85,26 +113,42 @@ const ContactUs = () => {
                 </Link>
             </Box>
 
-            <form onSubmit={handleSubmit}>
-                <TextField
-                    label="Your Name"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    fullWidth
-                    margin="normal"
-                    required
-                />
-                <TextField
-                    label="Email"
-                    name="email"
-                    type="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    fullWidth
-                    margin="normal"
-                    required
-                />
+            <Box>
+                <Box display="flex" gap={1}>
+                    <TextField
+                        label="Your Name"
+                        name="name"
+                        value={form.name}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        required
+                        variant="filled"
+                        sx={{
+                            backgroundColor: "#fff",
+                            borderRadius: 1,
+                        }}
+                        error={Boolean(errors.name)}
+                        helperText={errors.name}
+                    />
+                    <TextField
+                        label="Email"
+                        name="email"
+                        type="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        required
+                        variant="filled"
+                        sx={{
+                            backgroundColor: "#fff",
+                            borderRadius: 1,
+                        }}
+                        error={Boolean(errors.email)}
+                        helperText={errors.email}
+                    />
+                </Box>
                 <TextField
                     label="Your Message"
                     name="message"
@@ -115,12 +159,20 @@ const ContactUs = () => {
                     fullWidth
                     margin="normal"
                     required
+                    variant="filled"
+                    sx={{
+                        backgroundColor: "#fff",
+                        borderRadius: 1,
+                    }}
+                    error={Boolean(errors.message)}
+                    helperText={errors.message}
+
                 />
 
-                <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
+                <Button onClick={handleSubmit} variant="contained" fullWidth sx={{ mt: 2 }}>
                     Submit Feedback
                 </Button>
-            </form>
+            </Box>
         </Box>
     );
 };

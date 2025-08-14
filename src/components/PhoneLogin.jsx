@@ -7,7 +7,7 @@ import {
 } from "firebase/auth";
 
 const PhoneLogin = ({ onVerified }) => {
-    const [phone, setPhone] = useState("");
+    const [phone, setPhone] = useState("+919061365293");
     const [otp, setOtp] = useState("");
     const [confirmationResult, setConfirmationResult] = useState(null);
     const [message, setMessage] = useState("");

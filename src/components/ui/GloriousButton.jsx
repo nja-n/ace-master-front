@@ -14,6 +14,10 @@ const GloriousButton = ({ onClick, text, color, id }) => {
         orange: {
             background: 'linear-gradient(180deg, #000000, #d41717)', // base to darker orange
             hoverBackground: 'linear-gradient(180deg, #FFB733, #FFA500)', // slightly brighter on hover
+        },
+        green: {
+            background: 'linear-gradient(180deg, #1B5E20, #0D3B12)', // deep forest green to darker green
+            hoverBackground: 'linear-gradient(180deg, #2E7D32, #1B5E20)', // slightly lighter on top
         }
     };
 

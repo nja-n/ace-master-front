@@ -17,6 +17,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../components/ApIClient";
+import FirebaseLogin from "../components/FirebaseLogin";
 import Login from "../components/Login";
 import { getRandomProTip } from "../components/Utiliy";
 import { createUniqueRoom, saveUser, userByToken, validateUniqueRoom } from '../components/methods';
@@ -26,12 +27,17 @@ import AceMasterLogo from "../components/ui/GameLogoHeader";
 import GloriousButton from "../components/ui/GloriousButton";
 import RoomSessionModal from "../components/ui/RoomSession";
 import CoinIcon from '../images/aeither_coin.png';
-import bgGreenTable from '../images/bg-home.png';
+import { useLoading } from "../components/LoadingContext";
+import { useUser } from "../components/ui/UserContext";
 
 
 const Home = () => {
-    const [userName, setUserName] = useState("");
-    const [storedName, setStoredName] = useState("");
+    const { user, loading } = useUser();
+    const { setLoading } = useLoading();
+
+    const [changedName, setChangedName] = useState("");
+    //const [userName, setUserName] = useState("");
+    //const [storedName, setStoredName] = useState("");
     const [storedId, setStoredId] = useState("");
 
     const [isEditing, setIsEditing] = useState(false);
@@ -66,26 +72,20 @@ const Home = () => {
     };
 
     useEffect(() => {
-        (async () => {
-            try {
-                const response = await apiClient(userByToken, {
-                    method: 'POST',
-                });
+        if (loading) {
+            setLoading(true);
+            return;
+        }
 
-                if (response != null && response.id) {
-                    const data = response;
-                    setStoredName(data.firstName);
-                    setStoredId(data.id);
-                    setAuthenticated(true);
-                    setCoinBalance(data.coinBalance || -1);
-                } else {
-                    console.error("Failed to fetch user by token:", response.statusText);
-                }
-            } catch (error) {
-                console.error("Error fetching user by token:", error);
-            }
-        })();
-    }, [authenticated]);
+        if (user && user.id) {
+            setStoredId(user.id);
+            setAuthenticated(true);
+            setCoinBalance(user.coinBalance || -1);
+        } else {
+            setAuthenticated(false);
+        }
+        setLoading(false);
+    }, [user, loading]);
 
 
     useEffect(() => {
@@ -99,7 +99,7 @@ const Home = () => {
 
     const handleChangeName = (value) => {
         const capitalizedValue = value.replace(/\b\w/g, (char) => char.toUpperCase());
-        setUserName(capitalizedValue);
+        setChangedName(capitalizedValue);
     };
 
     const handleSaveName = async () => {
@@ -110,28 +110,30 @@ const Home = () => {
 
         const deviceInfo = await getDeviceInfo();
         try {
-            const response = await fetch(saveUser, {
+            const payload = {
+                id: storedId,
+                firstName: changedName,
+                os: deviceInfo.platform,
+                platform: deviceInfo.userAgent,
+                screenWidth: deviceInfo.screenWidth,
+                screenHeight: deviceInfo.screenHeight
+            };
+
+            console.log("Sending payload:", payload);
+            const response = await apiClient(saveUser, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    id: storedId,
-                    firstName: userName,
-                    os: deviceInfo.platform,
-                    platform: deviceInfo.userAgent,
-                    screenWidth: deviceInfo.screenWidth,
-                    screenHeight: deviceInfo.screenHeight
-                }),
-                //body: JSON.stringify({ name: userName }),
+                body: payload,
+                // body: JSON.stringify(payload),
             });
 
             if (!response.ok) throw new Error("Failed to save user");
 
-            const data = await response.json(); // Assuming the server returns { id: "12345" }
-            // localStorage.setItem("userName", userName);
-            // localStorage.setItem("userId", data.id);
-            setStoredName(userName);
+            const data = await response.json();
+
+            //setStoredName(userName);
             setStoredId(data.id)
             alert('Player Name have been saved.');
 
@@ -228,19 +230,11 @@ const Home = () => {
         }
     }
 
-    const handleGuestLogin = () => {
-        alert('Due to server update, Guest login is not available now. Please login with your mobile.');
-        return;
-
-        setAuthenticated(true);
-        alert('Please add your Name in desired Field');
-    };
-
     return (
         <Box
             sx={{
-                backgroundColor: "#2e7d32",
-                backgroundImage: `url(${bgGreenTable})`,
+                //backgroundColor: "#2e7d32",
+                //backgroundImage: `url(${bgGreenTable})`,
                 backgroundSize: "contain",       // Show full image without cutting
                 backgroundPosition: "top",    // Center the image
                 height: "100vh",
@@ -268,7 +262,7 @@ const Home = () => {
                     <AceMasterLogo />
 
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+                        <Typography variant="h6" sx={{ fontWeight: "bold" }} onClick={() => navigate('/profile')} style={{ cursor: 'pointer', color: 'white' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <img src={CoinIcon} alt="Coin" style={{ width: '24px', height: '24px', marginRight: '8px' }} />
 
@@ -310,7 +304,7 @@ const Home = () => {
                     marginTop: "10px",
                 }}>
                     <CustomAvatar
-                        size={200} letter={(storedName || userName)?.charAt(0).toUpperCase() || "?"}
+                        size={200} letter={(user?.firstName)?.charAt(0).toUpperCase() || "?"}
                     />
                 </Box>
                 {/* <Avatar
@@ -326,10 +320,10 @@ const Home = () => {
                     {(storedName || userName)?.charAt(0).toUpperCase() || "?"}
                 </Avatar> */}
 
-                {storedName && !isEditing ? (
+                {user?.firstName && !isEditing ? (
                     <>
                         <Typography variant="h4" color="white" sx={{ marginTop: "10px" }}>
-                            {storedName}
+                            {user?.firstName}
                         </Typography>
                         <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
                             <Button
@@ -337,7 +331,7 @@ const Home = () => {
                                 color="warning"
                                 onClick={() => {
                                     setIsEditing(true);
-                                    setUserName(storedName);
+                                    setChangedName(user?.firstName);
                                 }}
                             >
                                 Edit
@@ -348,7 +342,7 @@ const Home = () => {
                     <Box sx={{ marginTop: "20px", textAlign: "center" }}>
                         <TextField
                             id="name-input"
-                            value={userName}
+                            value={changedName}
                             onChange={(e) => handleChangeName(e.target.value)}
                             placeholder="Enter your name"
                             variant="outlined"
@@ -374,13 +368,13 @@ const Home = () => {
                             >
                                 Save
                             </Button> */}
-                            {storedName && (
+                            {user?.firstName && (
                                 <Button
                                     variant="outlined"
                                     color="inherit"
                                     onClick={() => {
                                         setIsEditing(false);
-                                        setUserName(""); // or revert to storedName
+                                        setChangedName(""); // or revert to storedName
                                     }}
                                 >
                                     Cancel
@@ -400,19 +394,19 @@ const Home = () => {
             }}>
                 <GloriousButton
                     id="play-ai-button"
-                    onClick={!storedName || networkError ? null : handleStartAiPlay}
+                    onClick={!user?.firstName || networkError ? null : handleStartAiPlay}
                     text={'Play with AI'}
                     color="darkblue"
                 />
                 <GloriousButton
                     id="play-online-button"
-                    onClick={!storedName || coinBalance < 100 || networkError ? null : handleStartGame}
+                    onClick={!user?.firstName || coinBalance < 100 || networkError ? null : handleStartGame}
                     text={'Start Online'}
                     color="orange"
                 />
                 <GloriousButton
                     id="room-session-button"
-                    onClick={!storedName || networkError ? null : () => setRoomModalOpen(true)}
+                    onClick={!user?.firstName || networkError ? null : () => setRoomModalOpen(true)}
                     text={'Room Session'}
                     color="darkblue"
                 />
@@ -554,24 +548,13 @@ const Home = () => {
                     <Stack spacing={2}>
 
                         <Login onAuthenticated={() => setAuthenticated(true)} />
+
                         <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
                             OR
                         </Box>
-                        <Button
-                            variant="outlined"
-                            onClick={handleGuestLogin}
-                            sx={{
-                                borderColor: 'white',
-                                color: 'white',
-                                fontWeight: 'bold',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                                }
-                            }}
-                            fullWidth
-                        >
-                            Continue as Guest
-                        </Button>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                            <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} />
+                        </Box>
                     </Stack>
                 </DialogContent>
             </Dialog>

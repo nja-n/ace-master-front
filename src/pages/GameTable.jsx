@@ -115,18 +115,7 @@ export default function GameTable() {
         };
     }, [playerId]);
 
-    /*useEffect(() => {
-        if (timeLeft > 0) {
-            const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [timeLeft]);*/
-
     useEffect(() => {
-        /*if (gameData) {
-            setCurrentTurn(gameData.turnIndex);
-            setTimeLeft(15);
-        }*/
         if (gameData?.sessionId) {
             let url = getTimeRemains.replace('SESSION_ID', gameData.sessionId);
             fetch(url)
@@ -134,6 +123,12 @@ export default function GameTable() {
                 .then((time) => setTimeLeft(time));
         }
         if (gameData && gameData?.turnIndex >= 0 && gameData.looserPlayer == null) {
+            if( gameData.turnIndex === gameData.clientPlayer.gameIndex) {
+                audioFlip2.current.play().catch((err) => {
+                    console.warn("Failed to play sound:", err);
+                });
+            }
+
             const interval = setInterval(() => {
                 let url = getTimeRemains.replace('SESSION_ID', gameData.sessionId);
                 if (gameData?.sessionId) {
@@ -304,6 +299,7 @@ export default function GameTable() {
                 backgroundSize: "cover",
                 backgroundRepeat: "no-repeat",
                 backgroundPosition: "center",
+                overflow: "hidden",
             }}>
                 {/* AppBar at the top */}
                 <AppBar position="static" sx={{ backgroundColor: "#1b5e20" }}>

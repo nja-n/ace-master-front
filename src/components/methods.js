@@ -1,9 +1,5 @@
 import { protocol, socket, server } from "./serverURL";
 
-// export const game = "wss://aetheracemaster-production.up.railway.app/game";
-// export const saveUser = "https://aetheracemaster-production.up.railway.app/cards/savePlayer";
-// export const getTimeRemains = "http://localhost:8080/cards/SESSION_ID/remaining-time";
-
 export const game = `${socket}://${server}/game`;
 export const saveUser = `${protocol}://${server}/cards/savePlayer`;
 export const getTimeRemains = `${protocol}://${server}/public/SESSION_ID/remaining-time`;
@@ -21,3 +17,11 @@ export const sendOtp = `${protocol}://${server}/auth/send-otp`;
 export const verifyOtp = `${protocol}://${server}/auth/verify-otp`;
 export const signUp = `${protocol}://${server}/auth/sign-up`;
 export const userByToken = `${protocol}://${server}/user-by-token`;
+export const firebaseAuth = `${protocol}://${server}/auth/firebase`;
+
+export const terms = `${protocol}://${server}/public/terms-pdf`;
+
+export const feedback = `${protocol}://${server}/feedback`;
+
+export const fetchDailyTasks = `${protocol}://${server}/tasks/daily`;
+export const claimDailyTask = `${protocol}://${server}/tasks/daily/claim`;

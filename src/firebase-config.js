@@ -1,6 +1,6 @@
 // src/firebase-config.js
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { FacebookAuthProvider, getAuth, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB_9t2s6gv43J9fKdUI1DLl4Z3v9yiJHnk",
@@ -16,4 +16,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
+
+export const setUpRecaptcha = (number) => {
+  const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    size: 'invisible', // or 'normal'
+    callback: () => {
+      console.log('reCAPTCHA solved, sending OTP...');
+    }
+  });
+
+  return signInWithPhoneNumber(auth, number, recaptchaVerifier);
+};
+
+
 export { auth };
+
