@@ -4,14 +4,18 @@ import { auth, googleProvider, facebookProvider } from "../firebase-config";
 import { signInAnonymously, signInWithPopup } from "firebase/auth";
 import { Button } from "@mui/material";
 import { firebaseAuth } from "./methods";
+import { useLoading } from "../components/LoadingContext";
 
 const FirebaseLogin = ({ onAuthenticated }) => {
+  const setLoading = useLoading();
 
   const handleGoogleLogin = async () => {
+    setLoading(true);
     const result = await signInWithPopup(auth, googleProvider);
     console.log("Google login result:", result);
     const token = await result.user.getIdToken(); // Firebase ID token
     await sendTokenToBackend(token);
+    setLoading(false);
   };
 
   const handleFacebookLogin = async () => {
@@ -34,6 +38,7 @@ const FirebaseLogin = ({ onAuthenticated }) => {
 
   async function handleGuestLogin() {
     try {
+      setLoading(true);
       const userCredential = await signInAnonymously(auth);
       const user = userCredential.user;
 
@@ -43,6 +48,8 @@ const FirebaseLogin = ({ onAuthenticated }) => {
     } catch (error) {
       console.error("Guest sign-in failed:", error);
       alert("Guest login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 

@@ -103,11 +103,6 @@ const Home = () => {
     };
 
     const handleSaveName = async () => {
-        let isNew = false;
-        if (storedId === "") {
-            isNew = true;
-        }
-
         const deviceInfo = await getDeviceInfo();
         try {
             const payload = {
@@ -129,9 +124,9 @@ const Home = () => {
                 // body: JSON.stringify(payload),
             });
 
-            if (!response.ok) throw new Error("Failed to save user");
+            if (!response) throw new Error("Failed to save user");
 
-            const data = await response.json();
+            const data = await response;
 
             //setStoredName(userName);
             setStoredId(data.id)
