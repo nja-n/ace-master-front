@@ -1,6 +1,7 @@
 import React from "react";
-import { Box, Container } from "@mui/material";
+import { Box, Container, Link, Typography } from "@mui/material";
 import bgGreenTable from "../../images/bg-home.png";
+import { protocol, server } from "../serverURL";
 
 const LayoutWithBackground = ({ children }) => {
   return (
@@ -20,6 +21,32 @@ const LayoutWithBackground = ({ children }) => {
       }}
     >
       {children}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 10,
+          right: 15,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ color: "white", opacity: 0.7 }}
+        >
+          © 2025 {" "}
+          <Link
+            href={`${protocol}://${server}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+            sx={{ color: "#FFD700", fontWeight: "bold" }} // gold highlight for link
+          >
+            Aeither
+          </Link>{" "} Dev Team | Trail - v0.0.1
+        </Typography>
+      </Box>
     </Box>
   );
 };

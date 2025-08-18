@@ -1,5 +1,5 @@
 import { Box, Button, Card, CardContent, Grid, Typography } from "@mui/material";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import fireConfetti from "../../components/custom-fire-confetti";
 import CoinIcon from '../../images/aeither_coin.png';
 import { Ribbon } from "lucide-react";
@@ -7,7 +7,7 @@ import GloriousButton from "../../components/ui/GloriousButton";
 import { apiClient } from "../../components/ApIClient";
 import { claimDailyTask } from "../../components/methods";
 
-const DailyTaskRow = ({ tasks }) => {
+const DailyTaskRow = ({ tasks, updateBalance }) => {
   const [claimed, setClaimed] = useState(false);
 
   const getLabel = (index) => {
@@ -22,10 +22,24 @@ const DailyTaskRow = ({ tasks }) => {
     const response = await apiClient(claimDailyTask, {
       method: 'POST',
     });
+    console.log("Claim response:", response);
+    if (response.status !== "success") {
+      alert("Failed to claim reward");
+      return;
+    }
+    alert(`Claimed ${reward} coins`);
+    updateBalance(reward);
     setClaimed(true);
     fireConfetti();
-    alert(`Claimed ${reward} coins`);
   };
+
+  useEffect(() => {
+    tasks.forEach((task) => {
+      if (task.status === "C") {
+        setClaimed(true);
+      }
+    });
+  }, [tasks]);
 
   return (
     <Grid container spacing={2} justifyContent="center">
@@ -51,10 +65,10 @@ const DailyTaskRow = ({ tasks }) => {
               <Typography variant="body1" fontWeight="bold">
                 {task.reward} Coins
               </Typography>
-              {getLabel(idx) === "TODAY" && task.status === "Y" ? (
+              {getLabel(idx) === "TODAY" && task.status !== "N" ? (
                 <Box sx={{ mt: 2 }}>
                   <GloriousButton
-                  onClick={() => handleClaim(task.reward)}
+                  onClick={!claimed ? () => handleClaim(task.reward) : null}
                   color="green"
                   text={claimed ? "Claimed" : "Claim"}
                 />

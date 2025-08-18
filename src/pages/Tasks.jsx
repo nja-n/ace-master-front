@@ -12,12 +12,12 @@ import AdBanner from "../components/adsterBanner";
 import CommonHeader from "../components/ui/CommonHeader";
 import { useLoading } from "../components/LoadingContext";
 import { apiClient } from "../components/ApIClient";
+import { useUser } from "../components/ui/UserContext";
 
 const Tasks = () => {
-    const [user, setUser] = useState(null);
-    const [storedId, setStoredId] = useState("");
     const [dailyTask, setDailyTask] = useState([]);
     const { setLoading } = useLoading();
+    const { user, setUser } = useUser();
 
     useEffect(() => {
         setLoading(true);
@@ -33,49 +33,36 @@ const Tasks = () => {
             }
         }
         loadDailyTasks();
-
-
-            setStoredId(localStorage.getItem("userId"));
-
-            fetch(fetchUser + '?id=' + storedId, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    setUser(data);
-                })
-                .catch((error) => {
-                    console.error("Error loading user:", error);
-                });
     }, []);
+
+    const updateBalance = async (coin) => {
+        if (!user) return;
+        setUser(prev => ({
+            ...prev,
+            coinBalance: prev.coinBalance + coin,
+        }));
+    }
 
     return (
         <Box
             sx={{ mx: "auto", mt: 5, px: 3 }}
         >
-            <CommonHeader coinBalance={20000}/>
-            
-            <AdBanner/>
-            <DailyTaskBox tasks={dailyTask}/>
-
-            {/* User Info */}
-            <Box sx={{ textAlign: "center", marginTop: "20px" }}>
-                <Avatar
-                    sx={{
-                        width: 150,
-                        height: 150,
-                        border: "3px solid white",
-                        fontSize: "50px",
-                        bgcolor: "#1b5e20",
-                        margin: "auto",
-                    }}
-                >
-                    {(user?.userName)?.charAt(0).toUpperCase() || "?"}
-                </Avatar>
-
+            <CommonHeader coinBalance={user?.coinBalance} />
+            <AdBanner />
+            <DailyTaskBox tasks={dailyTask} updateBalance={updateBalance} />
+            {/* Placeholder for future tasks */}
+            <Box
+                sx={{
+                    mt: 5,
+                    py: 3,
+                    textAlign: "center",
+                    border: "2px dashed #ccc",
+                    borderRadius: 2
+                }}
+            >
+                <Typography variant="h6" color="grey">
+                    🔒 More tasks will be updated later
+                </Typography>
             </Box>
         </Box>
     );

@@ -33,7 +33,7 @@ import { useUser } from "../components/ui/UserContext";
 
 const Home = () => {
     const { user, loading } = useUser();
-    const { setLoading } = useLoading();
+    const { setLoading, setLoadingMessage } = useLoading();
 
     const [changedName, setChangedName] = useState("");
     //const [userName, setUserName] = useState("");
@@ -74,6 +74,7 @@ const Home = () => {
     useEffect(() => {
         if (loading) {
             setLoading(true);
+            setLoadingMessage("Loading server...");
             return;
         }
 
@@ -103,6 +104,7 @@ const Home = () => {
     };
 
     const handleSaveName = async () => {
+        setLoading(true);
         const deviceInfo = await getDeviceInfo();
         try {
             const payload = {
@@ -121,24 +123,21 @@ const Home = () => {
                     "Content-Type": "application/json",
                 },
                 body: payload,
-                // body: JSON.stringify(payload),
             });
 
             if (!response) throw new Error("Failed to save user");
 
             const data = await response;
 
-            //setStoredName(userName);
             setStoredId(data.id)
             alert('Player Name have been saved.');
 
-            // if (isNew) {
-            //     navigate(`/game/ai`);
-            // }
         } catch (error) {
             alert('something went wrong, please try again');
             console.error("Error saving user:", error);
+            setLoading(false);
         }
+        setLoading(false);
     };
 
     const handleStartGame = () => {
@@ -150,10 +149,9 @@ const Home = () => {
     const handleCreateGame = async () => {
         if (window.confirm("Are you ready to create a Room?")) {
             try {
-                const response = await fetch(createUniqueRoom);
-                if (!response.ok) throw new Error("Failed to create room");
+                const response = await apiClient(createUniqueRoom);
 
-                const roomId = await response.json();
+                const roomId = response;
                 navigate(`/game/${roomId}`);
             } catch (error) {
                 console.error("Error creating room:", error);
@@ -163,7 +161,7 @@ const Home = () => {
     };
 
     const handleJoinRoom = () => {
-        setJoinModalOpen(true);
+        handlePlay();
     }
 
     const handlePlay = async () => {
@@ -202,8 +200,7 @@ const Home = () => {
     const handleMenuSelected = (i) => {
         switch (i) {
             case 1:
-                ///navigate('/tasks');
-                alert('Please wait a while. Server updates soon.!');
+                navigate('/tasks');
                 break;
             case 2:
                 navigate('/about');
@@ -213,6 +210,9 @@ const Home = () => {
                 break;
             case 3:
                 window.location.href = "mailto:aeither.dev@hotmail.com?subject=Contact Request&body=Hello, I need assistance with...";
+                break;
+            case 5:
+                navigate('/ranking');
                 break;
             default:
                 alert('Please select correct action');
@@ -251,9 +251,6 @@ const Home = () => {
                     display: "flex", justifyContent: "space-between",
                     marginLeft: '15px', marginRight: '15px',
                 }}>
-                    {/* <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                        Ace Master
-                    </Typography> */}
                     <AceMasterLogo />
 
                     <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -492,6 +489,7 @@ const Home = () => {
                     Server Error
                 </Typography>
             </Box>}
+            
             <Dialog open={joinModalOpen} onClose={() => setJoinModalOpen(false)}>
                 <DialogTitle>Join a Game Room</DialogTitle>
                 <DialogContent>

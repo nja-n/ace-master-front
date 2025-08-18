@@ -13,14 +13,15 @@ import { LoadingProvider, useLoading } from "./components/LoadingContext";
 import SpinnerOverlay from "./components/ui/SpinnerOverlay";
 import ProfilePage from "./pages/Profile";
 import { UserProvider } from "./components/ui/UserContext";
+import Leaderboard from "./pages/LeaderBoard";
 
 function AppContent() {
-  const { loading } = useLoading();
+  const { loading, loadingMessage } = useLoading();
 
   return (
     <>
       <UserProvider>
-        {loading && <SpinnerOverlay />}
+        {loading && <SpinnerOverlay text={loadingMessage} />}
         <LayoutWithBackground>
           <Routes>
             <Route path="/" element={<OpenScene />} />
@@ -32,6 +33,7 @@ function AppContent() {
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/bday" element={<BirthDay />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/ranking" element={<Leaderboard />} />
           </Routes>
         </LayoutWithBackground>
       </UserProvider>

@@ -1,34 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import logo from '../images/1000102291.png';
 import { CardMedia } from "@mui/material";
+import { useEffect, useState } from 'react';
+import { useUser } from '../components/ui/UserContext';
+import logo from '../images/1000102291.png';
 import Home from './Home';
 
 const OpenScene = () => {
     const [showSplash, setShowSplash] = useState(true);
-    const navigate = useNavigate();
+
+    const user = useUser();
 
     useEffect(() => {
-        const splashTimestamp = localStorage.getItem('splashTimestamp');
+        try {
+            if (user) {
+            setShowSplash(false); // If user is logged in, skip splash screen
+            const splashTimestamp = localStorage.getItem('splashTimestamp');
 
-        if (splashTimestamp) {
-            const currentTime = Date.now();
-            const timeDiff = currentTime - splashTimestamp;
+            if (splashTimestamp) {
+                const currentTime = Date.now();
+                const timeDiff = currentTime - splashTimestamp;
 
-            // If it's been more than 1 hour (3600000 ms), clear the localStorage
-            if (timeDiff > 3600000) {
-                localStorage.removeItem('splashTimestamp');
-            } else {
-                setShowSplash(false); // If not, skip splash screen
+                // If it's been more than 1 hour (3600000 ms), clear the localStorage
+                if (timeDiff > 3600000) {
+                    localStorage.removeItem('splashTimestamp');
+                } else {
+                    setShowSplash(false); // If not, skip splash screen
+                }
             }
-        }
-        const timer = setTimeout(() => {
-            setShowSplash(false);
-            localStorage.setItem('splashTimestamp', Date.now().toString());
-        }, 2000);
+            const timer = setTimeout(() => {
+                setShowSplash(false);
+                localStorage.setItem('splashTimestamp', Date.now().toString());
+            }, 2000);
 
-        return () => clearTimeout(timer);
-    }, [navigate]);
+            return () => clearTimeout(timer);
+        } 
+        } catch (error) {
+            console.error("Error in OpenScene useEffect:", error);
+            alert("An error occurred while loading the application. Please try again later.");
+        }
+    }, [user]);
 
     return (
         <div>

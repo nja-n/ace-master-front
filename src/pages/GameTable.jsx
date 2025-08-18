@@ -73,14 +73,14 @@ export default function GameTable() {
 
     useEffect(() => {
         (async () => {
-            /*let player = await apiClient(userByToken, {
+            let player = await apiClient(userByToken, {
                 method: "POST",
-            });*/
+            });
 
-            let player = {
+            /*let player = {
                 firstName: "You",
                 id: 35,
-            }
+            }*/
             setPlayerName(player.firstName);
             setPlayerId(player.id);
         })();
