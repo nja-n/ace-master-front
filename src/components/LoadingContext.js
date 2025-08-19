@@ -1,8 +1,10 @@
 import React, { createContext, useState, useContext } from 'react';
 
 const LoadingContext = createContext();
-
 export const useLoading = () => useContext(LoadingContext);
+
+let externalSetLoading = null;
+let externalSetLoadingMessage = null;
 
 export const LoadingProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
@@ -13,4 +15,9 @@ export const LoadingProvider = ({ children }) => {
       {children}
     </LoadingContext.Provider>
   );
+};
+
+export const setGlobalLoading = (state, message = "Loading...") => {
+  if (externalSetLoading) externalSetLoading(state);
+  if (externalSetLoadingMessage && message) externalSetLoadingMessage(message);
 };

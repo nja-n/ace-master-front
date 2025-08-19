@@ -33,10 +33,10 @@ import { useUser } from "../components/ui/UserContext";
 
 const Home = () => {
     const { user, loading } = useUser();
-    const { setLoading, setLoadingMessage } = useLoading();
+    const { setLoading } = useLoading();
 
     const [changedName, setChangedName] = useState("");
-    //const [userName, setUserName] = useState("");
+    const [userName, setUserName] = useState("");
     //const [storedName, setStoredName] = useState("");
     const [storedId, setStoredId] = useState("");
 
@@ -74,7 +74,6 @@ const Home = () => {
     useEffect(() => {
         if (loading) {
             setLoading(true);
-            setLoadingMessage("Loading server...");
             return;
         }
 
@@ -82,6 +81,7 @@ const Home = () => {
             setStoredId(user.id);
             setAuthenticated(true);
             setCoinBalance(user.coinBalance || -1);
+            setUserName(user.firstName || "");
         } else {
             setAuthenticated(false);
         }
@@ -116,7 +116,6 @@ const Home = () => {
                 screenHeight: deviceInfo.screenHeight
             };
 
-            console.log("Sending payload:", payload);
             const response = await apiClient(saveUser, {
                 method: "POST",
                 headers: {
@@ -130,6 +129,7 @@ const Home = () => {
             const data = await response;
 
             setStoredId(data.id)
+            setUserName(data.firstName);
             alert('Player Name have been saved.');
 
         } catch (error) {
@@ -299,23 +299,11 @@ const Home = () => {
                         size={200} letter={(user?.firstName)?.charAt(0).toUpperCase() || "?"}
                     />
                 </Box>
-                {/* <Avatar
-                    sx={{
-                        width: 10,
-                        height: 150,
-                        border: "3px solid white",
-                        fontSize: "50px",
-                        bgcolor: "#1b5e20",
-                        margin: "auto",
-                    }}
-                >
-                    {(storedName || userName)?.charAt(0).toUpperCase() || "?"}
-                </Avatar> */}
 
-                {user?.firstName && !isEditing ? (
+                {userName && !isEditing ? (
                     <>
                         <Typography variant="h4" color="white" sx={{ marginTop: "10px" }}>
-                            {user?.firstName}
+                            {userName}
                         </Typography>
                         <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
                             <Button

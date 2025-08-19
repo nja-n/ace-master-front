@@ -14,15 +14,39 @@ import SpinnerOverlay from "./components/ui/SpinnerOverlay";
 import ProfilePage from "./pages/Profile";
 import { UserProvider } from "./components/ui/UserContext";
 import Leaderboard from "./pages/LeaderBoard";
+import { useEffect, useState } from "react";
+import { apiClient } from "./components/ApIClient";
+import { versionHistory } from "./components/methods";
 
 function AppContent() {
-  const { loading, loadingMessage } = useLoading();
+  const { loading, loadingMessage, setLoading } = useLoading();
+
+  const [version, setVersion] = useState(null);
+
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        let versionApi = versionHistory.replace('/history', '');
+        const response = await apiClient(versionApi);
+        setVersion(response.version);
+      } catch (error) {
+        console.error("Error fetching version:", error);
+      }
+    };
+    fetchVersion();
+  }, []);
+
+  if (!version) {
+    setLoading(true);
+    return <OpenScene forceSplash={true} />;
+  }
+  setLoading(false);
 
   return (
     <>
       <UserProvider>
         {loading && <SpinnerOverlay text={loadingMessage} />}
-        <LayoutWithBackground>
+        <LayoutWithBackground version={version}>
           <Routes>
             <Route path="/" element={<OpenScene />} />
             <Route path="/game/:roomId" element={<GameTable />} />

@@ -1,9 +1,9 @@
-import React from "react";
-import { Box, Container, Link, Typography } from "@mui/material";
+import { Box, Link, Typography } from "@mui/material";
 import bgGreenTable from "../../images/bg-home.png";
 import { protocol, server } from "../serverURL";
+import InstallPrompt from "../force/Promote";
 
-const LayoutWithBackground = ({ children }) => {
+const LayoutWithBackground = ({ children, version }) => {
   return (
     <Box
       sx={{
@@ -28,6 +28,7 @@ const LayoutWithBackground = ({ children }) => {
           right: 15,
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           gap: 1,
         }}
       >
@@ -44,8 +45,9 @@ const LayoutWithBackground = ({ children }) => {
             sx={{ color: "#FFD700", fontWeight: "bold" }} // gold highlight for link
           >
             Aeither
-          </Link>{" "} Dev Team | Trail - v0.0.1
+          </Link>{" "} Dev Team | Trail - v{version}
         </Typography>
+        <InstallPrompt />
       </Box>
     </Box>
   );
