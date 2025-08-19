@@ -4,14 +4,12 @@ import { useUser } from '../components/ui/UserContext';
 import logo from '../images/1000102291.png';
 import Home from './Home';
 
-const OpenScene = () => {
+const OpenScene = ({forceSplash = false}) => {
     const [showSplash, setShowSplash] = useState(true);
 
-    const user = useUser();
-
     useEffect(() => {
+        if (forceSplash) return; 
         try {
-            if (user) {
             setShowSplash(false); // If user is logged in, skip splash screen
             const splashTimestamp = localStorage.getItem('splashTimestamp');
 
@@ -19,7 +17,6 @@ const OpenScene = () => {
                 const currentTime = Date.now();
                 const timeDiff = currentTime - splashTimestamp;
 
-                // If it's been more than 1 hour (3600000 ms), clear the localStorage
                 if (timeDiff > 3600000) {
                     localStorage.removeItem('splashTimestamp');
                 } else {
@@ -32,12 +29,11 @@ const OpenScene = () => {
             }, 2000);
 
             return () => clearTimeout(timer);
-        } 
         } catch (error) {
             console.error("Error in OpenScene useEffect:", error);
             alert("An error occurred while loading the application. Please try again later.");
         }
-    }, [user]);
+    }, []);
 
     return (
         <div>
