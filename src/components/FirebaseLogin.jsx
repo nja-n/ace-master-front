@@ -7,7 +7,7 @@ import { firebaseAuth } from "./methods";
 import { useLoading } from "../components/LoadingContext";
 
 const FirebaseLogin = ({ onAuthenticated }) => {
-  const setLoading = useLoading();
+  const { setLoading } = useLoading();
 
   const handleGoogleLogin = async () => {
     setLoading(true);

@@ -1,4 +1,4 @@
-import { setGlobalLoading } from "./LoadingContext";
+import { g } from "framer-motion/client";
 
 export const apiClient = async (endpoint, {
   method = "GET",
@@ -24,7 +24,6 @@ export const apiClient = async (endpoint, {
   }
 
   try {
-    setGlobalLoading(true); 
     const response = await fetch(`${endpoint}`, {
       method,
       headers: {
@@ -46,7 +45,6 @@ export const apiClient = async (endpoint, {
     console.error("Error in apiClient:", error);
     throw error;
   } finally {
-    setGlobalLoading(false);
   }
 
 };
