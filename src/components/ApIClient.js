@@ -1,5 +1,3 @@
-import { g } from "framer-motion/client";
-
 export const apiClient = async (endpoint, {
   method = "GET",
   body = null,
@@ -30,7 +28,14 @@ export const apiClient = async (endpoint, {
         ...defaultHeaders,
         ...headers,
       },
-      body: body instanceof FormData ? body : body ? JSON.stringify(body) : null,
+      body:
+        body instanceof FormData
+          ? body
+          : body instanceof URLSearchParams
+            ? body.toString()
+            : body
+              ? JSON.stringify(body)
+              : null,
       credentials,
     });
 

@@ -1,14 +1,12 @@
-import React from "react";
-import { Box, Typography, Button, Card, Avatar, Stack, Grid, Tooltip } from "@mui/material";
+import { Google } from "@mui/icons-material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
-import { useUser } from "../components/ui/UserContext";
+import { Box, Button, Card, Grid, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
+import { GoogleAuthProvider, linkWithPopup } from "firebase/auth";
+import { useLoading } from "../components/LoadingContext";
 import CommonHeader from "../components/ui/CommonHeader";
 import CustomAvatar from "../components/ui/CustomAvathar";
-import { useLoading } from "../components/LoadingContext";
-import { Google } from "@mui/icons-material";
-import { linkWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { useUser } from "../components/ui/UserContext";
 import { auth } from "../firebase-config";
 import CoinIcon from '../images/aeither_coin.png';
 
@@ -53,52 +51,65 @@ export default function ProfilePage({ isTop10 }) {
     }
 
     return (
-        <Box sx={{ mx: "auto", mt: 5, px: 3, maxWidth: "1200px" }}>
+        <Box sx={{ mx: "auto", mt: 5, px: 3, maxWidth: "1200px", overflow: "auto" }}>
             <CommonHeader coinBalance={user.coins} />
             <Grid container spacing={3}>
                 {/* LEFT SECTION (Profile Info & Stats) */}
                 <Grid item xs={12} md={8}>
                     {/* Profile Header */}
                     <Stack alignItems="center" spacing={1} sx={{ mb: 3 }}>
-                        <Box sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            marginTop: "10px",
-                        }}>
-                            <CustomAvatar
-                                size={200} letter={(user.firstName || "?")?.charAt(0).toUpperCase() || "?"}
-                            />
-                        </Box>
+                        <CustomAvatar
+                            size={200}
+                            letter={(user.firstName || "?")?.charAt(0).toUpperCase()}
+                        />
                         <Typography variant="h6" color="white">{user.firstName || "Guest"}</Typography>
                         <Typography variant="body2" color="gray">
                             Level {user.level || 1}
                         </Typography>
+                        {/* Progress Bar for XP */}
+                        <Box sx={{ width: '60%', mt: 1 }}>
+                            <LinearProgress
+                                variant="determinate"
+                                value={user.xpPercent || 30}
+                                sx={{ height: 8, borderRadius: 5, bgcolor: "#334155" }}
+                            />
+                        </Box>
                     </Stack>
 
-                    {/* Top Stats Row */}
-                    <Stack
-                        direction="row"
-                        spacing={2}
-                        justifyContent="space-between"
-                        sx={{ mb: 3 }}
-                    >
-                        <Card sx={{ flex: 1, p: 1, bgcolor: "#1e293b", textAlign: "center" }}>
-                            <FlashOnIcon sx={{ color: "#facc15" }} />
-                            <Typography variant="body2" color="#fff">Streak Days</Typography>
-                            <Typography variant="h6" color="#fff">{user.streakDays || 0}</Typography>
+                    {/* Stats Row */}
+                    <Stack direction="row" spacing={2} justifyContent="space-between" sx={{ mb: 3 }}>
+                        <Card sx={{ flex: 1, p: 2, background: "linear-gradient(135deg,#1e293b,#334155)", textAlign: "center", borderRadius: 3, boxShadow: 4 }}>
+                            <FlashOnIcon sx={{ color: "#facc15", fontSize: 32 }} />
+                            <Typography variant="body2" color="#fff">Streak</Typography>
+                            <Typography variant="h6" color="#facc15">{user.streakDays || 0} Days</Typography>
                         </Card>
-                        <Card sx={{ flex: 1, p: 1, bgcolor: "#1e293b", textAlign: "center" }}>
-                            <EmojiEventsIcon sx={{ color: "#fbbf24" }} />
+                        <Card sx={{ flex: 1, p: 2, background: "linear-gradient(135deg,#1e293b,#334155)", textAlign: "center", borderRadius: 3, boxShadow: 4 }}>
+                            <EmojiEventsIcon sx={{ color: "#fbbf24", fontSize: 32 }} />
                             <Typography variant="body2" color="#fff">League</Typography>
-                            <Typography variant="h6" color="#fff">{user.league || "Bronze"}</Typography>
+                            <Typography variant="h6" color="#fbbf24">{user.league || "Bronze"}</Typography>
                         </Card>
-                        <Card sx={{ flex: 1, p: 1, bgcolor: "#1e293b", textAlign: "center" }}>
-                            <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center"}}>
-                                <img src={CoinIcon} alt="Coin" style={{ width: '24px', height: '24px', marginRight: '8px' }} />
+                        <Card sx={{ flex: 1, p: 2, background: "linear-gradient(135deg,#1e293b,#334155)", textAlign: "center", borderRadius: 3, boxShadow: 4 }}>
+                            <Box display="flex" justifyContent="center">
+                                <img src={CoinIcon} alt="Coin" style={{ width: '28px', height: '28px' }} />
                             </Box>
                             <Typography variant="body2" color="#fff">Coins</Typography>
-                            <Typography variant="h6" color="#fff">{user.coins || 0}</Typography>
+                            <Typography variant="h6" color="#fbbf24">{user.coins || 0}</Typography>
+                        </Card>
+                    </Stack>
+
+                    {/* Extra Stats */}
+                    <Stack direction="row" spacing={2} justifyContent="space-between">
+                        <Card sx={{ flex: 1, p: 2, bgcolor: "#1e293b", textAlign: "center" }}>
+                            <Typography variant="body2" color="gray">Games Played</Typography>
+                            <Typography variant="h6" color="white">{user.gamesPlayed || 0}</Typography>
+                        </Card>
+                        <Card sx={{ flex: 1, p: 2, bgcolor: "#1e293b", textAlign: "center" }}>
+                            <Typography variant="body2" color="gray">Win Rate</Typography>
+                            <Typography variant="h6" color="white">{user.winRate || 0}%</Typography>
+                        </Card>
+                        <Card sx={{ flex: 1, p: 2, bgcolor: "#1e293b", textAlign: "center" }}>
+                            <Typography variant="body2" color="gray">Rank</Typography>
+                            <Typography variant="h6" color="white">{user.rank || "Unranked"}</Typography>
                         </Card>
                     </Stack>
 

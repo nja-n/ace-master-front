@@ -1,5 +1,8 @@
 import { protocol, socket, server } from "./serverURL";
 
+const preProtocol = `${protocol}://${server}/`;
+export const pre = preProtocol;
+
 export const game = `${socket}://${server}/game`;
 export const saveUser = `${protocol}://${server}/cards/savePlayer`;
 export const getTimeRemains = `${protocol}://${server}/public/SESSION_ID/remaining-time`;

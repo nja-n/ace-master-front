@@ -1,6 +1,6 @@
 import logo from '../images/back_thumb.jpg';
 
-import { ArrowBack, QuestionMark, Refresh } from "@mui/icons-material";
+import { ArrowBack, QuestionMark, Refresh, Share } from "@mui/icons-material";
 import {
     AppBar,
     Box,
@@ -26,7 +26,6 @@ import flipCard1 from '../assets/sounds/flip-card.mp3';
 import flipCard2 from '../assets/sounds/page-flip.mp3';
 import shuffleSound from '../assets/sounds/riffle-card-shuffle.mp3';
 import audioWinFile from '../assets/sounds/win.mp3';
-//import tadaaFile from '../assets/sounds/tadaa.mp3';
 import fireConfetti, { ConfettiSideCannons } from '../components/custom-fire-confetti';
 import GameTutorial from '../components/tutorial/GameTutorial';
 import AceMasterLogo from '../components/ui/GameLogoHeader';
@@ -34,6 +33,7 @@ import GloriousButton from '../components/ui/GloriousButton';
 import PlayerAvatarWithTimer from '../components/ui/PlaterWithAvatar';
 import bgGreenTable from '../images/bg-green-table.png';
 import { apiClient } from '../components/ApIClient';
+import { ShareIcon } from 'lucide-react';
 
 export default function GameTable() {
     const ws = useRef(null);
@@ -64,7 +64,6 @@ export default function GameTable() {
     const audioFlip1 = useRef(new Audio(flipCard1));
     const audioFlip2 = useRef(new Audio(flipCard2));
     const audioWin = useRef(new Audio(audioWinFile));
-    //const audioTadaa = useRef(tadaaFile);
 
     const celebratedWinners = useRef(new Set());
 
@@ -76,17 +75,13 @@ export default function GameTable() {
             let player = await apiClient(userByToken, {
                 method: "POST",
             });
-
-            /*let player = {
-                firstName: "You",
-                id: 35,
-            }*/
             setPlayerName(player.firstName);
             setPlayerId(player.id);
         })();
     }, []);
 
     useEffect(() => {
+        if (!playerId) return;
         console.log("Connecting to WebSocket...", playerId);
         if (roomId && isNaN(roomId)) {
             ws.current = new WebSocket(`${gameAi}?playerId=${playerId}`);
@@ -123,7 +118,7 @@ export default function GameTable() {
                 .then((time) => setTimeLeft(time));
         }
         if (gameData && gameData?.turnIndex >= 0 && gameData.looserPlayer == null) {
-            if( gameData.turnIndex === gameData.clientPlayer.gameIndex) {
+            if (gameData.turnIndex === gameData.clientPlayer.gameIndex) {
                 audioFlip2.current.play().catch((err) => {
                     console.warn("Failed to play sound:", err);
                 });
@@ -511,7 +506,7 @@ export default function GameTable() {
                         {closedCards &&
                             (
                                 <Card sx={{ width: 50, height: 80, backgroundColor: "white" }}>
-                                    {/* <CardContent sx={{ fontSize: 24, textAlign: "center" }}>{timeLeft}</CardContent> */}
+                                    {/* <CardContent sx={{ fontSize: 24, textAlign: "center" }}>{gameData.turnIndex}</CardContent> */}
                                     <CardContent sx={{ fontSize: 24, textAlign: "center" }}>
                                         {closedCards ? closedCards.length : 'X'}
                                         <Box sx={{ fontSize: 10 }}>Nos</Box>
@@ -530,7 +525,32 @@ export default function GameTable() {
                             {gameData.roomId && gameData.turnIndex < 0 &&
                                 <Typography color="white" variant="h6"
                                     fontWeight={"bold"} sx={{ position: 'absolute', top: 0, left: 0 }}>
-                                    Room Number : {gameData.roomId}</Typography>
+                                    Room Number : {gameData.roomId}
+
+                                    <IconButton
+                                        color="primary"
+                                        size="small"
+                                        onClick={() => {
+                                            const shareText = `Join my game! Room Number: ${gameData.roomId}`;
+                                            const shareUrl = window.location.href;
+
+                                            if (navigator.share) {
+                                                navigator
+                                                    .share({
+                                                        title: "Ace Master Room",
+                                                        text: shareText,
+                                                        url: shareUrl,
+                                                    })
+                                                    .catch((err) => console.error("Share failed:", err));
+                                            } else {
+                                                navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+                                                alert("Room info copied to clipboard!");
+                                            }
+                                        }}
+                                    >
+                                        <Share sx={{ color: "white" }} />
+                                    </IconButton>
+                                </Typography>
                             }
                         </Box>
                     </Box>
@@ -596,15 +616,6 @@ export default function GameTable() {
                         {gameData.turnIndex < 0 && gameData.players.length > 2 && (
                             <GloriousButton onClick={() => handleStartGame()}
                                 text='Start' />
-                            // <Box >
-                            //     <Button
-                            //         variant="contained"
-                            //         color="primary"
-                            //         onClick={() => handleStartGame()}
-                            //     >
-                            //         Start
-                            //     </Button>
-                            // </Box>
                         )}
                     </Typography>
                     <Box display="flex" flexWrap="wrap" gap={1}
