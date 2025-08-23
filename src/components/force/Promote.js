@@ -2,15 +2,34 @@ import { useEffect, useState } from "react";
 
 function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
+    // Detect already installed
+    if (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    ) {
+      setInstalled(true);
+    }
+
+    // Handle beforeinstallprompt
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener("beforeinstallprompt", handler);
 
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    // Handle appinstalled event
+    window.addEventListener("appinstalled", () => {
+      console.log("App installed successfully");
+      setInstalled(true);
+    });
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", () => {});
+    };
   }, []);
 
   const handleInstallClick = () => {
@@ -27,11 +46,16 @@ function InstallPrompt() {
   };
 
   return (
-    deferredPrompt && (
-      <button onClick={handleInstallClick} style={{ position: "fixed", bottom: 20, right: 20 }}>
-        📲 Install App
-      </button>
-    )
+    <>
+      {!installed && deferredPrompt && (
+        <button
+          onClick={handleInstallClick}
+          style={{ position: "fixed", bottom: 20, right: 20 }}
+        >
+          📲 Install App
+        </button>
+      )}
+    </>
   );
 }
 

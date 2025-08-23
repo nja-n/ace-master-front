@@ -1,17 +1,13 @@
-import { ArrowBack } from "@mui/icons-material";
+import { WebStoriesRounded } from "@mui/icons-material";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
-import TwitterIcon from "@mui/icons-material/Twitter"; // X is represented by TwitterIcon
-import { AppBar, Box, Button, IconButton, Link, TextField, Toolbar, Typography } from "@mui/material";
+import { Box, Button, IconButton, Link, TextField, Typography } from "@mui/material";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import AceMasterLogo from "../components/ui/GameLogoHeader";
-import CommonHeader from "../components/ui/CommonHeader";
 import { apiClient } from "../components/ApIClient";
-import { feedback } from "../components/methods";
+import { feedback, pre } from "../components/methods";
+import CommonHeader from "../components/ui/CommonHeader";
 
 const ContactUs = () => {
-    const navigate = useNavigate();
     const [form, setForm] = useState({ name: "", email: "", message: "" });
     const [errors, setErrors] = useState({ name: "", email: "", message: "" });
 
@@ -58,6 +54,9 @@ const ContactUs = () => {
                 method: "POST",
                 body: form,
             });
+            if (response.status === "success") {
+                alert("Feedback submitted successfully!");
+            }
 
             setForm({ name: "", email: "", message: "" });
             setErrors({ name: "", email: "", message: "" });
@@ -103,13 +102,13 @@ const ContactUs = () => {
                     <TwitterIcon />
                 </IconButton> */}
                 <Link
-                    href="https://aetheracemaster.onrender.com/cards"
+                    href={`${pre}public/status`}
                     target="_blank"
                     rel="noopener noreferrer"
                     underline="hover"
                     sx={{ display: "flex", alignItems: "center", ml: 1 }}
                 >
-                    View Web API
+                    <WebStoriesRounded/>API
                 </Link>
             </Box>
 

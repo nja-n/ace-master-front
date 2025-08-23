@@ -1,6 +1,6 @@
 {
-  "short_name": "Ace Master",
-  "name": "Ace Master React Game",
+  "short_name": "Ace",
+  "name": "Ace Master",
   "description": "A simple React app to Play Ace Master Game.",
   "icons": [
     {

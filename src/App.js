@@ -17,31 +17,39 @@ import Leaderboard from "./pages/LeaderBoard";
 import { useEffect, useState } from "react";
 import { apiClient } from "./components/ApIClient";
 import { versionHistory } from "./components/methods";
+import { tr } from "framer-motion/client";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
 
   const [version, setVersion] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchVersion = async () => {
       try {
+        setLoading(true);
         let versionApi = versionHistory.replace('/history', '');
         const response = await apiClient(versionApi);
         setVersion(response.version);
       } catch (error) {
         console.error("Error fetching version:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchVersion();
+
+    let intervalId = setInterval(fetchVersion, 60_000);
+    return () => clearInterval(intervalId); 
   }, []);
 
+  
   if (!version) {
     setLoading(true);
     return <OpenScene forceSplash={true} />;
   }
-  setLoading(false);
-
+ 
   return (
     <>
       <UserProvider>

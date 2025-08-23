@@ -1,5 +1,3 @@
-import { setGlobalLoading } from "./LoadingContext";
-
 export const apiClient = async (endpoint, {
   method = "GET",
   body = null,
@@ -24,14 +22,20 @@ export const apiClient = async (endpoint, {
   }
 
   try {
-    setGlobalLoading(true); 
     const response = await fetch(`${endpoint}`, {
       method,
       headers: {
         ...defaultHeaders,
         ...headers,
       },
-      body: body instanceof FormData ? body : body ? JSON.stringify(body) : null,
+      body:
+        body instanceof FormData
+          ? body
+          : body instanceof URLSearchParams
+            ? body.toString()
+            : body
+              ? JSON.stringify(body)
+              : null,
       credentials,
     });
 
@@ -46,7 +50,6 @@ export const apiClient = async (endpoint, {
     console.error("Error in apiClient:", error);
     throw error;
   } finally {
-    setGlobalLoading(false);
   }
 
 };

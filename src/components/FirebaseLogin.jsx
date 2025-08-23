@@ -1,13 +1,13 @@
 
-import { Face, Facebook, Google, HowToRegSharp } from "@mui/icons-material";
-import { auth, googleProvider, facebookProvider } from "../firebase-config";
-import { signInAnonymously, signInWithPopup } from "firebase/auth";
+import { Google, HowToRegSharp } from "@mui/icons-material";
 import { Button } from "@mui/material";
-import { firebaseAuth } from "./methods";
+import { signInAnonymously, signInWithPopup } from "firebase/auth";
 import { useLoading } from "../components/LoadingContext";
+import { auth, facebookProvider, googleProvider } from "../firebase-config";
+import { firebaseAuth } from "./methods";
 
 const FirebaseLogin = ({ onAuthenticated }) => {
-  const setLoading = useLoading();
+  const { setLoading } = useLoading();
 
   const handleGoogleLogin = async () => {
     setLoading(true);

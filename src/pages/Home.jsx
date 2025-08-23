@@ -20,16 +20,16 @@ import { apiClient } from "../components/ApIClient";
 import FirebaseLogin from "../components/FirebaseLogin";
 import Login from "../components/Login";
 import { getRandomProTip } from "../components/Utiliy";
-import { createUniqueRoom, saveUser, userByToken, validateUniqueRoom } from '../components/methods';
+import { createUniqueRoom, saveUser, validateUniqueRoom } from '../components/methods';
 import GameTutorial from "../components/tutorial/GameTutorial";
 import CustomAvatar from "../components/ui/CustomAvathar";
 import AceMasterLogo from "../components/ui/GameLogoHeader";
 import GloriousButton from "../components/ui/GloriousButton";
 import RoomSessionModal from "../components/ui/RoomSession";
-import CoinIcon from '../images/aeither_coin.png';
 import { useLoading } from "../components/LoadingContext";
 import { useUser } from "../components/ui/UserContext";
-
+import CoinWithText from "./fragments/CoinWithText";
+import InstallPrompt from "../components/force/Promote";
 
 const Home = () => {
     const { user, loading } = useUser();
@@ -44,23 +44,22 @@ const Home = () => {
     const navigate = useNavigate();
 
     const [anchorEl, setAnchorEl] = useState(null);
-    const isMobile = window.innerWidth < 600;
 
     const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
 
-    const [joinModalOpen, setJoinModalOpen] = useState(false);
+    const [installProm, setInstallProm] = useState(false);
     const [roomIdInput, setRoomIdInput] = useState('');
 
     const [coinBalance, setCoinBalance] = useState(0);
-
-    const [networkError, setNetworkError] = useState(false);
 
     const [authenticated, setAuthenticated] = useState(storedId ? true : false);
 
     const [tutorialSeen, setTutorialSeen] = useState(true);
 
     const [roomModalOpen, setRoomModalOpen] = useState(false);
+
+    const alreadyInstalled = isInStandaloneMode();
 
     const getDeviceInfo = async () => {
         // Get OS and Platform
@@ -97,6 +96,12 @@ const Home = () => {
             setTutorialSeen(false);
         }
     }, [storedId]);
+
+    useEffect(() => {
+        if (!storedId && authenticated) {
+            window.location.reload();
+        }
+    }, [authenticated]);
 
     const handleChangeName = (value) => {
         const capitalizedValue = value.replace(/\b\w/g, (char) => char.toUpperCase());
@@ -160,33 +165,35 @@ const Home = () => {
         }
     };
 
-    const handleJoinRoom = () => {
-        handlePlay();
+    const handleJoinRoom = (roomNumber) => {
+        handlePlay(roomNumber);
     }
 
-    const handlePlay = async () => {
-        const trimmedRoomId = roomIdInput.trim();
+    const handlePlay = async (roomNumber) => {
+        let trimmedRoomId = roomIdInput.trim();
+        trimmedRoomId = trimmedRoomId ? trimmedRoomId : roomNumber;
 
         if (trimmedRoomId === '') {
             setRoomIdInput('');
             alert('Please enter a valid Room ID');
             return;
         }
+        else {
+            alert("Joining Room ID: " + trimmedRoomId);
+        }
 
         try {
-            const response = await fetch(validateUniqueRoom, {
+            const response = await apiClient(validateUniqueRoom, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: new URLSearchParams({ roomId: trimmedRoomId }),
             });
-
-            const result = await response.text();
+            const result = response.status;
 
             if (result === 'Y') {
                 navigate(`/game/${trimmedRoomId}`);
-                setJoinModalOpen(false);
                 setRoomIdInput('');
             } else {
                 alert('Room ID not found or inactive.');
@@ -213,6 +220,9 @@ const Home = () => {
                 break;
             case 5:
                 navigate('/ranking');
+                break;
+            case 6:
+                setInstallProm(true);
                 break;
             default:
                 alert('Please select correct action');
@@ -254,13 +264,7 @@ const Home = () => {
                     <AceMasterLogo />
 
                     <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography variant="h6" sx={{ fontWeight: "bold" }} onClick={() => navigate('/profile')} style={{ cursor: 'pointer', color: 'white' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <img src={CoinIcon} alt="Coin" style={{ width: '24px', height: '24px', marginRight: '8px' }} />
-
-                            </Box>
-                            <Typography component="span" sx={{ fontWeight: "bold", color: "#ff9800" }}>{coinBalance}</Typography>
-                        </Typography>
+                        <CoinWithText coinBalance={coinBalance} />
 
                         {/* Desktop Buttons */}
                         <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
@@ -268,6 +272,7 @@ const Home = () => {
                             <Button color="inherit" onClick={() => handleMenuSelected(1)}>Task</Button>
                             <Button color="inherit" onClick={() => handleMenuSelected(5)}>Leaderboard</Button>
                             <Button color="inherit" onClick={() => handleMenuSelected(2)}>About</Button>
+                            {!alreadyInstalled && false && <Button color="inherit" onClick={() => handleMenuSelected(6)}>Install App</Button>}
                             {/* <Button color="inherit" onClick={() => handleMenuSelected(4)}>Contact Us</Button> */}
                         </Box>
 
@@ -374,19 +379,19 @@ const Home = () => {
             }}>
                 <GloriousButton
                     id="play-ai-button"
-                    onClick={!user?.firstName || networkError ? null : handleStartAiPlay}
+                    onClick={!userName ? null : handleStartAiPlay}
                     text={'Play with AI'}
                     color="darkblue"
                 />
                 <GloriousButton
                     id="play-online-button"
-                    onClick={!user?.firstName || coinBalance < 100 || networkError ? null : handleStartGame}
+                    onClick={!userName || coinBalance < 100 ? null : handleStartGame}
                     text={'Start Online'}
                     color="orange"
                 />
                 <GloriousButton
                     id="room-session-button"
-                    onClick={!user?.firstName || networkError ? null : () => setRoomModalOpen(true)}
+                    onClick={!userName ? null : () => setRoomModalOpen(true)}
                     text={'Room Session'}
                     color="darkblue"
                 />
@@ -402,6 +407,7 @@ const Home = () => {
                         handleCreateGame();
                         setRoomModalOpen(false);
                     }}
+                    value={roomIdInput}
                 />
 
                 {/* <GloriousButton
@@ -466,39 +472,16 @@ const Home = () => {
                 {getRandomProTip()}
                 {/* 💡 Pro Tip: Win games to earn more coins and climb the leaderboard! */}
             </Box>
-            {networkError && <Box sx={{
-                display: "flex",
-                justifyContent: "center",
-                gap: 3,
-                marginBottom: "7%"
-            }}>
-                <Typography variant="body2" color="white" bgcolor={'red'}
-                    padding={1} borderRadius={2} fontWeight={'bold'}>
-                    Server Error
-                </Typography>
-            </Box>}
             
-            <Dialog open={joinModalOpen} onClose={() => setJoinModalOpen(false)}>
-                <DialogTitle>Join a Game Room</DialogTitle>
+            <Dialog open={installProm} onClose={() => setInstallProm(false)}>
+                <DialogTitle>
+                    Install Ace Master App
+                </DialogTitle>
                 <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Room ID"
-                        type="text"
-                        inputProps={{ maxLength: 5, inputMode: 'numeric', pattern: '[0-9]*' }}
-                        fullWidth
-                        value={roomIdInput}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            if (/^\d*$/.test(value)) {
-                                setRoomIdInput(value);
-                            }
-                        }}
-                    />
+                    <InstallPrompt />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setJoinModalOpen(false)}>Cancel</Button>
+                    <Button onClick={() => setInstallProm(false)}>Cancel</Button>
                     <Button onClick={handlePlay} variant="contained" color="primary">Play</Button>
                 </DialogActions>
             </Dialog>
@@ -544,3 +527,10 @@ const Home = () => {
 };
 
 export default Home;
+
+function isInStandaloneMode() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true // For iOS Safari
+  );
+}
