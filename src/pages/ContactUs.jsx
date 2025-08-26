@@ -5,7 +5,6 @@ import { Box, Button, IconButton, Link, TextField, Typography } from "@mui/mater
 import { useState } from "react";
 import { apiClient } from "../components/ApIClient";
 import { feedback, pre } from "../components/methods";
-import CommonHeader from "../components/ui/CommonHeader";
 
 const ContactUs = () => {
     const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -70,7 +69,6 @@ const ContactUs = () => {
 
     return (
         <Box sx={{ mx: "auto", mt: 5, px: 3 }}>
-            <CommonHeader />
             <Typography variant="h4" gutterBottom textAlign="center"
                 color="#fff">
                 Contact Us

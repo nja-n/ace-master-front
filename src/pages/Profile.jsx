@@ -4,20 +4,36 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import { Box, Button, Card, Grid, LinearProgress, Stack, Tooltip, Typography } from "@mui/material";
 import { GoogleAuthProvider, linkWithPopup } from "firebase/auth";
 import { useLoading } from "../components/LoadingContext";
-import CommonHeader from "../components/ui/CommonHeader";
 import CustomAvatar from "../components/ui/CustomAvathar";
 import { useUser } from "../components/ui/UserContext";
 import { auth } from "../firebase-config";
 import CoinIcon from '../images/aeither_coin.png';
+import { useEffect, useState } from "react";
+import { apiClient } from "../components/ApIClient";
+import { fetchAchievements } from "../components/methods";
 
 export default function ProfilePage({ isTop10 }) {
     const { user, loading } = useUser();
     const { setLoading } = useLoading();
+    const [profile, setProfile] = useState(null);
 
-    if (user === null) {
-        setLoading(true);
-        return <Box sx={{ p: 2, textAlign: "center", color: "#fff" }}>Loading...</Box>;
-    }
+    useEffect(() => {
+        async function fetchProfile() {
+            try {
+                const response = await apiClient(fetchAchievements, {
+                    userId: user.id
+                });
+                setProfile(response);
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        }
+        if (user === null) {
+            setLoading(true);
+            return <Box sx={{ p: 2, textAlign: "center", color: "#fff" }}>Loading...</Box>;
+        }
+        fetchProfile();
+    }, [user]);
     //isTop10 = isTop10 || true;
     setLoading(false);
 
@@ -51,8 +67,7 @@ export default function ProfilePage({ isTop10 }) {
     }
 
     return (
-        <Box sx={{ mx: "auto", mt: 5, px: 3, maxWidth: "1200px", overflow: "auto" }}>
-            <CommonHeader coinBalance={user.coins} />
+        <Box sx={{ mx: "auto", mt: 5, overflow: "auto" }}>
             <Grid container spacing={3}>
                 {/* LEFT SECTION (Profile Info & Stats) */}
                 <Grid item xs={12} md={8}>

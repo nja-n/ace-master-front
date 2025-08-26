@@ -92,20 +92,22 @@ html {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: linear-gradient(to bottom, #facc15, #eab308); /* gold / yellow glow */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #ec4899, #8b5cf6);
+  background: linear-gradient(to bottom, #4ade80, #22c55e);
   border-radius: 4px;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.7);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #db2777, #7c3aed);
+  background: linear-gradient(to bottom, #86efac, #34d399); /* even lighter hover */
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.9);
 }
 
 /* Prevent text selection during swipe */

@@ -393,8 +393,8 @@ export default function GameTable() {
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    backgroundColor: "#2e7d32",
-                    backgroundImage: `url(${bgGreenTable})`,
+                    //backgroundColor: "#2e7d32",
+                    //backgroundImage: `url(${bgGreenTable})`,
                     backgroundSize: "cover",
                     backgroundRepeat: "no-repeat",
                     backgroundPosition: "center",
@@ -404,7 +404,9 @@ export default function GameTable() {
                 <GameTutorial joyrideRef={joyrideRef} sceneNum={2} />
 
                 <AppBar position="static" sx={{ backgroundColor: "#1976d200", width: "100%" }}>
-                    <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+                    <Toolbar sx={{ display: "flex", justifyContent: "space-between",
+                        marginLeft: '8px', marginRight: '8px',
+                     }}>
                         {/* Back Button */}
                         <IconButton
                             edge="start"

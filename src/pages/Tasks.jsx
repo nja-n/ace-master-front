@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react";
 import {
-    Avatar, Button, Container, Typography, Box, TextField,
-    Dialog, DialogTitle, DialogContent, DialogActions
+    Box,
+    Typography
 } from "@mui/material";
-import { AppBar, Toolbar, IconButton, Menu, MenuItem, } from "@mui/material";
-import { MoreVert } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-import { fetchDailyTasks, fetchUser } from '../components/methods';
-import DailyTaskBox from "./fragments/DailyTaskBox";
+import { useEffect, useState } from "react";
 import AdBanner from "../components/adsterBanner";
-import CommonHeader from "../components/ui/CommonHeader";
-import { useLoading } from "../components/LoadingContext";
 import { apiClient } from "../components/ApIClient";
+import { useLoading } from "../components/LoadingContext";
+import { fetchDailyTasks } from '../components/methods';
 import { useUser } from "../components/ui/UserContext";
+import DailyTaskBox from "./fragments/DailyTaskBox";
+import ReferralUI from "./fragments/RefferalUI";
 
 const Tasks = () => {
     const [dailyTask, setDailyTask] = useState([]);
@@ -47,10 +44,9 @@ const Tasks = () => {
         <Box
             sx={{ mx: "auto", mt: 5, px: 3 }}
         >
-            <CommonHeader coinBalance={user?.coinBalance} />
             <AdBanner />
             <DailyTaskBox tasks={dailyTask} updateBalance={updateBalance} />
-            {/* Placeholder for future tasks */}
+            <ReferralUI coinBalance={user?.coinBalance} />
             <Box
                 sx={{
                     mt: 5,

@@ -12,7 +12,6 @@ import {
   ListItemText,
   Divider
 } from "@mui/material";
-import CommonHeader from "../components/ui/CommonHeader";
 
 const leaderboardData = {
   daily: [
@@ -66,8 +65,6 @@ export default function Leaderboard() {
           bgcolor: "rgba(0,0,0,0.6)",
         }}
       >
-        <CommonHeader/>
-        {/* Header */}
         <Box
           sx={{
             p: 2,

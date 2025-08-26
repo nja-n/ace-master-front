@@ -53,10 +53,6 @@ const About = () => {
         overflowY: "auto",
       }}
     >
-      <Box align="center">
-        <AceMasterLogo />
-      </Box>
-      {/* Header */}
       <Typography variant="h3" align="center" fontWeight="bold" gutterBottom>
         ABOUT US
       </Typography>

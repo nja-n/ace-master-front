@@ -14,7 +14,7 @@ export const validateUniqueRoom = `${protocol}://${server}/cards/validate-room`;
 
 // export const loadCoinBalance = `${protocol}://${server}/cards/load-coin-balance`;
 
-export const fetchUser = `${protocol}://${server}/fetch-user`;
+// export const fetchUser = `${protocol}://${server}/fetch-user`;
 
 export const sendOtp = `${protocol}://${server}/auth/send-otp`;
 export const verifyOtp = `${protocol}://${server}/auth/verify-otp`;
@@ -28,3 +28,5 @@ export const feedback = `${protocol}://${server}/feedback`;
 
 export const fetchDailyTasks = `${protocol}://${server}/tasks/daily`;
 export const claimDailyTask = `${protocol}://${server}/tasks/daily/claim`;
+
+export const fetchAchievements = `${protocol}://${server}/profile/fetch-achievements`;
