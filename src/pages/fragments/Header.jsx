@@ -3,8 +3,10 @@ import AceMasterLogo from "../../components/ui/GameLogoHeader";
 import CoinWithText from "./CoinWithText";
 import { ArrowBack, Home } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "../../components/ui/UserContext";
 export const Header = (color) => {
   const navigate = useNavigate();
+  const {user} = useUser();
   return (
     <AppBar
       position="static"
@@ -31,7 +33,7 @@ export const Header = (color) => {
 
         {/* Right side: Balance + Nav */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <CoinWithText coinBalance="45" />
+          <CoinWithText coinBalance={user && user.coinBalance} />
           <Home onClick={() => navigate("/")} style={{ cursor: "pointer" }} />
         </Box>
       </Toolbar>

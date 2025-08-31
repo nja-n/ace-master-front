@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { Box, TextField, InputAdornment, Button, CircularProgress, Switch, FormControlLabel, styled } from "@mui/material";
 import { Check, Close, LoginRounded, LoginSharp, SaveAs } from "@mui/icons-material";
 import { sendOtp, signUp, verifyOtp } from "./methods";
-import { apiClient } from "./ApIClient";
+import { apiClient } from "./utils/ApIClient";
 import { useNavigate } from "react-router-dom";
 import { tr } from "framer-motion/client";
 import MaterialUISwitch from "./ui/MaterialUISwitch";
@@ -103,7 +103,7 @@ const Login = ({ onAuthenticated }) => {
 
     const saveNewUser = async () => {
         const formData = new FormData(userForm.current);
-        const deviceInfo = await getDeviceInfo();
+        //const deviceInfo = await getDeviceInfo();
         
         // const payload = {
         //     ...Object.fromEntries(formData.entries()),
@@ -113,10 +113,10 @@ const Login = ({ onAuthenticated }) => {
   firstName: "Vishnu",
   lastName: "MG",
   email: "v4vishnumg25@gmail.com",
-  userAgent: deviceInfo.userAgent,
-  platform: deviceInfo.platform,
-  screenWidth: deviceInfo.screenWidth,
-  screenHeight: deviceInfo.screenHeight
+//   userAgent: deviceInfo.userAgent,
+//   platform: deviceInfo.platform,
+//   screenWidth: deviceInfo.screenWidth,
+//   screenHeight: deviceInfo.screenHeight
 };
         console.log("Payload for sign up:", payload);
         
@@ -311,13 +311,4 @@ const Login = ({ onAuthenticated }) => {
 };
 
 export default Login;
-
-const getDeviceInfo = async () => {
-    // Get OS and Platform
-    const userAgent = navigator.userAgent;
-    const platform = navigator.platform;
-    const screenWidth = window.screen.width;
-    const screenHeight = window.screen.height;
-    return { userAgent, platform, screenWidth, screenHeight };
-};
 

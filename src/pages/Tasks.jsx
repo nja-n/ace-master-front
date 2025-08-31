@@ -4,7 +4,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import AdBanner from "../components/adsterBanner";
-import { apiClient } from "../components/ApIClient";
+import { apiClient } from "../components/utils/ApIClient";
 import { useLoading } from "../components/LoadingContext";
 import { fetchDailyTasks } from '../components/methods';
 import { useUser } from "../components/ui/UserContext";

@@ -32,7 +32,7 @@ import AceMasterLogo from '../components/ui/GameLogoHeader';
 import GloriousButton from '../components/ui/GloriousButton';
 import PlayerAvatarWithTimer from '../components/ui/PlaterWithAvatar';
 import bgGreenTable from '../images/bg-green-table.png';
-import { apiClient } from '../components/ApIClient';
+import { apiClient } from '../components/utils/ApIClient';
 import { ShareIcon } from 'lucide-react';
 
 export default function GameTable() {

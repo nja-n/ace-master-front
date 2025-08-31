@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Grid, Typography } from "@mui/material";
 import CoinIcon from "../../images/aeither_coin.png";
 import GloriousButton from "../../components/ui/GloriousButton";
 import fireConfetti from "../../components/custom-fire-confetti";
-import { apiClient } from "../../components/ApIClient";
+import { apiClient } from "../../components/utils/ApIClient";
 import { claimDailyTask } from "../../components/methods";
 
 const DailyTaskRow = ({ tasks, updateBalance }) => {
@@ -45,7 +45,7 @@ const DailyTaskRow = ({ tasks, updateBalance }) => {
       <Typography variant="h5" fontWeight="bold" gutterBottom color="#fff">
         🧧 Claim Daily
       </Typography>
-      <Grid container spacing={2} justifyContent="center" sx={{ mt: 2 }}>
+      <Grid container spacing={2} justifyContent="center" >
         {tasks.map((task, idx) => (
           <Grid item xs={12} sm={6} md={4} key={idx}>
             <Card

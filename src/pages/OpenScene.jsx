@@ -1,8 +1,9 @@
-import { CardMedia } from "@mui/material";
+import { Box, CardMedia, Typography } from "@mui/material";
 import { useEffect, useState } from 'react';
 import { useUser } from '../components/ui/UserContext';
 import logo from '../images/1000102291.png';
 import Home from './Home';
+import Countdown from './fragments/CountDown';
 
 const OpenScene = ({forceSplash = false}) => {
     const [showSplash, setShowSplash] = useState(true);
@@ -45,10 +46,16 @@ const OpenScene = ({forceSplash = false}) => {
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            height: '100vh', // Ensure the container takes full height of the viewport
+                            height: '100vh',
+                            flexDirection: 'column',
                             //background: 'linear-gradient(to bottom,rgb(5, 63, 5), #006400)', // Green gradient background
                         }}
                     >
+                        {/* <Box>
+                            <Typography align="center" gutterBottom color="grey.800">
+                                Welcome to the 3D Scene Editor
+                            </Typography>
+                        </Box> */}
                         <CardMedia
                             component="img"
                             image={logo}
@@ -56,6 +63,7 @@ const OpenScene = ({forceSplash = false}) => {
                             sx={{ width: 'auto', height: 'auto', maxWidth: '80%', maxHeight: '80%' }} // Adjust image size as needed
                         />
                     </div>
+                    <Countdown />
                 </>
 
             ) : (

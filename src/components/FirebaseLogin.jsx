@@ -30,9 +30,9 @@ const FirebaseLogin = ({ onAuthenticated }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ idToken: firebaseIdToken })
     });
-    const jwtToken = await response.text();
-    console.log("Backend JWT:", jwtToken);
-    localStorage.setItem("accessToken", jwtToken);
+    const jwtToken = await response.json();
+    localStorage.setItem("accessToken", jwtToken.accessToken);
+    localStorage.setItem("refreshToken", jwtToken.refreshToken);
     onAuthenticated(true);
   };
 

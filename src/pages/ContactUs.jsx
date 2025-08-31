@@ -3,7 +3,7 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import { Box, Button, IconButton, Link, TextField, Typography } from "@mui/material";
 import { useState } from "react";
-import { apiClient } from "../components/ApIClient";
+import { apiClient } from "../components/utils/ApIClient";
 import { feedback, pre } from "../components/methods";
 
 const ContactUs = () => {
@@ -45,7 +45,7 @@ const ContactUs = () => {
 
         if (!valid) return;
 
-        const confirmed = window.confirm("Are you sure you want to submit this feedback?");
+        const confirmed = await window.confirm("Are you sure you want to submit this feedback?");
         if (!confirmed) return;
 
         try {
