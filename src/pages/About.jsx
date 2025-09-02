@@ -45,20 +45,58 @@ const About = () => {
   return (
     <Box
       sx={{
-        //backgroundImage: `url(${bgGreenTable})`,
-        //backgroundSize: "cover",
         minHeight: "100vh",
         padding: 4,
         color: "#eee",
+        background: "linear-gradient(135deg, #1e293b65, #33415565)",
         overflowY: "auto",
       }}
     >
+      {/* Title */}
       <Typography variant="h3" align="center" fontWeight="bold" gutterBottom>
-        ABOUT US
+        🃏 Kazhutha – Multiplayer Card Game
       </Typography>
-      <Typography variant="h6" align="center" sx={{ maxWidth: 800, mx: "auto", mb: 4 }}>
-        Ace Master is an exhilarating card game that challenges your strategic thinking and lightning-fast decision-making! Inspired by the classic Kazhutha game from Kerala.
+      <Typography variant="h5" align="center" sx={{ maxWidth: 800, mx: "auto", mb: 4 }}>
+        Ace Master is an exhilarating card game inspired by the traditional <strong>Kazhutha (കഴുത || கழுதை)</strong> from South India.
+        Outthink your rivals and get rid of your cards before anyone else!
       </Typography>
+
+      {/* Game Overview */}
+      <Paper elevation={3} sx={{ p: 3, mb: 4, maxWidth: 900, mx: "auto" }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom>
+          🎮 How to Play
+        </Typography>
+        <Typography paragraph>
+          The main objective is to clear your hand of all cards as quickly as possible.
+        </Typography>
+        <Typography paragraph>
+          Each round has an active suit (♣, ♦, ♥, ♠). Play cards in sequence. If you don’t have one, perform a <b>Vettu</b> – play another suit.
+          In this case, the player with the highest card takes the pile.
+        </Typography>
+        <Typography paragraph>
+          The winner of a round chooses the next suit. The last player holding cards at the end is the
+          <b> Kazhutha (Donkey) 🐴</b>.
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+
+        <Typography variant="h6" gutterBottom>
+          🔢 Card Power
+        </Typography>
+        <Typography paragraph>2–10 = low to high | J=11th, Q=12th, K=13th, A=14th</Typography>
+      </Paper>
+
+      {/* Mobile Version */}
+      <Paper elevation={3} sx={{ p: 3, mb: 4, maxWidth: 900, mx: "auto" }}>
+        <Typography variant="h5" fontWeight="bold" gutterBottom>
+          📱 Game Categories
+        </Typography>
+        <Typography paragraph>
+          Choose from 3 categories – <b>AI</b>, <b>Online</b>, and <b>Room</b> – each with unique bet ranges.
+        </Typography>
+        <Typography paragraph>
+          Online and Rooms have 3–6 seats. Join by tapping an empty chair. Invite friends via shareable link or play with bots if fewer players join.
+        </Typography>
+      </Paper>
 
       {/* Stats Section */}
       <Grid container spacing={3} justifyContent="center" sx={{ mb: 4 }}>
@@ -76,9 +114,9 @@ const About = () => {
         </Grid>
       </Grid>
 
-      {/* Services Section */}
+      {/* Unique Features */}
       <Typography variant="h4" fontWeight="bold" align="center" gutterBottom>
-        UNIQUE EXPERIENCE WITH ACE MASTER
+        🌟 Unique Experience with Ace Master
       </Typography>
       <Typography align="center" sx={{ maxWidth: 700, mx: "auto", mb: 3 }}>
         Dive into immersive gameplay, intuitive controls, and addictive challenges that keep you coming back for more!
@@ -88,25 +126,19 @@ const About = () => {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, textAlign: "center" }}>
             <Typography variant="h6" fontWeight="bold">🎬 Game Direction</Typography>
-            <Typography variant="body2">
-              Strategize every move and outplay your opponents with skill.
-            </Typography>
+            <Typography variant="body2">Strategize every move and outplay opponents.</Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, textAlign: "center" }}>
             <Typography variant="h6" fontWeight="bold">📽️ Game Mechanics</Typography>
-            <Typography variant="body2">
-              Smooth gameplay and competitive features for all games.
-            </Typography>
+            <Typography variant="body2">Smooth and competitive gameplay.</Typography>
           </Paper>
         </Grid>
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, textAlign: "center" }}>
             <Typography variant="h6" fontWeight="bold">🎯 Visual Effects</Typography>
-            <Typography variant="body2">
-              Engaging visuals and animations for an epic card battle experience.
-            </Typography>
+            <Typography variant="body2">Engaging visuals & animations for epic battles.</Typography>
           </Paper>
         </Grid>
       </Grid>
@@ -130,7 +162,7 @@ const About = () => {
             {history.length > 0 ? (
               history.map((entry, index) => (
                 <Paper key={index} sx={{ p: 1, my: 1 }}>
-                  🗓️ {formatDate(entry.date)} - 🔹 {entry.version}
+                  🗓️ {entry.date} - 🔹 {entry.version}
                   <Typography variant="subtitle2">{entry.head}</Typography>
                 </Paper>
               ))
@@ -141,24 +173,22 @@ const About = () => {
         )}
       </Paper>
 
-      {/* Buttons */}
+      {/* Footer Buttons */}
       <Grid container spacing={2} justifyContent="center" sx={{ mb: 4 }}>
         <Grid item>
-          <GloriousButton text="Contact Us" color="darkblue" onClick={() => navigate("/contact")}>
-            Contact Us
-          </GloriousButton>
+                    <GloriousButton text="Contact Us" color="darkblue" onClick={() => navigate("/contact")}/>
+
         </Grid>
         <Grid item>
-          <GloriousButton text="Terms & Conditions" onClick={() => window.open("/terms", "_blank")}
-              color="darkblue">
-            Terms & Conditions
-          </GloriousButton>
+                    <GloriousButton text="Terms & Conditions" onClick={() => window.open("/terms", "_blank")}
+              color="darkblue"/>
+
         </Grid>
-        <Grid item>
+        {/* <Grid item>
           <Button variant="text" onClick={() => navigate(-1)}>
             ⬅ Back to Home
           </Button>
-        </Grid>
+        </Grid> */}
       </Grid>
     </Box>
   );

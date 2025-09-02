@@ -159,7 +159,8 @@ export default function ProfilePage({ isTop10 }) {
     };
     const handleOpen = (key) => {
         setSelectedKey(key);
-        setOpen(true);
+        alert(statIdeas[key].description);
+        //setOpen(true);
     };
 
     const handleClose = () => {
@@ -343,7 +344,7 @@ export default function ProfilePage({ isTop10 }) {
                             Claim
                         </Button>
                     ) : (
-                        <Tooltip title="You must be in the Top 10 today to withdraw">
+                        <Tooltip title="Your rank must be in the Top 10 today to withdraw">
                             <span style={{ width: "100%" }}>
                                 <Button
                                     variant="contained"

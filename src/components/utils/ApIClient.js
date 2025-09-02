@@ -1,3 +1,4 @@
+import { refreshAuth } from "../methods";
 import { emit } from "./eventBus";
 
 export const apiClient = async (endpoint, {
@@ -71,7 +72,7 @@ export const apiClient = async (endpoint, {
       if (!refreshToken) throw error;
 
       try {
-        const refreshResp = await fetch("/auth/refresh", {
+        const refreshResp = await fetch(refreshAuth, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
@@ -88,7 +89,7 @@ export const apiClient = async (endpoint, {
       } catch (refreshError) {
         // localStorage.removeItem("accessToken");
         // localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
+        //window.location.href = "/login";
         throw refreshError;
       }
     }

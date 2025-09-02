@@ -46,7 +46,7 @@ const Tasks = () => {
         >
             <AdBanner />
             <DailyTaskBox tasks={dailyTask} updateBalance={updateBalance} />
-            <ReferralUI coinBalance={user?.coinBalance} />
+            {/* <ReferralUI coinBalance={user?.coinBalance} /> */}
             <Box
                 sx={{
                     mt: 5,

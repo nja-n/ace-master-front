@@ -21,6 +21,7 @@ export const verifyOtp = `${protocol}://${server}/auth/verify-otp`;
 export const signUp = `${protocol}://${server}/auth/sign-up`;
 export const userByToken = `${protocol}://${server}/user-by-token`;
 export const firebaseAuth = `${protocol}://${server}/auth/firebase`;
+export const refreshAuth = `${protocol}://${server}/auth/refresh`;
 
 export const terms = `${protocol}://${server}/public/terms-pdf`;
 
