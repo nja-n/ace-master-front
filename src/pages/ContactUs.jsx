@@ -3,9 +3,8 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import { Box, Button, IconButton, Link, TextField, Typography } from "@mui/material";
 import { useState } from "react";
-import { apiClient } from "../components/ApIClient";
+import { apiClient } from "../components/utils/ApIClient";
 import { feedback, pre } from "../components/methods";
-import CommonHeader from "../components/ui/CommonHeader";
 
 const ContactUs = () => {
     const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -46,7 +45,7 @@ const ContactUs = () => {
 
         if (!valid) return;
 
-        const confirmed = window.confirm("Are you sure you want to submit this feedback?");
+        const confirmed = await window.confirm("Are you sure you want to submit this feedback?");
         if (!confirmed) return;
 
         try {
@@ -70,7 +69,6 @@ const ContactUs = () => {
 
     return (
         <Box sx={{ mx: "auto", mt: 5, px: 3 }}>
-            <CommonHeader />
             <Typography variant="h4" gutterBottom textAlign="center"
                 color="#fff">
                 Contact Us

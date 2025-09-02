@@ -15,9 +15,9 @@ import ProfilePage from "./pages/Profile";
 import { UserProvider } from "./components/ui/UserContext";
 import Leaderboard from "./pages/LeaderBoard";
 import { useEffect, useState } from "react";
-import { apiClient } from "./components/ApIClient";
+import { apiClient } from "./components/utils/ApIClient";
 import { versionHistory } from "./components/methods";
-import { tr } from "framer-motion/client";
+import { AlertConfirmProvider, AlertProvider } from "./components/ui/CustomAlert";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
@@ -30,7 +30,7 @@ function AppContent() {
       try {
         setLoading(true);
         let versionApi = versionHistory.replace('/history', '');
-        const response = await apiClient(versionApi);
+        const response = await apiClient(versionApi, { withAuth: false });
         setVersion(response.version);
       } catch (error) {
         console.error("Error fetching version:", error);
@@ -41,15 +41,19 @@ function AppContent() {
     fetchVersion();
 
     let intervalId = setInterval(fetchVersion, 60_000);
-    return () => clearInterval(intervalId); 
+    return () => clearInterval(intervalId);
   }, []);
-
   
+  useEffect(() => {
+    if (!version) {
+      setLoading(true);
+    }
+  }, [version, setLoading]);
+
   if (!version) {
-    setLoading(true);
     return <OpenScene forceSplash={true} />;
   }
- 
+
   return (
     <>
       <UserProvider>
@@ -77,7 +81,9 @@ function App() {
   return (
     <Router>
       <LoadingProvider>
-        <AppContent />
+        <AlertProvider>
+          <AppContent />
+        </AlertProvider>
       </LoadingProvider>
     </Router>
   );

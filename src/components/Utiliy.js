@@ -41,3 +41,12 @@ export const getRandomProTip = () => {
     const randomIndex = Math.floor(Math.random() * proTips.length);
     return proTips[randomIndex];
 };
+
+export const getDeviceInfo = async () => {
+    // Get OS and Platform
+    const userAgent = navigator.userAgent;
+    const platform = navigator.platform;
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    return { userAgent, platform, screenWidth, screenHeight };
+};

@@ -2,24 +2,34 @@ import { Box, Link, Typography } from "@mui/material";
 import bgGreenTable from "../../images/bg-home.png";
 import { protocol, server } from "../serverURL";
 import InstallPrompt from "../force/Promote";
+import { useLocation } from "react-router-dom";
+import { Header } from "../../pages/fragments/Header";
 
 const LayoutWithBackground = ({ children, version }) => {
+  const location = useLocation();
+
+  const gameRoutes = ["/", "/game", "/game/:roomId"];
+  const isGameRoute =
+    location.pathname === "/" || location.pathname.startsWith("/game");
+
   return (
     <Box
       sx={{
-        backgroundColor: "#2e7d32",
+        backgroundColor: "#2e7d32", // fallback color
         backgroundImage: `url(${bgGreenTable})`,
-        backgroundSize: "contain",
-        backgroundPosition: "top",
+        backgroundSize: "cover",   // instead of "contain"
+        backgroundPosition: "top", // center the image
+        backgroundRepeat: "no-repeat", // no tiling
         position: "relative",
-        //backgroundRepeat: "no-repeat",
-        height: "100vh",
+        minHeight: "100vh", // better than fixed height
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "space-between",
       }}
+
     >
+      {!isGameRoute && <Header />}
       {children}
       <Box
         sx={{

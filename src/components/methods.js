@@ -14,13 +14,14 @@ export const validateUniqueRoom = `${protocol}://${server}/cards/validate-room`;
 
 // export const loadCoinBalance = `${protocol}://${server}/cards/load-coin-balance`;
 
-export const fetchUser = `${protocol}://${server}/fetch-user`;
+// export const fetchUser = `${protocol}://${server}/fetch-user`;
 
 export const sendOtp = `${protocol}://${server}/auth/send-otp`;
 export const verifyOtp = `${protocol}://${server}/auth/verify-otp`;
 export const signUp = `${protocol}://${server}/auth/sign-up`;
 export const userByToken = `${protocol}://${server}/user-by-token`;
 export const firebaseAuth = `${protocol}://${server}/auth/firebase`;
+export const refreshAuth = `${protocol}://${server}/auth/refresh`;
 
 export const terms = `${protocol}://${server}/public/terms-pdf`;
 
@@ -28,3 +29,5 @@ export const feedback = `${protocol}://${server}/feedback`;
 
 export const fetchDailyTasks = `${protocol}://${server}/tasks/daily`;
 export const claimDailyTask = `${protocol}://${server}/tasks/daily/claim`;
+
+export const fetchAchievements = `${protocol}://${server}/profile/fetch-achievements`;

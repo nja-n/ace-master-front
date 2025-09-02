@@ -16,10 +16,10 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiClient } from "../components/ApIClient";
+import { apiClient } from "../components/utils/ApIClient";
 import FirebaseLogin from "../components/FirebaseLogin";
 import Login from "../components/Login";
-import { getRandomProTip } from "../components/Utiliy";
+import { getDeviceInfo, getRandomProTip } from "../components/Utiliy";
 import { createUniqueRoom, saveUser, validateUniqueRoom } from '../components/methods';
 import GameTutorial from "../components/tutorial/GameTutorial";
 import CustomAvatar from "../components/ui/CustomAvathar";
@@ -60,15 +60,6 @@ const Home = () => {
     const [roomModalOpen, setRoomModalOpen] = useState(false);
 
     const alreadyInstalled = isInStandaloneMode();
-
-    const getDeviceInfo = async () => {
-        // Get OS and Platform
-        const userAgent = navigator.userAgent;
-        const platform = navigator.platform;
-        const screenWidth = window.screen.width;
-        const screenHeight = window.screen.height;
-        return { userAgent, platform, screenWidth, screenHeight };
-    };
 
     useEffect(() => {
         if (loading) {
@@ -145,14 +136,25 @@ const Home = () => {
         setLoading(false);
     };
 
-    const handleStartGame = () => {
-        if (coinBalance < 100) { alert('You do not have enough coins to play. Please earn more coins by complete tasks.'); return; }
-        if (window.confirm('Are you ready .? Your coin of 100 has been used for this round')) navigate("/game");
+    const handleStartGame = async () => {
+        if (coinBalance < 100) {
+            alert('You do not have enough coins to play. Please earn more coins by completing tasks.');
+            return;
+        }
+
+        const confirmed = await window.confirm(
+            "Starting a game will cost you 100 coins. Do you want to proceed?"
+        );
+
+        if (confirmed) {
+            navigate("/game");
+        }
     };
 
 
+
     const handleCreateGame = async () => {
-        if (window.confirm("Are you ready to create a Room?")) {
+        if (await window.confirm("Are you ready to create a Room?")) {
             try {
                 const response = await apiClient(createUniqueRoom);
 
@@ -199,7 +201,6 @@ const Home = () => {
                 alert('Room ID not found or inactive.');
             }
         } catch (error) {
-            console.error('Error validating room:', error);
             alert('An error occurred while validating the Room ID.');
         }
     };
@@ -229,8 +230,8 @@ const Home = () => {
         }
     };
 
-    const handleStartAiPlay = () => {
-        if (window.confirm('Are you ready to play with AI?')) {
+    const handleStartAiPlay = async () => {
+        if (await window.confirm('Are you ready to play with AI?')) {
             navigate("/game/ai");
         }
     }
@@ -310,7 +311,7 @@ const Home = () => {
                         <Typography variant="h4" color="white" sx={{ marginTop: "10px" }}>
                             {userName}
                         </Typography>
-                        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
+                        {/* <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
                             <Button
                                 variant="outlined"
                                 color="warning"
@@ -321,7 +322,7 @@ const Home = () => {
                             >
                                 Edit
                             </Button>
-                        </Box>
+                        </Box> */}
                     </>
                 ) : (
                     <Box sx={{ marginTop: "20px", textAlign: "center" }}>
@@ -472,7 +473,7 @@ const Home = () => {
                 {getRandomProTip()}
                 {/* 💡 Pro Tip: Win games to earn more coins and climb the leaderboard! */}
             </Box>
-            
+
             <Dialog open={installProm} onClose={() => setInstallProm(false)}>
                 <DialogTitle>
                     Install Ace Master App
@@ -511,11 +512,11 @@ const Home = () => {
 
                     <Stack spacing={2}>
 
-                        <Login onAuthenticated={() => setAuthenticated(true)} />
+                        {/* <Login onAuthenticated={() => setAuthenticated(true)} /> */}
 
-                        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
+                        {/* <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
                             OR
-                        </Box>
+                        </Box> */}
                         <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
                             <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} />
                         </Box>
@@ -529,8 +530,8 @@ const Home = () => {
 export default Home;
 
 function isInStandaloneMode() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true // For iOS Safari
-  );
+    return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true // For iOS Safari
+    );
 }
