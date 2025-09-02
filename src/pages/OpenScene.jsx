@@ -63,7 +63,7 @@ const OpenScene = ({forceSplash = false}) => {
                             sx={{ width: 'auto', height: 'auto', maxWidth: '80%', maxHeight: '80%' }} // Adjust image size as needed
                         />
                     </div>
-                    {/* <Countdown /> */}
+                    <Countdown />
                 </>
 
             ) : (

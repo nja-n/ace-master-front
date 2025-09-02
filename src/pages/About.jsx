@@ -13,6 +13,7 @@ import { versionHistory } from "../components/methods";
 import { formatDate } from "../components/Utiliy";
 import GloriousButton from "../components/ui/GloriousButton";
 import AceMasterLogo from "../components/ui/GameLogoHeader";
+import { Helmet } from "react-helmet-async";
 
 const About = () => {
   const navigate = useNavigate();
@@ -53,6 +54,11 @@ const About = () => {
       }}
     >
       {/* Title */}
+      <Helmet>
+        <title>About AceMaster</title>
+        <meta name="description" content="Learn about AceMaster, the multiplayer card and puzzle game that combines fun and strategy." />
+        <meta name="robots" content="index, follow" />
+      </Helmet>
       <Typography variant="h3" align="center" fontWeight="bold" gutterBottom>
         🃏 Kazhutha – Multiplayer Card Game
       </Typography>

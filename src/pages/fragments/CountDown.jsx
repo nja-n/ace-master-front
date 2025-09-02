@@ -8,7 +8,7 @@ const CountDown = () => {
   const [expired, setExpired] = useState(false);
 
   // Target date: September 2, 2025 10:00 AM (local time)
-  const targetDate = new Date("2025-09-01T10:00:00");
+  const targetDate = new Date("2025-09-03T15:00:00");
 
   useEffect(() => {
     const timer = setInterval(() => {
