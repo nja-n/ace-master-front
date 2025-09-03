@@ -279,7 +279,7 @@ const Home = () => {
 
                         {/* Mobile Menu */}
                         <IconButton edge="end" color="inherit" onClick={handleMenuOpen} sx={{ display: { xs: "block", sm: "none" } }}>
-                            <MoreVert />
+                            <MoreVert color="gold"/>
                         </IconButton>
 
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
@@ -410,51 +410,6 @@ const Home = () => {
                     }}
                     value={roomIdInput}
                 />
-
-                {/* <GloriousButton
-
-                    onClick={!storedName || networkError ? null : handleCreateGame}
-                    text={'Create Room'}
-                    color="darkblue"
-                />
-                <GloriousButton
-                    id="play-room-button"
-                    onClick={!storedName || networkError ? null : handleJoinRoom}
-                    text={'Join Room'}
-                    color="darkblue" */}
-                {/* /> */}
-                {/* <Button
-                    variant="contained"
-                    color="info"
-                    onClick={handleStartAiPlay}
-                    disabled={!storedName || networkError}
-                >
-                    Play with AI
-                </Button> 
-                <Button
-                    variant="contained"
-                    color="warning"
-                    onClick={handleStartGame}
-                    disabled={!storedName || coinBalance < 100 || networkError}
-                >
-                    Start Online
-                </Button> 
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleCreateGame}
-                    disabled={!storedName || networkError}
-                >
-                    Create Room
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleJoinRoom}
-                    disabled={!storedName || networkError}
-                >
-                    Join Room
-                </Button>*/}
             </Box>
             <Box
                 sx={{

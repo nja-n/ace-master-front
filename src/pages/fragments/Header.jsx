@@ -14,6 +14,7 @@ export const Header = (color) => {
         background: "linear-gradient(135deg, rgba(30,41,59,0.55), rgba(51,65,85,0.55))",
         boxShadow: 3,
         borderRadius: 2,
+        color: "gold",
         // px: 0, // proper padding instead of margin
       }}
     >
