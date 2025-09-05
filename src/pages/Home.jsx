@@ -62,6 +62,10 @@ const Home = () => {
     const alreadyInstalled = isInStandaloneMode();
 
     useEffect(() => {
+        emit("user:refresh");
+    }, []);
+
+    useEffect(() => {
         if (loading) {
             setLoading(true);
             return;
