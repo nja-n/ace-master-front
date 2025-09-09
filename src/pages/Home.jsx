@@ -30,6 +30,7 @@ import { useLoading } from "../components/LoadingContext";
 import { useUser } from "../components/ui/UserContext";
 import CoinWithText from "./fragments/CoinWithText";
 import InstallPrompt from "../components/force/Promote";
+import { emit } from "../components/utils/eventBus";
 
 const Home = () => {
     const { user, loading } = useUser();
@@ -476,9 +477,7 @@ const Home = () => {
                         {/* <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
                             OR
                         </Box> */}
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
                             <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} />
-                        </Box>
                     </Stack>
                 </DialogContent>
             </Dialog>

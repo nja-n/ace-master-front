@@ -2,35 +2,14 @@ import {
     Box,
     Typography
 } from "@mui/material";
-import { useEffect, useState } from "react";
 import AdBanner from "../components/adsterBanner";
-import { apiClient } from "../components/utils/ApIClient";
-import { useLoading } from "../components/LoadingContext";
-import { fetchDailyTasks } from '../components/methods';
 import { useUser } from "../components/ui/UserContext";
 import DailyTaskBox from "./fragments/DailyTaskBox";
-import ReferralUI from "./fragments/RefferalUI";
 
 const Tasks = () => {
-    const [dailyTask, setDailyTask] = useState([]);
-    const { setLoading } = useLoading();
     const { user, setUser } = useUser();
 
-    useEffect(() => {
-        setLoading(true);
-
-        const loadDailyTasks = async () => {
-            try {
-                const response = await apiClient(fetchDailyTasks);
-                setDailyTask(response);
-            } catch (error) {
-                console.error("Error loading daily tasks:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        loadDailyTasks();
-    }, []);
+    
 
     const updateBalance = async (coin) => {
         if (!user) return;
@@ -45,7 +24,7 @@ const Tasks = () => {
             sx={{ mx: "auto", mt: 5, px: 3 }}
         >
             <AdBanner />
-            <DailyTaskBox tasks={dailyTask} updateBalance={updateBalance} />
+            <DailyTaskBox updateBalance={updateBalance} />
             {/* <ReferralUI coinBalance={user?.coinBalance} /> */}
             <Box
                 sx={{

@@ -18,6 +18,9 @@ import { useEffect, useState } from "react";
 import { apiClient } from "./components/utils/ApIClient";
 import { versionHistory } from "./components/methods";
 import { AlertConfirmProvider, AlertProvider } from "./components/ui/CustomAlert";
+import FAQ from "./pages/Faq";
+import Blog from "./pages/Blog";
+import NotFound from "./pages/fragments/NotFound";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
@@ -70,6 +73,9 @@ function AppContent() {
             <Route path="/bday" element={<BirthDay />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/ranking" element={<Leaderboard />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </LayoutWithBackground>
       </UserProvider>

@@ -1,6 +1,6 @@
 
 import { Google, HowToRegSharp } from "@mui/icons-material";
-import { Button } from "@mui/material";
+import { Box, Button, Link, Typography } from "@mui/material";
 import { signInAnonymously, signInWithPopup } from "firebase/auth";
 import { useLoading } from "../components/LoadingContext";
 import { auth, facebookProvider, googleProvider } from "../firebase-config";
@@ -71,22 +71,23 @@ const FirebaseLogin = ({ onAuthenticated }) => {
 
   return (
     <>
-      <Button
-        variant="outlined"
-        onClick={handleGoogleLogin}
-        sx={{
-          borderColor: 'white',
-          color: 'white',
-          fontWeight: 'bold',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-          }
-        }}
-        fullWidth
-      >
-        Connect Google <Google />
-      </Button>
-      {/* <Button
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={handleGoogleLogin}
+          sx={{
+            borderColor: 'white',
+            color: 'white',
+            fontWeight: 'bold',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
+          fullWidth
+        >
+          Connect Google <Google />
+        </Button>
+        {/* <Button
         variant="outlined"
         onClick={handleFacebookLogin}
         sx={{
@@ -101,26 +102,27 @@ const FirebaseLogin = ({ onAuthenticated }) => {
       >
         Connect Facebook <Facebook />
       </Button> */}
-      <Button
-        variant="outlined"
-        onClick={handleGuestLogin}
-        sx={{
-          borderColor: 'white',
-          color: 'white',
-          fontWeight: 'bold',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-          }
-        }}
-        fullWidth
-      >
-        Continue as Guest <HowToRegSharp />
-      </Button>
+        <Button
+          variant="outlined"
+          onClick={handleGuestLogin}
+          sx={{
+            borderColor: 'white',
+            color: 'white',
+            fontWeight: 'bold',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
+          fullWidth
+        >
+          Continue as Guest <HowToRegSharp />
+        </Button>
+      </Box>
       <Box mt={2} textAlign="center">
         <Typography variant="body2" color="white">
           By continuing, you agree to our{" "}
           <Link
-            href={ pre + "terms"}
+            href={"/terms"}
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: "#90caf9", textDecoration: "underline" }}
