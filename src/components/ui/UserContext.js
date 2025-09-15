@@ -1,7 +1,10 @@
-import React, { createContext, useState, useEffect, useContext, useCallback } from "react";
-import { userByToken } from "../methods";
+import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from "react";
+import { pre, userByToken } from "../methods";
 import { apiClient } from "../utils/ApIClient";
 import { on } from "../utils/eventBus";
+import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from "@mui/material";
+import { Close } from "@mui/icons-material";
+import DailyTaskBox from "../../pages/fragments/DailyTaskBox";
 
 const UserContext = createContext();
 
@@ -9,11 +12,28 @@ export function UserProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const [notifDialogOpen, setNotifDialogOpen] = useState(false);
+    const [currentNotifIndex, setCurrentNotifIndex] = useState(0);
+    const [notifications, setNotifications] = useState([]);
+    const firstCall = useRef(true);
+
     const fetchUser = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await apiClient(userByToken, { method: "POST" });
+            const body = firstCall.current ? { notes: "yes" } : null;
+            const res = await apiClient(userByToken, {
+                method: "POST",
+                body: body,
+            });
             setUser(res);
+
+            if (firstCall.current && res?.notifications && res.notifications.length > 0) {
+                setNotifications(res.notifications);
+                setCurrentNotifIndex(0);
+                setNotifDialogOpen(true);
+            }
+            firstCall.current = false;
+
         } catch (err) {
             console.error("Failed to load user:", err);
             setUser(null);
@@ -29,9 +49,83 @@ export function UserProvider({ children }) {
         return () => unsubscribe();
     }, [fetchUser]);
 
+    const handleCloseNotif = () => {
+        if (currentNotifIndex < notifications.length - 1) {
+            setCurrentNotifIndex((prev) => prev + 1);
+        } else {
+            setNotifDialogOpen(false);
+        }
+    };
+
     return (
         <UserContext.Provider value={{ user, setUser, loading, refreshUser: fetchUser }}>
             {children}
+
+            <Dialog
+                open={notifDialogOpen}
+                onClose={handleCloseNotif}
+                maxWidth
+                PaperProps={{
+                    sx: {
+                        //backgroundColor: "transparent",   // make the paper itself transparent
+                        backgroundColor: "#2222228f", // dark background
+                        boxShadow: "none",                // remove the shadow
+                    },
+                }}
+            // BackdropProps={{
+            //     style: { backgroundColor: "transparent" }, // remove dark backdrop
+            // }}
+            >
+                <DialogTitle sx={{ m: 0, p: 2 }}
+                    justifyContent={"center"}
+                    display="flex"
+                    alignItems="center"
+                    color="white">
+                    <Box></Box>
+                    {currentNotifIndex + 1} of {notifications.length}
+                    <IconButton
+                        aria-label="close"
+                        onClick={handleCloseNotif}
+                        sx={{
+                            position: "absolute",
+                            right: 8,
+                            top: 8,
+                            color: (theme) => theme.palette.grey[500],
+                        }}
+                    >
+                        <Close />
+                    </IconButton>
+                </DialogTitle>
+                {notifications[currentNotifIndex]?.actionDestination &&
+                    notifications[currentNotifIndex]?.actionDestination !== 'rewards' ?
+                    <DialogContent dividers>
+                        {notifications[currentNotifIndex]?.image && (
+                            <img
+                                src={pre + notifications[currentNotifIndex].image}
+                                alt="notification"
+                                style={{
+                                    maxWidth: "100%",    // fit width of dialog
+                                    maxHeight: "60vh",   // fit within viewport height (adjust as needed)
+                                    width: "auto",
+                                    height: "auto",
+                                    borderRadius: "12px",
+                                    display: "block",
+                                    margin: "0 auto",
+                                    objectFit: "contain"
+                                }}
+                            />
+                        )}
+                        <Typography sx={{ mt: 2, color: "grey",  }}>
+                            {notifications[currentNotifIndex]?.message ||
+                                JSON.stringify(notifications[currentNotifIndex])}
+                        </Typography>
+                    </DialogContent>
+                    :
+                    <DialogContent dividers>
+                        <DailyTaskBox />
+                    </DialogContent>
+                }
+            </Dialog>
         </UserContext.Provider>
     );
 }

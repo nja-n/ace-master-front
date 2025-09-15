@@ -30,6 +30,7 @@ import { useLoading } from "../components/LoadingContext";
 import { useUser } from "../components/ui/UserContext";
 import CoinWithText from "./fragments/CoinWithText";
 import InstallPrompt from "../components/force/Promote";
+import { emit } from "../components/utils/eventBus";
 
 const Home = () => {
     const { user, loading } = useUser();
@@ -60,6 +61,10 @@ const Home = () => {
     const [roomModalOpen, setRoomModalOpen] = useState(false);
 
     const alreadyInstalled = isInStandaloneMode();
+
+    useEffect(() => {
+        emit("user:refresh");
+    }, []);
 
     useEffect(() => {
         if (loading) {
@@ -279,7 +284,7 @@ const Home = () => {
 
                         {/* Mobile Menu */}
                         <IconButton edge="end" color="inherit" onClick={handleMenuOpen} sx={{ display: { xs: "block", sm: "none" } }}>
-                            <MoreVert />
+                            <MoreVert color="gold" />
                         </IconButton>
 
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
@@ -378,24 +383,46 @@ const Home = () => {
                 gap: 3,
                 marginBottom: "2%"
             }}>
-                <GloriousButton
-                    id="play-ai-button"
-                    onClick={!userName ? null : handleStartAiPlay}
-                    text={'Play with AI'}
-                    color="darkblue"
-                />
-                <GloriousButton
-                    id="play-online-button"
-                    onClick={!userName || coinBalance < 100 ? null : handleStartGame}
-                    text={'Start Online'}
-                    color="orange"
-                />
-                <GloriousButton
-                    id="room-session-button"
-                    onClick={!userName ? null : () => setRoomModalOpen(true)}
-                    text={'Room Session'}
-                    color="darkblue"
-                />
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr", // two equal columns
+                        gap: "16px", // spacing between buttons
+                        maxWidth: "400px", // optional: control overall width
+                        margin: "0 auto" // center in parent
+                    }}
+                >
+
+                    <GloriousButton
+                        id="play-online-button"
+                        onClick={!userName || coinBalance < 100 ? null : handleStartGame}
+                        text="Start Online"
+                        color="orange"
+                    />
+
+                    <GloriousButton
+                        id="quick-play-button"
+                        onClick={!userName || coinBalance < 100 ? null : handleStartGame}
+                        text="Quick Play"
+                        color="orange"
+                    />
+
+                    <GloriousButton
+                        id="play-ai-button"
+                        onClick={!userName ? null : handleStartAiPlay}
+                        text="Play with AI"
+                        color="darkblue"
+                    />
+
+                    <GloriousButton
+                        id="room-session-button"
+                        onClick={!userName ? null : () => setRoomModalOpen(true)}
+                        text="Room Session"
+                        color="darkblue"
+                    />
+
+                </div>
+
 
                 <RoomSessionModal
                     open={roomModalOpen}
@@ -410,51 +437,6 @@ const Home = () => {
                     }}
                     value={roomIdInput}
                 />
-
-                {/* <GloriousButton
-
-                    onClick={!storedName || networkError ? null : handleCreateGame}
-                    text={'Create Room'}
-                    color="darkblue"
-                />
-                <GloriousButton
-                    id="play-room-button"
-                    onClick={!storedName || networkError ? null : handleJoinRoom}
-                    text={'Join Room'}
-                    color="darkblue" */}
-                {/* /> */}
-                {/* <Button
-                    variant="contained"
-                    color="info"
-                    onClick={handleStartAiPlay}
-                    disabled={!storedName || networkError}
-                >
-                    Play with AI
-                </Button> 
-                <Button
-                    variant="contained"
-                    color="warning"
-                    onClick={handleStartGame}
-                    disabled={!storedName || coinBalance < 100 || networkError}
-                >
-                    Start Online
-                </Button> 
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleCreateGame}
-                    disabled={!storedName || networkError}
-                >
-                    Create Room
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleJoinRoom}
-                    disabled={!storedName || networkError}
-                >
-                    Join Room
-                </Button>*/}
             </Box>
             <Box
                 sx={{
@@ -513,13 +495,7 @@ const Home = () => {
                     <Stack spacing={2}>
 
                         {/* <Login onAuthenticated={() => setAuthenticated(true)} /> */}
-
-                        {/* <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-                            OR
-                        </Box> */}
-                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                            <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} />
-                        </Box>
+                        <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} />
                     </Stack>
                 </DialogContent>
             </Dialog>

@@ -8,6 +8,8 @@ export const saveUser = `${protocol}://${server}/cards/savePlayer`;
 export const getTimeRemains = `${protocol}://${server}/public/SESSION_ID/remaining-time`;
 export const gameAi = `${socket}://${server}/game-ai`;
 
+export const voiceRoom = `${socket}://${server}/voice`;
+
 export const versionHistory = `${protocol}://${server}/version/history`;
 export const createUniqueRoom = `${protocol}://${server}/cards/create-room`;
 export const validateUniqueRoom = `${protocol}://${server}/cards/validate-room`;

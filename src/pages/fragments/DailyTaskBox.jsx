@@ -4,13 +4,33 @@ import CoinIcon from "../../images/aeither_coin.png";
 import GloriousButton from "../../components/ui/GloriousButton";
 import fireConfetti from "../../components/custom-fire-confetti";
 import { apiClient } from "../../components/utils/ApIClient";
-import { claimDailyTask } from "../../components/methods";
+import { claimDailyTask, fetchDailyTasks } from "../../components/methods";
+import { useLoading } from "../../components/LoadingContext";
 
-const DailyTaskRow = ({ tasks, updateBalance }) => {
+const DailyTaskRow = () => {
+  
+  const { setLoading } = useLoading();
   const [claimed, setClaimed] = useState(false);
+  const [dailyTask, setDailyTask] = useState([]);
+
+  useEffect(() => {
+        setLoading(true);
+
+        const loadDailyTasks = async () => {
+            try {
+                const response = await apiClient(fetchDailyTasks);
+                setDailyTask(response);
+            } catch (error) {
+                console.error("Error loading daily tasks:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadDailyTasks();
+    }, []);
 
   const getLabel = (index) => {
-    if (tasks.length === 3) {
+    if (dailyTask.length === 3) {
       return ["Yesterday", "Today", "Tomorrow"][index].toUpperCase();
     } else {
       return ["Today", "Tomorrow"][index].toUpperCase();
@@ -18,7 +38,7 @@ const DailyTaskRow = ({ tasks, updateBalance }) => {
   };
 
   const handleClaim = async (reward) => {
-    const response = await apiClient(claimDailyTask, { method: "POST" });
+    const response = await apiClient(claimDailyTask, { method: "POST", refreshOnSuccess: true });
     console.log("Claim response:", response);
 
     if (response.status !== "success") {
@@ -27,18 +47,18 @@ const DailyTaskRow = ({ tasks, updateBalance }) => {
     }
 
     alert(`Claimed ${reward} coins`);
-    updateBalance(reward);
+    // updateBalance(reward);
     setClaimed(true);
     fireConfetti();
   };
 
   useEffect(() => {
-    tasks.forEach((task) => {
+    dailyTask.forEach((task) => {
       if (task.status === "C") {
         setClaimed(true);
       }
     });
-  }, [tasks]);
+  }, [dailyTask]);
 
   return (
     <Box mb={3}>
@@ -46,7 +66,7 @@ const DailyTaskRow = ({ tasks, updateBalance }) => {
         🧧 Claim Daily
       </Typography>
       <Grid container spacing={2} justifyContent="center" >
-        {tasks.map((task, idx) => (
+        {dailyTask.map((task, idx) => (
           <Grid item xs={12} sm={6} md={4} key={idx}>
             <Card
               sx={{

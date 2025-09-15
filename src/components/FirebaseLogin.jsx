@@ -1,21 +1,24 @@
 
 import { Google, HowToRegSharp } from "@mui/icons-material";
-import { Button } from "@mui/material";
+import { Box, Button, Link, Typography } from "@mui/material";
 import { signInAnonymously, signInWithPopup } from "firebase/auth";
 import { useLoading } from "../components/LoadingContext";
 import { auth, facebookProvider, googleProvider } from "../firebase-config";
-import { firebaseAuth } from "./methods";
+import { firebaseAuth, pre } from "./methods";
 
 const FirebaseLogin = ({ onAuthenticated }) => {
   const { setLoading } = useLoading();
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
-    const result = await signInWithPopup(auth, googleProvider);
-    console.log("Google login result:", result);
-    const token = await result.user.getIdToken(); // Firebase ID token
-    await sendTokenToBackend(token);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const result = await signInWithPopup(auth, googleProvider);
+      const token = await result.user.getIdToken(); // Firebase ID token
+      await sendTokenToBackend(token);
+      setLoading(false);
+    } catch {
+      console.log("Google login Failed:");
+    }
   };
 
   const handleFacebookLogin = async () => {
@@ -53,37 +56,38 @@ const FirebaseLogin = ({ onAuthenticated }) => {
     }
   }
 
-//   import { GoogleAuthProvider, linkWithPopup } from "firebase/auth";
+  //   import { GoogleAuthProvider, linkWithPopup } from "firebase/auth";
 
-// async function upgradeGuestAccount(auth) {
-//   const provider = new GoogleAuthProvider();
-//   try {
-//     const result = await linkWithPopup(auth.currentUser, provider);
-//     console.log("Guest upgraded to registered:", result.user);
-//   } catch (error) {
-//     console.error("Upgrade failed:", error);
-//   }
-// }
+  // async function upgradeGuestAccount(auth) {
+  //   const provider = new GoogleAuthProvider();
+  //   try {
+  //     const result = await linkWithPopup(auth.currentUser, provider);
+  //     console.log("Guest upgraded to registered:", result.user);
+  //   } catch (error) {
+  //     console.error("Upgrade failed:", error);
+  //   }
+  // }
 
 
   return (
     <>
-      <Button
-        variant="outlined"
-        onClick={handleGoogleLogin}
-        sx={{
-          borderColor: 'white',
-          color: 'white',
-          fontWeight: 'bold',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-          }
-        }}
-        fullWidth
-      >
-        Connect Google <Google />
-      </Button>
-      {/* <Button
+      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={handleGoogleLogin}
+          sx={{
+            borderColor: 'white',
+            color: 'white',
+            fontWeight: 'bold',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
+          fullWidth
+        >
+          Connect Google <Google />
+        </Button>
+        {/* <Button
         variant="outlined"
         onClick={handleFacebookLogin}
         sx={{
@@ -98,21 +102,36 @@ const FirebaseLogin = ({ onAuthenticated }) => {
       >
         Connect Facebook <Facebook />
       </Button> */}
-      <Button
-        variant="outlined"
-        onClick={handleGuestLogin}
-        sx={{
-          borderColor: 'white',
-          color: 'white',
-          fontWeight: 'bold',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-          }
-        }}
-        fullWidth
-      >
-        Continue as Guest <HowToRegSharp />
-      </Button>
+        <Button
+          variant="outlined"
+          onClick={handleGuestLogin}
+          sx={{
+            borderColor: 'white',
+            color: 'white',
+            fontWeight: 'bold',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
+          fullWidth
+        >
+          Continue as Guest <HowToRegSharp />
+        </Button>
+      </Box>
+      <Box mt={2} textAlign="center">
+        <Typography variant="body2" color="white">
+          By continuing, you agree to our{" "}
+          <Link
+            href={"/terms"}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#90caf9", textDecoration: "underline" }}
+          >
+            Terms & Privacy Policy
+          </Link>
+          .
+        </Typography>
+      </Box>
     </>
   );
 }
