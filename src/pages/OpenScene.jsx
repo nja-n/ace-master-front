@@ -1,4 +1,4 @@
-import { Box, CardMedia, Typography } from "@mui/material";
+import { Box, CardMedia, LinearProgress, Typography } from "@mui/material";
 import { useEffect, useState } from 'react';
 import { useUser } from '../components/ui/UserContext';
 import logo from '../images/1000102291.png';
@@ -48,7 +48,7 @@ const OpenScene = ({forceSplash = false}) => {
                             alignItems: 'center',
                             height: '100vh',
                             flexDirection: 'column',
-                            //background: 'linear-gradient(to bottom,rgb(5, 63, 5), #006400)', // Green gradient background
+                            // background: 'linear-gradient(to bottom,rgb(5, 63, 5), #006400)', // Green gradient background
                         }}
                     >
                         {/* <Box>
@@ -62,6 +62,12 @@ const OpenScene = ({forceSplash = false}) => {
                             alt="Logo"
                             sx={{ width: 'auto', height: 'auto', maxWidth: '80%', maxHeight: '80%' }} // Adjust image size as needed
                         />
+                        <Box>
+                            <Typography align="center" gutterBottom color="grey.800">
+                                Welcome to the 2D Game Play
+                            </Typography>
+                            <LinearProgress color="grey"/>
+                        </Box>
                     </div>
                     {/* <Countdown /> */}
                 </>

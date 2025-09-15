@@ -1,26 +1,28 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import './App.css';
 
+import { useEffect, useState } from "react";
+import { LoadingProvider, useLoading } from "./components/LoadingContext";
+import { versionHistory } from "./components/methods";
+import { AlertProvider } from "./components/ui/CustomAlert";
 import LayoutWithBackground from './components/ui/LayoutWithBackground';
+import SpinnerOverlay from "./components/ui/SpinnerOverlay";
+import { UserProvider } from "./components/ui/UserContext";
+import { apiClient } from "./components/utils/ApIClient";
+import VoiceRoom from "./components/voicechat/VoiceRoom";
 import About from './pages/About';
 import BirthDay from './pages/BirthDay';
+import Blog from "./pages/Blog";
 import ContactUs from './pages/ContactUs';
+import FAQ from "./pages/Faq";
+import NotFound from "./pages/fragments/NotFound";
 import GameTable from "./pages/GameTable";
+import Leaderboard from "./pages/LeaderBoard";
 import OpenScene from './pages/OpenScene';
+import ProfilePage from "./pages/Profile";
 import Tasks from './pages/Tasks';
 import TermsPage from './pages/TermsPage';
-import { LoadingProvider, useLoading } from "./components/LoadingContext";
-import SpinnerOverlay from "./components/ui/SpinnerOverlay";
-import ProfilePage from "./pages/Profile";
-import { UserProvider } from "./components/ui/UserContext";
-import Leaderboard from "./pages/LeaderBoard";
-import { useEffect, useState } from "react";
-import { apiClient } from "./components/utils/ApIClient";
-import { versionHistory } from "./components/methods";
-import { AlertConfirmProvider, AlertProvider } from "./components/ui/CustomAlert";
-import FAQ from "./pages/Faq";
-import Blog from "./pages/Blog";
-import NotFound from "./pages/fragments/NotFound";
+import GameTableDesign from "./pages/GameTable2";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
@@ -76,6 +78,8 @@ function AppContent() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/vvv" element={<VoiceRoom/>}/>
+            <Route path="/quick" element={<GameTableDesign/>}/>
           </Routes>
         </LayoutWithBackground>
       </UserProvider>

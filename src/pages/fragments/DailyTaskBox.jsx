@@ -7,7 +7,7 @@ import { apiClient } from "../../components/utils/ApIClient";
 import { claimDailyTask, fetchDailyTasks } from "../../components/methods";
 import { useLoading } from "../../components/LoadingContext";
 
-const DailyTaskRow = ({ updateBalance }) => {
+const DailyTaskRow = () => {
   
   const { setLoading } = useLoading();
   const [claimed, setClaimed] = useState(false);
@@ -38,7 +38,7 @@ const DailyTaskRow = ({ updateBalance }) => {
   };
 
   const handleClaim = async (reward) => {
-    const response = await apiClient(claimDailyTask, { method: "POST" });
+    const response = await apiClient(claimDailyTask, { method: "POST", refreshOnSuccess: true });
     console.log("Claim response:", response);
 
     if (response.status !== "success") {
@@ -47,7 +47,7 @@ const DailyTaskRow = ({ updateBalance }) => {
     }
 
     alert(`Claimed ${reward} coins`);
-    updateBalance(reward);
+    // updateBalance(reward);
     setClaimed(true);
     fireConfetti();
   };

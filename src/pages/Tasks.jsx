@@ -11,20 +11,20 @@ const Tasks = () => {
 
     
 
-    const updateBalance = async (coin) => {
+    /*const updateBalance = async (coin) => {
         if (!user) return;
         setUser(prev => ({
             ...prev,
             coinBalance: prev.coinBalance + coin,
         }));
     }
-
+*/
     return (
         <Box
             sx={{ mx: "auto", mt: 5, px: 3 }}
         >
             <AdBanner />
-            <DailyTaskBox updateBalance={updateBalance} />
+            <DailyTaskBox />
             {/* <ReferralUI coinBalance={user?.coinBalance} /> */}
             <Box
                 sx={{

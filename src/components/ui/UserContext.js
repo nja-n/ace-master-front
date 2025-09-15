@@ -31,8 +31,6 @@ export function UserProvider({ children }) {
                 setNotifications(res.notifications);
                 setCurrentNotifIndex(0);
                 setNotifDialogOpen(true);
-            } else {
-                console.log("First Call:", firstCall);
             }
             firstCall.current = false;
 
@@ -63,13 +61,14 @@ export function UserProvider({ children }) {
         <UserContext.Provider value={{ user, setUser, loading, refreshUser: fetchUser }}>
             {children}
 
-            <Dialog 
-                open={notifDialogOpen} 
+            <Dialog
+                open={notifDialogOpen}
                 onClose={handleCloseNotif}
                 maxWidth
                 PaperProps={{
                     sx: {
-                        backgroundColor: "transparent",   // make the paper itself transparent
+                        //backgroundColor: "transparent",   // make the paper itself transparent
+                        backgroundColor: "#2222228f", // dark background
                         boxShadow: "none",                // remove the shadow
                     },
                 }}
@@ -104,16 +103,26 @@ export function UserProvider({ children }) {
                             <img
                                 src={pre + notifications[currentNotifIndex].image}
                                 alt="notification"
-                                style={{ maxWidth: "100%", borderRadius: "12px" }}
+                                style={{
+                                    maxWidth: "100%",    // fit width of dialog
+                                    maxHeight: "60vh",   // fit within viewport height (adjust as needed)
+                                    width: "auto",
+                                    height: "auto",
+                                    borderRadius: "12px",
+                                    display: "block",
+                                    margin: "0 auto",
+                                    objectFit: "contain"
+                                }}
                             />
                         )}
-                        <Typography>
+                        <Typography sx={{ mt: 2, color: "grey",  }}>
                             {notifications[currentNotifIndex]?.message ||
                                 JSON.stringify(notifications[currentNotifIndex])}
                         </Typography>
-                    </DialogContent> :
+                    </DialogContent>
+                    :
                     <DialogContent dividers>
-                        <DailyTaskBox  />
+                        <DailyTaskBox />
                     </DialogContent>
                 }
             </Dialog>

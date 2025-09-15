@@ -31,9 +31,8 @@ import GameTutorial from '../components/tutorial/GameTutorial';
 import AceMasterLogo from '../components/ui/GameLogoHeader';
 import GloriousButton from '../components/ui/GloriousButton';
 import PlayerAvatarWithTimer from '../components/ui/PlaterWithAvatar';
-import bgGreenTable from '../images/bg-green-table.png';
 import { apiClient } from '../components/utils/ApIClient';
-import { ShareIcon } from 'lucide-react';
+import bgGreenTable from '../images/bg-green-table.png';
 
 export default function GameTable() {
     const ws = useRef(null);
@@ -704,14 +703,6 @@ export default function GameTable() {
         );
     }
 }
-
-const getCardImage = (imageName) => {
-    try {
-        return require(`../images/cards/${imageName}`);
-    } catch (error) {
-        return require(`../images/cards/default_card.jpg`); // Fallback
-    }
-};
 
 const cardStyles = {
     width: 56,

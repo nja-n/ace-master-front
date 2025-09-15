@@ -284,7 +284,7 @@ const Home = () => {
 
                         {/* Mobile Menu */}
                         <IconButton edge="end" color="inherit" onClick={handleMenuOpen} sx={{ display: { xs: "block", sm: "none" } }}>
-                            <MoreVert color="gold"/>
+                            <MoreVert color="gold" />
                         </IconButton>
 
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
@@ -383,24 +383,46 @@ const Home = () => {
                 gap: 3,
                 marginBottom: "2%"
             }}>
-                <GloriousButton
-                    id="play-ai-button"
-                    onClick={!userName ? null : handleStartAiPlay}
-                    text={'Play with AI'}
-                    color="darkblue"
-                />
-                <GloriousButton
-                    id="play-online-button"
-                    onClick={!userName || coinBalance < 100 ? null : handleStartGame}
-                    text={'Start Online'}
-                    color="orange"
-                />
-                <GloriousButton
-                    id="room-session-button"
-                    onClick={!userName ? null : () => setRoomModalOpen(true)}
-                    text={'Room Session'}
-                    color="darkblue"
-                />
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr", // two equal columns
+                        gap: "16px", // spacing between buttons
+                        maxWidth: "400px", // optional: control overall width
+                        margin: "0 auto" // center in parent
+                    }}
+                >
+
+                    <GloriousButton
+                        id="play-online-button"
+                        onClick={!userName || coinBalance < 100 ? null : handleStartGame}
+                        text="Start Online"
+                        color="orange"
+                    />
+
+                    <GloriousButton
+                        id="quick-play-button"
+                        onClick={!userName || coinBalance < 100 ? null : handleStartGame}
+                        text="Quick Play"
+                        color="orange"
+                    />
+
+                    <GloriousButton
+                        id="play-ai-button"
+                        onClick={!userName ? null : handleStartAiPlay}
+                        text="Play with AI"
+                        color="darkblue"
+                    />
+
+                    <GloriousButton
+                        id="room-session-button"
+                        onClick={!userName ? null : () => setRoomModalOpen(true)}
+                        text="Room Session"
+                        color="darkblue"
+                    />
+
+                </div>
+
 
                 <RoomSessionModal
                     open={roomModalOpen}
@@ -473,11 +495,7 @@ const Home = () => {
                     <Stack spacing={2}>
 
                         {/* <Login onAuthenticated={() => setAuthenticated(true)} /> */}
-
-                        {/* <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-                            OR
-                        </Box> */}
-                            <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} />
+                        <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} />
                     </Stack>
                 </DialogContent>
             </Dialog>
