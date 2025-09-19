@@ -1,61 +1,123 @@
-import { useEffect, useRef, useState } from "react";
 import {
-  AppBar,
-  Avatar,
   Box,
   Button,
   Card,
   CardContent,
   CardMedia,
-  Grid,
   IconButton,
   LinearProgress,
-  Toolbar,
-  Typography,
-  useTheme,
+  Popover,
+  Typography
 } from "@mui/material";
-import { ArrowBack, Refresh, QuestionMark, Share } from "@mui/icons-material";
-import { motion, AnimatePresence } from "framer-motion";
-import logo from '../images/back_thumb.jpg';
+import { AnimatePresence, motion } from "framer-motion";
+import React, { Suspense, use, useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import { gameAi, getTimeRemains } from "../components/methods";
+import CustomSnackbar from "../components/ui/CustomSnackBar";
+import PlayerAvatarWithTimer from "../components/ui/PlaterWithAvatar";
+import { Header } from "./fragments/Header";
+import GloriousButton from "../components/ui/GloriousButton";
+import { EmojiEmotionsOutlined } from "@mui/icons-material";
+import EmojiPopover from "../components/ui/EmojiPopover";
 
 export default function GameTableDesign() {
   const [selectedCard, setSelectedCard] = useState(null);
-
-  const [tableCards, setTableCards] = useState(["5♥", "Q♣"]);
-
+  const [tableCards, setTableCards] = useState([]);
 
   const [flyingCard, setFlyingCard] = useState(null);
+  const prevTableCardsRef = useRef([]);
+  const playerRefs = useRef({});
+  const [collectingCards, setCollectingCards] = useState([]);
+  const closedRef = useRef(null);
+  const tableCardRefs = useRef([]);
+
   const containerRef = useRef(null);
   const scrollRef = useRef(null);
   const dropRef = useRef(null);
+  const [isOverDrop, setIsOverDrop] = useState(false);
+  const [draggingIndex, setDraggingIndex] = useState(null);
+  const [zValue, setZvalue] = useState(1000); // high zIndex for dragged card
 
 
-  // const theme = useTheme();
+  const [gameData, setGameData] = useState(null);
+  const token = localStorage.getItem("accessToken");
+  const ws = useRef(null);
+  const { roomId } = useParams();
+  const [timeLeft, setTimeLeft] = useState(15);
 
-  // Dummy data
-  const dummyPlayers = [
-    { id: 1, name: "Alice", cards: [1, 2, 3], rank: 1 },
-    { id: 2, name: "Bob", cards: [1, 2, 3], rank: 2 },
-    { id: 3, name: "Charlie", cards: [1, 2, 3], rank: null },
-    { id: 3, name: "Charlie", cards: [1, 2, 3], rank: null },
-    { id: 3, name: "Charlie", cards: [1, 2, 3], rank: null },
-    { id: 3, name: "Charlie", cards: [1, 2, 3], rank: null },
-  ];
-  const clientPlayer = {
-    id: 0,
-    name: "You",
-    cards: [
-      { number: "A", symbol: "♠", color: "black" },
-      { number: "10", symbol: "♥", color: "red" },
-      { number: "7", symbol: "♣", color: "black" },
-      { number: "K", symbol: "♦", color: "red" }
-    ]
-    ,
-    sorted: false,
-  };
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info"
+  });
+
+  const [anchorPopoverEl, setAnchorPopoverEl] = useState(null);
+  const pickerRef = useRef(null);
+
+  const [closecardFlipped, setClosecardFlipped] = useState(false);
+
   useEffect(() => {
-    setTableCards(["5♥", "Q♣", "5♥", "Q♣", "5♥", "Q♣"]);
-  }, []);
+    if (!token) return;
+
+    ws.current = new WebSocket(`${gameAi}?token=${token}${roomId ? "&roomId=" + roomId : ""}`);
+
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setGameData(data);
+    };
+
+    ws.current.onopen = () => console.log("WebSocket connected");
+    ws.current.onerror = (err) => console.error("WS error", err);
+    ws.current.onclose = () => console.log("WS closed");
+
+    if (pickerRef.current) {
+      pickerRef.current.addEventListener("emoji-click", (event) => {
+        handleEmojiClick(event.detail.unicode);
+      });
+    }
+
+    return () => ws.current.close();
+
+  }, [token]);
+
+  useEffect(() => {
+    if (gameData?.sessionId) {
+      let url = getTimeRemains.replace('SESSION_ID', gameData.sessionId);
+      fetch(url)
+        .then((res) => res.json())
+        .then((time) => setTimeLeft(time));
+    }
+    if (gameData && gameData?.turnIndex >= 0 && gameData.looserPlayer == null) {
+      if (gameData.turnIndex === gameData.clientPlayer.gameIndex) {
+        /*audioFlip2.current.play().catch((err) => {
+          console.warn("Failed to play sound:", err);
+        });*/
+      }
+
+      const interval = setInterval(() => {
+        let url = getTimeRemains.replace('SESSION_ID', gameData.sessionId);
+        if (gameData?.sessionId) {
+          fetch(url)
+            .then((res) => res.json())
+            .then((time) => {
+              setTimeLeft(time);
+              if (time < 1) {
+                if (gameData?.turnIndex === gameData.clientPlayer.gameIndex) {
+                  setSnackbar({ open: true, message: "Time Out!", severity: "info" });
+                  // setSnackbar({ open: true, message: "Time Out!" });
+                  /*audioPlace.current.play().catch((err) => {
+                    console.warn("Failed to play sound:", err)
+                  });*/
+                }
+                setSelectedCard(null);
+              }
+            });
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+
+  }, [gameData?.turnIndex]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -64,14 +126,50 @@ export default function GameTableDesign() {
         behavior: "smooth", // optional smooth scroll
       });
     }
-  }, []); // scroll on mount
+  }, [scrollRef]); // scroll on mount
+
+  useEffect(() => {
+    if (gameData?.tableCards?.length === 0) {
+      startCollectAnimation();
+    }
+    const prevCards = prevTableCardsRef.current;
+    const currentCards = gameData?.tableCards || [];
+    //gameData?.tableCards?.[i]
+
+    if (currentCards.length > prevCards.length) {
+      let card = currentCards[currentCards.length - 1];
+      const addedTurnIndex = card?.addedTurnIndex;
+
+      const playerElement = playerRefs.current[addedTurnIndex];
 
 
-  const closedCards = 20;
-  const countDown = 5;
+      if (!playerElement) return;
+
+      const playerBox = playerElement.getBoundingClientRect();
+      const containerBox = containerRef.current.getBoundingClientRect();
+
+      const top = ((playerBox.top + playerBox.height / 2 - containerBox.top) / containerBox.height) * 100;
+      const left = ((playerBox.left + playerBox.width / 2 - containerBox.left) / containerBox.width) * 100;
+
+      setFlyingCard({ card, top, left });
+
+      setTimeout(() => {
+        setTableCards((prev) => [...prev, card]); // add to table
+        setFlyingCard(null);
+      }, 1000);
+    }
+    prevTableCardsRef.current = currentCards;
+
+  }, [gameData?.tableCards]);
+
+
+  let players = gameData?.players || [];
+  const clientPlayer = gameData?.clientPlayer || null;
+  players = players.filter(player => !player.client);
+
 
   const handlePlayerClick = (player, e) => {
-    if (!player.cards.length || !containerRef.current) return;
+    if (!player.cards?.length || !containerRef.current) return;
 
     const card = player.cards[0]; // pick 1 card for demo
     const containerBox = containerRef.current.getBoundingClientRect();
@@ -84,12 +182,12 @@ export default function GameTableDesign() {
     setFlyingCard({ card, top, left });
 
     setTimeout(() => {
-      setTableCards((prev) => [...prev, card]); // add to table
+      // setTableCards((prev) => [...prev, card]); // add to table
       setFlyingCard(null);
     }, 1000);
   };
 
-  const handleDrop = (card, info) => {
+  const handleDrop = (card, info, isValid) => {
     if (!dropRef.current) return;
 
     const dropBox = dropRef.current.getBoundingClientRect();
@@ -101,19 +199,143 @@ export default function GameTableDesign() {
       y >= dropBox.top &&
       y <= dropBox.bottom
     ) {
-      console.log("\nDropped:", card);
-      //setDroppedCards((prev) => [...prev, card]);
+      if (!selectedCard) {
+        setSelectedCard(card);
+      }
+      handlePlayCard();
+    } else {
+      if( draggingIndex && zValue){
+        alert('New Index is ' + zValue)
+      }
+    }
 
-      // 🚀 TODO: trigger your game action here
+    setIsOverDrop(false);
+
+    setZvalue(draggingIndex);
+    setDraggingIndex(null);
+  };
+
+  const handleDragCard = (event, info) => {
+    if (!dropRef.current) return;
+    const dropBox = dropRef.current.getBoundingClientRect();
+    const { x, y } = info.point;
+
+    // 👇 highlight drop zone while hovering
+    if (
+      x >= dropBox.left &&
+      x <= dropBox.right &&
+      y >= dropBox.top &&
+      y <= dropBox.bottom
+    ) {
+      if (!isOverDrop) setIsOverDrop(true);
+    } else {
+      if (isOverDrop) setIsOverDrop(false);
+    }
+
+    if (draggingIndex === null) return;
+
+    const dx = info.offset.x;
+
+    // slot width = 30px
+    const shift = Math.round(dx / 30);
+    const i = draggingIndex;
+    setZvalue(i + shift);
+
+  }
+
+
+  if (!gameData) {
+    return <Typography color="white">Loading...</Typography>;
+  }
+
+  const snackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleStartGame = () => {
+    ws.current.send(JSON.stringify({ way: "start" }));
+    setSelectedCard(null);
+    //setJoyrideRef(3);
+  };
+
+  const handlePlayCard = () => {
+    if (selectedCard !== null) {
+      if (gameData.turnIndex === clientPlayer.gameIndex) {
+        const isTurn = (!hasMatchingCard || gameData.tableSuit == null || selectedCard.cardName === gameData.tableSuit);
+        if (isTurn) {
+          let selectedCardValue = selectedCard.id;
+          ws.current.send(JSON.stringify({ way: "push", player: clientPlayer.id, card: selectedCardValue }));
+          /*audioPlace.current.play().catch((err) => {
+            console.warn("Failed to play sound:", err)
+          });*/
+        } else {
+          setSnackbar({ open: true, message: "You must follow the suit!", severity: "warning" });
+        }
+      } else {
+        setSnackbar({ open: true, message: "It's not your turn!", severity: "warning" });
+      }
+      setSelectedCard(null);
     }
   };
 
+  const handleSortCard = () => {
+    if (!clientPlayer.sorted) {
+      setSelectedCard(null);
+      ws.current.send(JSON.stringify({ way: "sort", player: clientPlayer.id }));
+    }
+  };
 
+  const startCollectAnimation = () => {
+    if (!closedRef.current) return;
+
+    const closedRect = closedRef.current.getBoundingClientRect();
+
+    const animCards = tableCards.map((card, i) => {
+      const tableRect = tableCardRefs.current[i]?.getBoundingClientRect();
+      if (!tableRect) return null;
+
+      return {
+        ...card,
+        from: {
+          top: tableRect.top,
+          left: tableRect.left,
+        },
+        to: {
+          top: closedRect.top,
+          left: closedRect.left,
+        },
+      };
+    }).filter(Boolean);
+
+    // setTableCards([]); // clear table immediately
+    setCollectingCards(animCards);
+
+    // clear after animation ends
+    setTimeout(() => {
+      setCollectingCards([]);
+      setTableCards([]);
+      // update backend / move to closed pile here
+    }, 1000);
+  };
+
+  const handleEmojiInputOpen = (event) => {
+    setAnchorPopoverEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorPopoverEl(null);
+  };
+
+  const handleEmojiClick = (emojiData, e) => {
+    setAnchorPopoverEl(null);
+    alert(`Send emoji: ${emojiData}`);
+  };
+
+  const hasMatchingCard = clientPlayer.cards && clientPlayer.cards.some(card => card.cardName === gameData.tableSuit);
 
   return (
     <Box
       ref={scrollRef}
-
       sx={{
         width: "100%",         // Full width
         height: "100vh",        // Full height of viewport
@@ -122,41 +344,58 @@ export default function GameTableDesign() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "flex-start", // distribute top/middle/bottom
-        //backgroundColor: "#2e7d32",
         backgroundSize: "cover",
         backgroundPosition: "center",
         overflow: "auto",
       }}
     >
+      <Header />
+      <Box
+        sx={{
+          position: "absolute",
+          top: "75%",
+          right: 10,
+          backgroundColor: "rgba(0,0,0,0.7)",
+          color: "lime",
+          padding: "6px 10px",
+          borderRadius: "8px",
+          fontSize: "12px",
+          fontFamily: "monospace",
+          zIndex: 0,
+          opacity: 0.4,
+        }}
+      >
+        Session ID: {gameData.sessionId}
+      </Box>
 
       {/* Opponents Section */}
       <Box
-
         ref={containerRef}
         sx={{
           position: "relative",
           width: "100%",  // full width of parent
+          // maxWidth: 700, 
+          minHeight: "60vh", // limit height
           maxWidth: { xs: "100%", sm: 500, md: 600 }, // cap on bigger screens
           aspectRatio: {
             xs: "3/4",   // mobile (taller oval)
             sm: "4/3",   // tablet (balanced oval)
-            md: "3/2",   // desktop (wider oval)
+            md: "4/3",   // desktop (wider oval)
           },
-
-          borderRadius: "50%",
-          background: "radial-gradient(circle, #044a2d, #022218)",
+          // aspectRatio: "4/3",
+          background: "radial-gradient(circle, #044a2dd0, #022218cc)",
           height: "100%",          // show only 3/4 of the height
           borderRadius: "50% / 75%", // squash vertically so top looks right
-
           margin: "0 auto", // center horizontally
           overflow: "hidden",     //
-          //clipPath: "inset(0 0 25% 0)",
+          // clipPath: "inset(0 0 25% 0)",
         }}
 
       >
+
         {/* Players on top half circle */}
-        {dummyPlayers.map((player, index) => {
-          const total = dummyPlayers.length;
+        {players.map((player, index) => {
+          const total = players.length;
           const angle = (index / (total - 1)) * Math.PI; // 0 → π (top half)
           const radius = { xs: 30, sm: 40, md: 40 }; // smaller on mobile
 
@@ -164,6 +403,7 @@ export default function GameTableDesign() {
           return (
             <Box
               key={player.id}
+              ref={(el) => (playerRefs.current[player.gameIndex] = el)}
               sx={{
                 position: "absolute",
                 top: `${50 - 40 * Math.sin(angle)}%`, // top half arc
@@ -174,24 +414,36 @@ export default function GameTableDesign() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-
                 justifyContent: "center",
               }}
             >
-              <Avatar>
-
-              </Avatar>
+              <PlayerAvatarWithTimer
+                gameData={gameData}
+                player={player}
+                timeLeft={timeLeft}
+              />
               <Typography color="white" fontWeight="bold" fontSize={{ xs: 10, sm: 12, md: 14 }}>
-                {player.name}
+                {player.firstName}
               </Typography>
-              <Box display="flex" gap={0.5} justifyContent="center" onClick={(e) => handlePlayerClick(player, e)}>
-                {player.cards.map((_, i) => (
+              <Box display="flex" gap={0.5}
+                justifyContent="center"
+                onClick={(e) => handlePlayerClick(player, e)}
+                sx={{
+                  position: "relative",
+                  height: { xs: 30, sm: 45, md: 60 },
+                  cursor: player.cards?.length ? "pointer" : "default",
+                  left: "-50%",
+                  transform: "translateX(-50%)",
+                }}>
+                {player.cards.map((card, i) => (
                   <Card
                     key={i}
                     sx={{
+                      position: "absolute",
                       width: { xs: 20, sm: 30, md: 40 },
                       height: { xs: 30, sm: 45, md: 60 },
                       backgroundColor: "gray",
+                      left: `${i * 2}px`,
                     }}>
                     <CardMedia
                       component="img"
@@ -218,31 +470,111 @@ export default function GameTableDesign() {
             gap: { xs: 1, sm: 2, md: 3 },
           }}
         >
-          {/* Closed Cards */}
-          <Card sx={{ width: { xs: 40, sm: 50, md: 60 }, height: { xs: 60, sm: 75, md: 90 }, backgroundColor: "white" }}>
-            <CardContent
-              sx={{ fontSize: { xs: 14, sm: 18, md: 24 }, textAlign: "center", fontWeight: "bold", p: 1 }}
-            >
-              {closedCards}
-              <Box sx={{ fontSize: { xs: 8, sm: 10, md: 12 } }}>Cards</Box>
-            </CardContent>
-          </Card>
 
-          {/* Table Cards */}
-          <Box display="flex" gap={{ xs: 1, sm: 1.5, md: 2 }}>
-            {tableCards.map((c, i) => (
+          {gameData.turnIndex >= 0 && (
+            <>
+              {/* Closed Cards */}
               <Card
-                key={i}
-                sx={{ width: { xs: 40, sm: 50, md: 60 }, height: { xs: 60, sm: 75, md: 90 }, backgroundColor: "white" }}
+                ref={closedRef}
+                onClick={() => setClosecardFlipped(!closecardFlipped)}
+                sx={{
+                  width: { xs: 40, sm: 50, md: 60 },
+                  height: { xs: 60, sm: 75, md: 90 },
+                  perspective: "1000px", // 👈 3D effect
+                  cursor: "pointer",
+                }}
               >
-                <CardContent
-                  sx={{ fontSize: { xs: 12, sm: 18, md: 22 }, textAlign: "center", fontWeight: "bold", p: 1 }}
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    position: "relative",
+                    transformStyle: "preserve-3d",
+                    transition: "transform 0.6s",
+                    transform: closecardFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                  }}
                 >
-                  {c}
-                </CardContent>
+                  {/* Front (CardMedia) */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      width: "100%",
+                      height: "100%",
+                      backfaceVisibility: "hidden",
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      image={getCardImage("card-back.png")}
+                      alt="Logo"
+                      sx={{ width: "97%", height: "99%" }}
+                    />
+                  </Box>
+
+                  {/* Back (CardContent) */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      width: "100%",
+                      height: "100%",
+                      backfaceVisibility: "hidden",
+                      transform: "rotateY(180deg)",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "white",
+                    }}
+                  >
+                    <CardContent
+                      sx={{
+                        fontSize: { xs: 14, sm: 18, md: 24 },
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        p: 1,
+                      }}
+                    >
+                      {gameData?.closedCards?.length}
+                      <Box sx={{ fontSize: { xs: 8, sm: 10, md: 12 } }}>Cards</Box>
+                    </CardContent>
+                  </Box>
+                </Box>
               </Card>
-            ))}
-          </Box>
+
+
+              {/* Table Cards */}
+              <Box display="flex" gap={{ xs: 1, sm: 1.5, md: 2 }}>
+                {Array.from({ length: gameData?.players.length }).map((_, i) => {
+                  const c = tableCards[i]; // slot i may or may not have a card
+
+                  return (
+                    <Card
+                      key={i}
+                      ref={(el) => (tableCardRefs.current[i] = el)}
+                      sx={{
+                        // position: "absolute",
+                        width: { xs: 50, sm: 50, md: 60 },
+                        height: { xs: 75, sm: 75, md: 90 },
+                        border: !c ? "2px dashed rgba(0,0,0,0.2)" : "", // outline for empty slot
+                        opacity: c ? 1 : 0.5,
+                        zIndex: c ? 1 : 0,
+                      }}
+                    >
+                      {c ? (
+                        renderCardDesign(c, "classic")
+                      ) : (
+                        <Box sx={{ fontSize: { xs: 10, sm: 12, md: 14 }, color: "gray", p: 1 }}>
+                          Empty
+                        </Box>
+                      )}
+                    </Card>
+                  );
+                })}
+              </Box>
+            </>
+          )}
+
+          {/* Start and Drop Zone */}
           <Box
             ref={dropRef}
             sx={{
@@ -250,9 +582,9 @@ export default function GameTableDesign() {
               bottom: 40,
               left: "50%",
               transform: "translateX(-50%)",
-              width: 200,
+              width: 250,
               height: 120,
-              border: "2px dashed #fff",
+              border: `2px dashed ${isOverDrop ? "gold" : "#fff"}`,
               borderRadius: "12px",
               backgroundColor: "rgba(255,255,255,0.1)",
               display: "flex",
@@ -262,14 +594,39 @@ export default function GameTableDesign() {
               fontWeight: "bold",
             }}
           >
-            Drop Here
+            {gameData.turnIndex < 0
+              ? (
+                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                  {gameData.players.length > 2 &&
+                    <GloriousButton onClick={() => handleStartGame()}
+                      text='Start' />
+                  }
+                  <Box display="flex" flexDirection="column" alignItems="center"
+                    width="100%" style={{ fontSize: 20, }}>
+                    {gameData.countDown === 0 || gameData.countDown === '0' ? (
+                      <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                        Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
+                      </Typography>
+                    ) : (
+                      <Typography variant="body1" sx={{ mb: 1 }}>
+                        Starts in... ({gameData.countDown} Sec)
+                      </Typography>
+                    )}
+
+                    <Box width="60%">
+                      <LinearProgress color="inherit" />
+                    </Box>
+                  </Box>
+                </Box>
+              ) : (
+                <Typography>Drop Here</Typography>
+              )}
           </Box>
         </Box>
         {/* Flying Card Animation */}
         <AnimatePresence>
           {flyingCard && (
             <motion.div
-              // initial={{ top: "10%", left: "30%" }} // starting point
               initial={{ top: `${flyingCard.top}%`, left: `${flyingCard.left}%` }}
               animate={{ top: "70%", left: "50%" }} // table center
               exit={{ opacity: 0 }}
@@ -286,12 +643,52 @@ export default function GameTableDesign() {
                 fontWeight: "bold",
               }}
             >
-              {flyingCard.card}
+              {renderCardDesign(flyingCard.card, "classic")}
             </motion.div>
           )}
         </AnimatePresence>
+        {collectingCards.map((card) => (
+          <motion.div
+            key={card.id}
+            initial={{
+              top: card.from.top - containerRef.current?.getBoundingClientRect().top,
+              left: card.from.left - containerRef.current?.getBoundingClientRect().left,
+              rotateY: 0,
+              position: "absolute",
+            }}
+            animate={{
+              top: card.to.top - containerRef.current?.getBoundingClientRect().top,
+              left: card.to.left - containerRef.current?.getBoundingClientRect().left,
+              rotateY: 180,
+            }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            style={{ pointerEvents: "none" }}
+          >
+            {renderCardDesign(card, "classic")}
+          </motion.div>
+        ))}
 
+        <Box
+          ref={(el) => (playerRefs.current[clientPlayer.gameIndex] = el)}
+          sx={{
+            position: "absolute",
+            top: "100%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 30,
+            height: 30,
+            border: "2px dashed #fff",
+            borderRadius: "12px",
+            backgroundColor: "rgba(255,255,255,0.1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontWeight: "bold",
+          }}
+        >
 
+        </Box>
       </Box>
 
       {/* Bottom, Section*/}
@@ -299,102 +696,120 @@ export default function GameTableDesign() {
         position="relative"
         textAlign="center"
         sx={{
-          p: 2,
+          // p: 2,
           borderTop: "2px solid rgba(255,255,255,0.3)",
           backgroundColor: "rgba(0,0,0,0.2)",
         }}
         width="100%"
       >
+        {/* Avatar with smiley button */}
+        <Box position="relative" display="inline-block">
+          <PlayerAvatarWithTimer
+            gameData={gameData}
+            player={clientPlayer}
+            timeLeft={timeLeft}
+          />
+          <IconButton
+            size="small"
+            sx={{
+              position: "absolute",
+              top: -6,
+              right: -6,
+              backgroundColor: "rgba(0,0,0,0.4)",
+              color: "white",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.2)" },
+            }}
+            onClick={handleEmojiInputOpen}
+          >
+            <EmojiEmotionsOutlined fontSize="small" />
+          </IconButton>
+        </Box>
         <Typography color="white" variant="h6">
-          {clientPlayer.name}
+          {clientPlayer.firstName}
         </Typography>
 
         {/* Cards */}
-        <Box
-          display="flex"
-          justifyContent="center"
-          position="relative"
-          sx={{ height: 120, width: "100%", mt: 1 }}
-        >
-          {clientPlayer.cards.map((card, i) => (
-            <motion.div
-              key={i}
-              drag
-              // dragConstraints={{ left: 0, right: 300, top: 0, bottom: 100 }} // keep inside
-              dragConstraints={{ top: -300, bottom: 0, left: -40, right: 40 }}
-
-
-              // style={{
-              //   position: "absolute",
-              //   //left: i * 30,
-              //   cursor: "grab",
-              // }}
-
-              whileDrag={{ scale: 1.15 }} // smooth zoom on drag
-              onMouseDown={() => setSelectedCard(i)}
-              onDragEnd={(event, info) => handleDrop(card, info)}
+        {gameData.turnIndex >= 0 && (
+          <>
+            <Box
+              display="flex"
+              justifyContent="center"
+              position="relative"
+              sx={{ height: 120, width: "100%", mt: 1 }}
             >
-              <Card
-                key={i}
-                onClick={() => setSelectedCard(i)}
-                sx={{
-                  position: "absolute",
-                  // left: `${i * 30}px`, // overlap spacing
-                  left: `calc(50% - ${(clientPlayer.cards.length * 30) / 2}px + ${i * 30}px)`,
-                  width: selectedCard === i ? 80 : 60,
-                  height: selectedCard === i ? 110 : 90,
-                  // backgroundColor: "white",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease-in-out",
-                  transform: selectedCard === i ? "translateY(-15px)" : "none",
-                  boxShadow: selectedCard === i ? 6 : 2,
-                  // borderRadius: "8px",
-                  overflow: "hidden",
-                }}
-              >
-                {/* <CardContent
-                  sx={{
-                    fontSize: 22,
-                    textAlign: "center",
-                    color: card.color === "red" ? "red" : "black", // dynamic color
-                    p: 1,
-                  }}
-                >
-                  {card.symbol} {card.number}
-                </CardContent> */}
-                {/* <CardMedia
-                  component="img"
-                  image={getCardImage(card.fileName)}
-                  alt="Logo"
-                  sx={{ width: "97%", height: "99%" }}
-                /> */}
-                {renderCardDesign(card, "classic")}
-              </Card>
-            </motion.div>
-          ))}
-        </Box>
+              {clientPlayer.cards.map((card, i) => {
+                const isSelected = selectedCard && selectedCard.id === card.id;
+                const isTurn =
+                  gameData.turnIndex === clientPlayer.gameIndex &&
+                  (!hasMatchingCard || gameData.tableSuit == null || card.cardName === gameData.tableSuit);
+
+                return (
+                  <motion.div
+                    key={i}
+                    drag
+                    dragSnapToOrigin
+                    dragConstraints={{ top: -300, bottom: 0, left: -100, right: 100 }}
+                    whileDrag={{ scale: 1.15 }}
+                    onMouseDown={() => setSelectedCard(card)}
+                    onDragStart={() => setDraggingIndex(i)}
+                    onDragEnd={(event, info) => handleDrop(card, info, isTurn)}
+                    onDrag={(event, info) => handleDragCard(event, info)}
+                    style={{
+                      position: "absolute",
+                      left: `calc(50% - ${(clientPlayer.cards.length * 30) / 2}px + ${i * 30}px)`,
+                      zIndex: draggingIndex === i ? zValue : i,
+                    }}
+                  >
+                    <Card
+                      onClick={() => setSelectedCard(card)}
+                      sx={{
+                        width: isSelected ? 80 : 60,
+                        height: isSelected ? 110 : 90,
+                        cursor: "pointer",
+                        transition: "all 0.2s ease-in-out",
+                        transform: isSelected ? "translateY(-15px)" : "none",
+                        boxShadow: isSelected ? 6 : 2,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {renderCardDesign(card, "classic", isTurn)}
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </Box>
 
 
-        {/* Action Buttons */}
-        <Box mt={2} display="flex" justifyContent="center" gap={2}>
-          <Button variant="contained" color="primary">
-            Sort
-          </Button>
-          <Button
-            variant="contained"
-            color="secondary"
-            disabled={selectedCard === null}
-          >
-            Place
-          </Button>
-        </Box>
 
-        {/* Countdown */}
-        <Box mt={2} width="60%" mx="auto">
-          <Typography color="white">Starts in... {countDown} Sec</Typography>
-          <LinearProgress color="inherit" />
-        </Box>
+            {/* Action Buttons */}
+            <Box display="flex" justifyContent="center" gap={2}>
+              {!clientPlayer.sorted && gameData.turnIndex >= 0 && (
+                <GloriousButton
+                  onClick={() => handleSortCard()}
+                  text='SORT'
+                />
+              )}
+              <GloriousButton
+                onClick={selectedCard !== null
+                  ? () => handlePlayCard()
+                  : null
+                }
+                text='PLACE'
+              />
+            </Box>
+          </>
+        )}
       </Box>
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={snackbarClose}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
+      <EmojiPopover 
+        anchorPopoverEl={anchorPopoverEl}
+        handlePopoverClose={handlePopoverClose}
+        onEmojiSelect={handleEmojiClick}/>
     </Box>
   );
 }
@@ -404,13 +819,11 @@ const getCardImage = (imageName) => {
   try {
     return require(`../images/cards/${imageName}`);
   } catch (error) {
-
     return require(`../images/card-back.png`); // Fallback
-    // return require(`../images/cards/default_card.jpg`); // Fallback
   }
 };
 
-const renderCardDesign = (card, theme) => {
+const renderCardDesign = (card, theme, isMatched = true) => {
   switch (theme) {
     case "classic":
       return (
@@ -418,7 +831,7 @@ const renderCardDesign = (card, theme) => {
           sx={{
             width: "100%",
             height: "100%",
-            backgroundColor: "white",
+            backgroundColor: isMatched ? 'white' : "gray",
             border: "2px solid #000",
             borderRadius: "12px",
             boxShadow: 3,
@@ -434,19 +847,18 @@ const renderCardDesign = (card, theme) => {
             flexDirection: "column",
             alignItems: "flex-start",
             fontSize: 16,
-            color: card.color,
+            color: card?.color || "green",
             lineHeight: 1.1,
           }}
           >
-
-            <span> {card.number}</span>
-            <span>{card.symbol}</span>
+            <span> {card.cardNumber}</span>
+            <span>{card.cardIcon}</span>
           </Box>
           <Box sx={{ position: "absolute", bottom: 5, right: 5, fontSize: 16, color: card.color }}>
-            {card.symbol} {card.number}
+            {card.cardIcon} {card.cardNumber}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 36, color: card.color }}>
-            {card.symbol}
+            {card.cardIcon}
           </Box>
         </Card>
       );
