@@ -241,6 +241,12 @@ const Home = () => {
         }
     }
 
+    const handleStartQucikPlay = async () => {
+        if (await window.confirm('Are you ready to play with AI?')) {
+            navigate("/quick");
+        }
+    }
+
     return (
         <Box
             sx={{
@@ -402,7 +408,7 @@ const Home = () => {
 
                     <GloriousButton
                         id="quick-play-button"
-                        onClick={!userName ? null : handleStartAiPlay}
+                        onClick={!userName ? null : handleStartQucikPlay}
                         text="Quick Bot"
                         color="orange"
                     />
