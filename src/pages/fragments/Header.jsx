@@ -4,7 +4,7 @@ import CoinWithText from "./CoinWithText";
 import { ArrowBack, Home } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../components/ui/UserContext";
-import homeIcon from '../../images/home.png';
+import ImageIcon from "../../components/ui/CustomImageIcon";
 export const Header = (color) => {
   const navigate = useNavigate();
   const {user} = useUser();
@@ -26,9 +26,8 @@ export const Header = (color) => {
         <IconButton
           edge="start"
           color="inherit"
-          onClick={() => navigate(-1)}
         >
-          <ArrowBack />
+          <ImageIcon onclick={() => navigate(-1)} icon = "back"/>
           
         </IconButton>
         {/* Left side: Logo */}
@@ -37,10 +36,7 @@ export const Header = (color) => {
         {/* Right side: Balance + Nav */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <CoinWithText coinBalance={user && user.coinBalance} />
-          {/* <Home onClick={() => navigate("/")} style={{ cursor: "pointer" }} /> */}
-            <img src={homeIcon} width={33} height={33} 
-              onClick={() => navigate("/")} style={{ cursor: "pointer" }} 
-            />
+            <ImageIcon onclick={() => navigate("/")} icon = "home"/>
         </Box>
       </Toolbar>
     </AppBar>

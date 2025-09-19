@@ -8,9 +8,10 @@ import { Header } from "../../pages/fragments/Header";
 const LayoutWithBackground = ({ children, version }) => {
   const location = useLocation();
 
-  const gameRoutes = ["/", "/game", "/game/:roomId"];
-  const isGameRoute =
-    location.pathname === "/" || location.pathname.startsWith("/game");
+  const isGameRoute 
+    = location.pathname === "/" 
+    || location.pathname.startsWith("/game")
+    || location.pathname.startsWith("/quick");
 
   return (
     <Box

@@ -2,10 +2,10 @@ import React from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import CustomAvatar from './CustomAvathar'; // Make sure this is imported correctly
 
-const PlayerAvatarWithTimer = ({ gameData, clientPlayer, timeLeft, playerName, getOrdinalSuffix }) => {
-  const isCurrentTurn = gameData.turnIndex === clientPlayer.gameIndex;
-  const displayLetter = playerName?.charAt(0)?.toUpperCase() || '?';
-  const rank = clientPlayer.winningRank ? getOrdinalSuffix(clientPlayer.winningRank) : null;
+const PlayerAvatarWithTimer = ({ gameData, player, timeLeft}) => {
+  const isCurrentTurn = gameData.turnIndex === player.gameIndex;
+  const displayLetter = player.gameIndex;//.firstName?.charAt(0)?.toUpperCase() || '?';
+  const rank = player.winningRank ? getOrdinalSuffix(player.winningRank) : null;
 
   return (
     <Box position="relative" display="inline-flex">
@@ -42,3 +42,21 @@ const PlayerAvatarWithTimer = ({ gameData, clientPlayer, timeLeft, playerName, g
 };
 
 export default PlayerAvatarWithTimer;
+
+function getOrdinalSuffix(rank) {
+    if (rank == 0) {
+        return 'Looser';
+    }
+    const j = rank % 10,
+        k = rank % 100;
+    if (j === 1 && k !== 11) {
+        return `🥇 ${rank}st\n-`;
+    }
+    if (j === 2 && k !== 12) {
+        return `🥈 ${rank}nd\n-`;
+    }
+    if (j === 3 && k !== 13) {
+        return `🥉 ${rank}rd\n-`;
+    }
+    return `${rank}th\n-`;
+}

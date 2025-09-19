@@ -402,8 +402,8 @@ const Home = () => {
 
                     <GloriousButton
                         id="quick-play-button"
-                        onClick={!userName || coinBalance < 100 ? null : handleStartGame}
-                        text="Quick Play"
+                        onClick={!userName ? null : handleStartAiPlay}
+                        text="Quick Bot"
                         color="orange"
                     />
 

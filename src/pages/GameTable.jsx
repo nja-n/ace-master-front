@@ -137,7 +137,6 @@ export default function GameTable() {
                                         console.warn("Failed to play sound:", err)
                                     });
                                 }
-
                                 setSelectedCard(null);
                             }
                         });
@@ -438,11 +437,8 @@ export default function GameTable() {
                         <Grid item key={player.id} textAlign="center">
                             <PlayerAvatarWithTimer
                                 gameData={gameData}
-                                clientPlayer={player}
+                                player={player}
                                 timeLeft={timeLeft}
-                                playerName={player.firstName}
-                                getOrdinalSuffix={getOrdinalSuffix}
-                                size={30}
                             />
                             {/* <Box position="relative" display="inline-flex">
                                 {gameData.turnIndex === player.gameIndex ? (
@@ -728,41 +724,4 @@ function getOrdinalSuffix(rank) {
     }
     return `${rank}th\n-`;
 }
-
-const getPlayerAngles = (numOpponents) => {
-  switch (numOpponents) {
-    case 1: return [0]; // top
-    case 2: return [-45, 45]; // left-top, right-top
-    case 3: return [-90, 0, 90]; // left, top, right
-    case 4: return [-72, -24, 24, 72]; // spaced around top
-    case 5: return [-60, -30, 0, 30, 60];
-    case 6: return [-60, -36, -12, 12, 36, 60];
-    default:
-      // fallback for >6, full circle
-      return Array.from({ length: numOpponents }, (_, i) => (i / numOpponents) * 360 - 180);
-  }
-};
-const radius = 250;
-const center = { x: 200, y: 200 };
-// const angles = getPlayerAngles(players.length - 1); // exclude client player
-
-// players.forEach((player, index) => {
-//   let angleDeg;
-
-//   if (player.isClient) {
-//     // client player always at bottom
-//     angleDeg = 180; 
-//   } else {
-//     // opponents get angle from array
-//     angleDeg = angles.shift(); // assign in order
-//   }
-
-//   const angleRad = (angleDeg * Math.PI) / 180;
-//   const x = center.x + radius * Math.cos(angleRad) - 30;
-//   const y = center.y + radius * Math.sin(angleRad) - 30;
-
-//   // render player at (x, y)
-// });
-
-
 

@@ -64,7 +64,7 @@ const OpenScene = ({forceSplash = false}) => {
                         />
                         <Box>
                             <Typography align="center" gutterBottom color="grey.800">
-                                Welcome to the 2D Game Play
+                                Let’s shuffle in and start the fun!
                             </Typography>
                             <LinearProgress color="grey"/>
                         </Box>

@@ -38,17 +38,20 @@ const DailyTaskRow = () => {
   };
 
   const handleClaim = async (reward) => {
+    setLoading(true);
     const response = await apiClient(claimDailyTask, { method: "POST", refreshOnSuccess: true });
     console.log("Claim response:", response);
 
     if (response.status !== "success") {
       alert("Failed to claim reward");
+      setLoading(false);
       return;
     }
 
     alert(`Claimed ${reward} coins`);
     // updateBalance(reward);
     setClaimed(true);
+    setLoading(false);
     fireConfetti();
   };
 
