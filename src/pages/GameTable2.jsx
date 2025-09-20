@@ -36,7 +36,7 @@ export default function GameTableDesign() {
   const dropRef = useRef(null);
   const [isOverDrop, setIsOverDrop] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState(null);
-  const [zValue, setZvalue] = useState(1000); // high zIndex for dragged card
+  const zValue = useRef(0); // high zIndex for dragged card
 
 
   const [gameData, setGameData] = useState(null);
@@ -52,7 +52,7 @@ export default function GameTableDesign() {
   });
 
   const [anchorPopoverEl, setAnchorPopoverEl] = useState(null);
-  const pickerRef = useRef(null);
+  const [flyingEmojis, setFlyingEmojis] = useState([]);
 
   const [closecardFlipped, setClosecardFlipped] = useState(false);
 
@@ -69,12 +69,6 @@ export default function GameTableDesign() {
     ws.current.onopen = () => console.log("WebSocket connected");
     ws.current.onerror = (err) => console.error("WS error", err);
     ws.current.onclose = () => console.log("WS closed");
-
-    if (pickerRef.current) {
-      pickerRef.current.addEventListener("emoji-click", (event) => {
-        handleEmojiClick(event.detail.unicode);
-      });
-    }
 
     return () => ws.current.close();
 
@@ -129,9 +123,6 @@ export default function GameTableDesign() {
   }, [scrollRef]); // scroll on mount
 
   useEffect(() => {
-    if (gameData?.tableCards?.length === 0) {
-      startCollectAnimation();
-    }
     const prevCards = prevTableCardsRef.current;
     const currentCards = gameData?.tableCards || [];
     //gameData?.tableCards?.[i]
@@ -161,6 +152,51 @@ export default function GameTableDesign() {
     prevTableCardsRef.current = currentCards;
 
   }, [gameData?.tableCards]);
+
+  useEffect(() => {
+    gameData?.players.forEach(player => {
+    if (player.lastEmoji) {
+      const { emoji, timestamp } = player.lastEmoji;
+
+      // ✅ Add only if not already shown recently
+      setFlyingEmojis(prev => {
+        const alreadyExists = prev.some(e => e.timestamp === timestamp && e.playerId === player.id);
+        if (alreadyExists) return prev;
+        const playerEl = playerRefs.current[player.gameIndex];
+        if (!playerEl) return prev;
+
+        const rect = playerEl.getBoundingClientRect();
+
+        // Start position relative to viewport
+        const startX = rect.left + rect.width / 2;
+        const startY = rect.top;
+
+
+        return [
+          ...prev,
+          {
+            id: `${player.id}-${timestamp}`,
+            playerId: player.id,
+            emoji,
+            timestamp,
+            startX,
+            startY,
+          },
+        ];
+      });
+    }
+  });
+
+  }, [gameData?.players]);
+
+  useEffect(() => {
+    if (gameData?.cuttedIndex) {
+    if(gameData?.cuttedIndex === -1)
+      startCollectAnimation();
+    else
+      startCollectAnimation(gameData?.cuttedIndex)
+    }
+  }, [gameData?.cuttedIndex]);
 
 
   let players = gameData?.players || [];
@@ -204,14 +240,14 @@ export default function GameTableDesign() {
       }
       handlePlayCard();
     } else {
-      if( draggingIndex && zValue){
-        alert('New Index is ' + zValue)
+      if (draggingIndex && zValue) {
+        pushBackSession("ssort");
       }
     }
 
     setIsOverDrop(false);
 
-    setZvalue(draggingIndex);
+    zValue.current = draggingIndex;
     setDraggingIndex(null);
   };
 
@@ -235,12 +271,34 @@ export default function GameTableDesign() {
     if (draggingIndex === null) return;
 
     const dx = info.offset.x;
-
-    // slot width = 30px
     const shift = Math.round(dx / 30);
-    const i = draggingIndex;
-    setZvalue(i + shift);
+    const newZ = draggingIndex + shift;
 
+    if (newZ !== zValue.current) {
+      zValue.current = newZ;
+    }
+
+  }
+
+  const handleStartDrag = (index) => {
+    setDraggingIndex(index);
+  }
+
+  const pushBackSession = (way) => {
+    if (way === "ssort") {
+      ws.current.send(JSON.stringify({
+        way: way,
+        player: clientPlayer.id,
+        currentZ: draggingIndex,
+        newZ: zValue.current,
+      }));
+    } else {
+      ws.current.send(JSON.stringify({
+        way: "emoji",
+        player: clientPlayer.id,
+        emoji: way,
+      }));
+    }
   }
 
 
@@ -285,10 +343,14 @@ export default function GameTableDesign() {
     }
   };
 
-  const startCollectAnimation = () => {
+  const startCollectAnimation = (playerIndex) => {
     if (!closedRef.current) return;
 
-    const closedRect = closedRef.current.getBoundingClientRect();
+    let closedRect = closedRef.current.getBoundingClientRect();
+    if(playerIndex != null) {
+      const playerElement = playerRefs.current[playerIndex];
+      closedRect = playerElement.getBoundingClientRect();
+    }
 
     const animCards = tableCards.map((card, i) => {
       const tableRect = tableCardRefs.current[i]?.getBoundingClientRect();
@@ -326,10 +388,18 @@ export default function GameTableDesign() {
     setAnchorPopoverEl(null);
   };
 
-  const handleEmojiClick = (emojiData, e) => {
-    setAnchorPopoverEl(null);
-    alert(`Send emoji: ${emojiData}`);
+  const handleEmojiClick = (emoji, e) => {
+
+    pushBackSession(emoji);
+
+    // const id = Date.now();
+    // setFlyingEmojis((prev) => [...prev, { id, emoji }]);
+
+    // setTimeout(() => {
+    //   setFlyingEmojis((prev) => prev.filter((e) => e.id !== id));
+    // }, 2000);
   };
+
 
   const hasMatchingCard = clientPlayer.cards && clientPlayer.cards.some(card => card.cardName === gameData.tableSuit);
 
@@ -584,7 +654,7 @@ export default function GameTableDesign() {
               transform: "translateX(-50%)",
               width: 250,
               height: 120,
-              border: `2px dashed ${isOverDrop ? "gold" : "#fff"}`,
+              // border: `2px dashed ${isOverDrop ? "gold" : "#fff"}`,
               borderRadius: "12px",
               backgroundColor: "rgba(255,255,255,0.1)",
               display: "flex",
@@ -594,33 +664,64 @@ export default function GameTableDesign() {
               fontWeight: "bold",
             }}
           >
-            {gameData.turnIndex < 0
-              ? (
-                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                  {gameData.players.length > 2 &&
-                    <GloriousButton onClick={() => handleStartGame()}
-                      text='Start' />
-                  }
-                  <Box display="flex" flexDirection="column" alignItems="center"
-                    width="100%" style={{ fontSize: 20, }}>
-                    {gameData.countDown === 0 || gameData.countDown === '0' ? (
-                      <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                        Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
-                      </Typography>
-                    ) : (
-                      <Typography variant="body1" sx={{ mb: 1 }}>
-                        Starts in... ({gameData.countDown} Sec)
-                      </Typography>
-                    )}
+            <motion.div
+              animate={{
+                scale: isOverDrop ? 1.1 : 1,
+                backgroundColor: isOverDrop
+                  ? "rgba(255, 215, 0, 0.2)" // gold glow
+                  : "rgba(255,255,255,0.05)",
+                boxShadow: isOverDrop
+                  ? "0px 0px 20px rgba(255, 215, 0, 0.8)"
+                  : "0px 0px 6px rgba(255,255,255,0.2)",
+                borderColor: isOverDrop ? "gold" : "#fff",
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              style={{
+                //position: "absolute",
+                //bottom: 40,
+                //left: "50%",
+                transform: "translateX(-50%)",
+                width: 250,
+                height: 120,
+                border: "2px dashed",
+                borderRadius: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                overflow: "hidden",
+              }}
+            >
+              {gameData.turnIndex < 0
+                ? (
+                  <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                    {gameData.players.length > 2 &&
+                      <GloriousButton onClick={() => handleStartGame()}
+                        text='Start' />
+                    }
+                    <Box display="flex" flexDirection="column" alignItems="center"
+                      width="100%" style={{ fontSize: 20, }}>
+                      {gameData.countDown === 0 || gameData.countDown === '0' ? (
+                        <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                          Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
+                        </Typography>
+                      ) : (
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                          Starts in... ({gameData.countDown} Sec)
+                        </Typography>
+                      )}
 
-                    <Box width="60%">
-                      <LinearProgress color="inherit" />
+                      <Box width="60%">
+                        <LinearProgress color="inherit" />
+                      </Box>
                     </Box>
                   </Box>
-                </Box>
-              ) : (
-                <Typography>Drop Here</Typography>
-              )}
+                ) : (
+                  <Typography>
+                    {isOverDrop ? "✨ Release to Drop!" : "Drop Here"}
+                  </Typography>
+                )}
+            </motion.div>
           </Box>
         </Box>
         {/* Flying Card Animation */}
@@ -646,6 +747,33 @@ export default function GameTableDesign() {
               {renderCardDesign(flyingCard.card, "classic")}
             </motion.div>
           )}
+          {flyingEmojis.map(({ id, emoji, startX, startY}) => (
+            <motion.div
+              key={`emoji-${id}`}
+              initial={{ x: 0, y: 0 }}
+              // initial={{ opacity: 0, y: 0, scale: 0.8 }}
+              animate={{
+                opacity: [1, 1, 0],
+                y: -120,
+                scale: [1, 1.3, 1],
+                rotate: Math.random() * 30 - 15,
+              }}
+              // initial={{ x: startX, y: startY, opacity: 1, scale: 1 }}
+              // animate={{ y: startY - 120, opacity: 0, scale: 1.5 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              style={{
+                position: "absolute",
+                bottom: 40,
+                left: "50%",
+                transform: "translateX(-50%)",
+                fontSize: 40,
+                pointerEvents: "none",
+              }}
+            >
+              {emoji}
+            </motion.div>
+          ))}
         </AnimatePresence>
         {collectingCards.map((card) => (
           <motion.div
@@ -748,16 +876,16 @@ export default function GameTableDesign() {
                     key={i}
                     drag
                     dragSnapToOrigin
-                    dragConstraints={{ top: -300, bottom: 0, left: -100, right: 100 }}
+                    dragConstraints={{ top: -400, bottom: 0, left: -300, right: 300 }}
                     whileDrag={{ scale: 1.15 }}
                     onMouseDown={() => setSelectedCard(card)}
-                    onDragStart={() => setDraggingIndex(i)}
+                    onDragStart={() => handleStartDrag(i)}
                     onDragEnd={(event, info) => handleDrop(card, info, isTurn)}
                     onDrag={(event, info) => handleDragCard(event, info)}
                     style={{
                       position: "absolute",
                       left: `calc(50% - ${(clientPlayer.cards.length * 30) / 2}px + ${i * 30}px)`,
-                      zIndex: draggingIndex === i ? zValue : i,
+                      zIndex: draggingIndex === i ? zValue.current : i,
                     }}
                   >
                     <Card
@@ -806,10 +934,10 @@ export default function GameTableDesign() {
         message={snackbar.message}
         severity={snackbar.severity}
       />
-      <EmojiPopover 
+      <EmojiPopover
         anchorPopoverEl={anchorPopoverEl}
         handlePopoverClose={handlePopoverClose}
-        onEmojiSelect={handleEmojiClick}/>
+        onEmojiSelect={handleEmojiClick} />
     </Box>
   );
 }

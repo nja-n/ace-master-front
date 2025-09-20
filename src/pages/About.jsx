@@ -70,7 +70,7 @@ const About = () => {
           The main objective is to clear your hand of all cards as quickly as possible.
         </Typography>
         <Typography paragraph>
-          Each round has an active suit (♣, ♦, ♥, ♠). Play cards in sequence. If you don’t have one, perform a <b>Vettu</b> – play another suit.
+          Each round has an active suit (♣, ♦, ♥, ♠). Play cards in sequence. If you don’t have one, perform a <b>Strike (break the suit/flow)</b> – play another suit.
           In this case, the player with the highest card takes the pile.
         </Typography>
         <Typography paragraph>
