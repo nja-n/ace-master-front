@@ -12,13 +12,14 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import React, { Suspense, use, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { gameAi, getTimeRemains } from "../components/methods";
+import { game, gameAi, getTimeRemains } from "../components/methods";
 import CustomSnackbar from "../components/ui/CustomSnackBar";
 import PlayerAvatarWithTimer from "../components/ui/PlaterWithAvatar";
 import { Header } from "./fragments/Header";
 import GloriousButton from "../components/ui/GloriousButton";
 import { EmojiEmotionsOutlined } from "@mui/icons-material";
 import EmojiPopover from "../components/ui/EmojiPopover";
+import GameOverScreen from "./fragments/WinningScreen";
 
 export default function GameTableDesign() {
   const [selectedCard, setSelectedCard] = useState(null);
@@ -42,7 +43,7 @@ export default function GameTableDesign() {
   const [gameData, setGameData] = useState(null);
   const token = localStorage.getItem("accessToken");
   const ws = useRef(null);
-  const { roomId } = useParams();
+  const { match } = useParams();
   const [timeLeft, setTimeLeft] = useState(15);
 
   const [snackbar, setSnackbar] = useState({
@@ -57,9 +58,7 @@ export default function GameTableDesign() {
   const [closecardFlipped, setClosecardFlipped] = useState(false);
 
   useEffect(() => {
-    if (!token) return;
-
-    ws.current = new WebSocket(`${gameAi}?token=${token}${roomId ? "&roomId=" + roomId : ""}`);
+    ws.current = new WebSocket(socketUrl(match));
 
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -83,6 +82,7 @@ export default function GameTableDesign() {
     }
     if (gameData && gameData?.turnIndex >= 0 && gameData.looserPlayer == null) {
       if (gameData.turnIndex === gameData.clientPlayer.gameIndex) {
+        scrollBottom();
         /*audioFlip2.current.play().catch((err) => {
           console.warn("Failed to play sound:", err);
         });*/
@@ -112,15 +112,6 @@ export default function GameTableDesign() {
     }
 
   }, [gameData?.turnIndex]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth", // optional smooth scroll
-      });
-    }
-  }, [scrollRef]); // scroll on mount
 
   useEffect(() => {
     const prevCards = prevTableCardsRef.current;
@@ -155,53 +146,70 @@ export default function GameTableDesign() {
 
   useEffect(() => {
     gameData?.players.forEach(player => {
-    if (player.lastEmoji) {
-      const { emoji, timestamp } = player.lastEmoji;
+      if (player.lastEmoji) {
+        const { emoji, timestamp } = player.lastEmoji;
 
-      // ✅ Add only if not already shown recently
-      setFlyingEmojis(prev => {
-        const alreadyExists = prev.some(e => e.timestamp === timestamp && e.playerId === player.id);
-        if (alreadyExists) return prev;
-        const playerEl = playerRefs.current[player.gameIndex];
-        if (!playerEl) return prev;
+        setFlyingEmojis(prev => {
+          const alreadyExists = prev.some(e => e.timestamp === timestamp && e.playerId === player.id);
+          if (alreadyExists) return prev;
+          const playerEl = playerRefs.current[player.gameIndex];
+          if (!playerEl) return prev;
 
-        const rect = playerEl.getBoundingClientRect();
+          const playerBox = playerEl.getBoundingClientRect();
+          const containerBox = containerRef.current.getBoundingClientRect();
 
-        // Start position relative to viewport
-        const startX = rect.left + rect.width / 2;
-        const startY = rect.top;
+          const top = ((playerBox.top + playerBox.height / 2 - containerBox.top) / containerBox.height) * 100;
+          const left = ((playerBox.left + playerBox.width / 2 - containerBox.left) / containerBox.width) * 100;
 
+          const startX = left;
+          const startY = top;
 
-        return [
-          ...prev,
-          {
-            id: `${player.id}-${timestamp}`,
-            playerId: player.id,
-            emoji,
-            timestamp,
-            startX,
-            startY,
-          },
-        ];
-      });
-    }
-  });
+          return [
+            ...prev,
+            {
+              id: `${player.id}-${timestamp}`,
+              playerId: player.id,
+              emoji,
+              timestamp,
+              startX,
+              startY,
+            },
+          ];
+        });
+      }
+    });
 
   }, [gameData?.players]);
 
   useEffect(() => {
-    if (gameData?.cuttedIndex) {
-    if(gameData?.cuttedIndex === -1)
-      startCollectAnimation();
-    else
-      startCollectAnimation(gameData?.cuttedIndex)
+    if (gameData?.cuttedIndex !== undefined && gameData?.cuttedIndex !== null) {
+      if (gameData?.cuttedIndex === -1)
+        startCollectAnimation();
+      else if (gameData?.cuttedIndex >= 0)
+        startCollectAnimation(gameData?.cuttedIndex)
+      else
+        setTableCards([]);
     }
   }, [gameData?.cuttedIndex]);
 
 
-  let players = gameData?.players || [];
+  const playersBefore = gameData?.players || [];
   const clientPlayer = gameData?.clientPlayer || null;
-  players = players.filter(player => !player.client);
+  let players = [];
+
+  if (playersBefore.length > 0 && clientPlayer) {
+    const clientIndex = playersBefore.findIndex(p => p.id === clientPlayer.id);
+
+    if (clientIndex !== -1) {
+      const rotated = [
+        ...playersBefore.slice(clientIndex),
+        ...playersBefore.slice(0, clientIndex),
+      ];
+      players = rotated.filter(p => p.id !== clientPlayer.id);
+    } else {
+      players = playersBefore.filter(p => p.id !== clientPlayer?.id);
+    }
+  }
 
 
   const handlePlayerClick = (player, e) => {
@@ -313,6 +321,7 @@ export default function GameTableDesign() {
   const handleStartGame = () => {
     ws.current.send(JSON.stringify({ way: "start" }));
     setSelectedCard(null);
+    setTableCards([]);
     //setJoyrideRef(3);
   };
 
@@ -343,11 +352,19 @@ export default function GameTableDesign() {
     }
   };
 
+  const handleResetGame = async () => {
+    await ws.current.send(JSON.stringify({ way: "reset" }));
+    if(match && match === "quick") {
+      await ws.current.send(JSON.stringify({ way: "start" }));
+    }
+    setSelectedCard(null);
+  };
+
   const startCollectAnimation = (playerIndex) => {
     if (!closedRef.current) return;
 
     let closedRect = closedRef.current.getBoundingClientRect();
-    if(playerIndex != null) {
+    if (playerIndex != null) {
       const playerElement = playerRefs.current[playerIndex];
       closedRect = playerElement.getBoundingClientRect();
     }
@@ -369,14 +386,11 @@ export default function GameTableDesign() {
       };
     }).filter(Boolean);
 
-    // setTableCards([]); // clear table immediately
     setCollectingCards(animCards);
 
-    // clear after animation ends
     setTimeout(() => {
       setCollectingCards([]);
       setTableCards([]);
-      // update backend / move to closed pile here
     }, 1000);
   };
 
@@ -389,19 +403,27 @@ export default function GameTableDesign() {
   };
 
   const handleEmojiClick = (emoji, e) => {
-
     pushBackSession(emoji);
-
-    // const id = Date.now();
-    // setFlyingEmojis((prev) => [...prev, { id, emoji }]);
-
-    // setTimeout(() => {
-    //   setFlyingEmojis((prev) => prev.filter((e) => e.id !== id));
-    // }, 2000);
   };
 
+  const scrollBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth", // optional smooth scroll
+      });
+    }
+  }
 
   const hasMatchingCard = clientPlayer.cards && clientPlayer.cards.some(card => card.cardName === gameData.tableSuit);
+
+  if (gameData.looserPlayer)
+    return (
+      <GameOverScreen
+        gameData={gameData}
+        handleResetGame={handleResetGame}
+      />
+    );
 
   return (
     <Box
@@ -466,9 +488,8 @@ export default function GameTableDesign() {
         {/* Players on top half circle */}
         {players.map((player, index) => {
           const total = players.length;
-          const angle = (index / (total - 1)) * Math.PI; // 0 → π (top half)
+          const angle = total != 1 ? (index / (total - 1)) * Math.PI : 1.5707963267948966; // 0 → π (top half)
           const radius = { xs: 30, sm: 40, md: 40 }; // smaller on mobile
-
 
           return (
             <Box
@@ -485,6 +506,7 @@ export default function GameTableDesign() {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
+                zIndex: 9999,
               }}
             >
               <PlayerAvatarWithTimer
@@ -505,7 +527,7 @@ export default function GameTableDesign() {
                   left: "-50%",
                   transform: "translateX(-50%)",
                 }}>
-                {player.cards.map((card, i) => (
+                {player.cards?.map((card, i) => (
                   <Card
                     key={i}
                     sx={{
@@ -702,9 +724,19 @@ export default function GameTableDesign() {
                     <Box display="flex" flexDirection="column" alignItems="center"
                       width="100%" style={{ fontSize: 20, }}>
                       {gameData.countDown === 0 || gameData.countDown === '0' ? (
-                        <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                          Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
-                        </Typography>
+                        <>
+                          {gameData.roomId !== null ? (
+                            <Box display="flex" flexDirection="column" alignItems="center"
+                              width="100%" style={{ fontSize: 20, }}>
+                              <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                                Room Id {gameData.roomId}
+                              </Typography>
+                            </Box>
+                          ) :
+                            <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                              Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
+                            </Typography>}
+                        </>
                       ) : (
                         <Typography variant="body1" sx={{ mb: 1 }}>
                           Starts in... ({gameData.countDown} Sec)
@@ -747,25 +779,23 @@ export default function GameTableDesign() {
               {renderCardDesign(flyingCard.card, "classic")}
             </motion.div>
           )}
-          {flyingEmojis.map(({ id, emoji, startX, startY}) => (
+          {flyingEmojis.map(({ id, emoji, startX, startY }) => (
             <motion.div
               key={`emoji-${id}`}
-              initial={{ x: 0, y: 0 }}
-              // initial={{ opacity: 0, y: 0, scale: 0.8 }}
+              initial={{ opacity: 1, scale: 1 }}
               animate={{
                 opacity: [1, 1, 0],
-                y: -120,
+                top: '70%',
+                left: '50%',
                 scale: [1, 1.3, 1],
                 rotate: Math.random() * 30 - 15,
               }}
-              // initial={{ x: startX, y: startY, opacity: 1, scale: 1 }}
-              // animate={{ y: startY - 120, opacity: 0, scale: 1.5 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 1.5, ease: "easeOut" }}
               style={{
                 position: "absolute",
-                bottom: 40,
-                left: "50%",
+                top: `${startY}%`,
+                left: `${startX}%`,
                 transform: "translateX(-50%)",
                 fontSize: 40,
                 pointerEvents: "none",
@@ -942,6 +972,20 @@ export default function GameTableDesign() {
   );
 }
 
+
+const socketUrl = (match) => {
+  const token = localStorage.getItem("accessToken");
+  switch (match) {
+    case "bot":
+      return `${gameAi}?token=${token}&bot=true`;
+    case "classic":
+      return `${game}?token=${token}&classic=true`;
+    case "quick":
+      return `${game}?token=${token}&roomId=quick`;
+    default:
+      return `${game}?token=${token}${match ? "&roomId=" + match : ""}`;
+  }
+}
 
 const getCardImage = (imageName) => {
   try {

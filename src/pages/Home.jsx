@@ -31,6 +31,7 @@ import { useUser } from "../components/ui/UserContext";
 import CoinWithText from "./fragments/CoinWithText";
 import InstallPrompt from "../components/force/Promote";
 import { emit } from "../components/utils/eventBus";
+import ImageIcon from "../components/ui/CustomImageIcon";
 
 const Home = () => {
     const { user, loading } = useUser();
@@ -152,7 +153,7 @@ const Home = () => {
         );
 
         if (confirmed) {
-            navigate("/game");
+            navigate("/play/classic");
         }
     };
 
@@ -164,7 +165,7 @@ const Home = () => {
                 const response = await apiClient(createUniqueRoom);
 
                 const roomId = response;
-                navigate(`/game/${roomId}`);
+                navigate(`/play/${roomId}`);
             } catch (error) {
                 console.error("Error creating room:", error);
                 alert("Failed to create room. Please try again.");
@@ -184,8 +185,7 @@ const Home = () => {
             setRoomIdInput('');
             alert('Please enter a valid Room ID');
             return;
-        }
-        else {
+        } else {
             alert("Joining Room ID: " + trimmedRoomId);
         }
 
@@ -200,7 +200,7 @@ const Home = () => {
             const result = response.status;
 
             if (result === 'Y') {
-                navigate(`/game/${trimmedRoomId}`);
+                navigate(`/play/${trimmedRoomId}`);
                 setRoomIdInput('');
             } else {
                 alert('Room ID not found or inactive.');
@@ -237,7 +237,15 @@ const Home = () => {
 
     const handleStartAiPlay = async () => {
         if (await window.confirm('Are you ready to play with AI?')) {
-            navigate("/game/ai");
+            // navigate("/game/ai");
+            navigate("/play/bot");
+        }
+    }
+
+    const handleQuickPlay = async () => {
+        if (await window.confirm('Are you ready for a battle?')) {
+            // navigate("/game/ai");
+            navigate("/play/quick");
         }
     }
 
@@ -283,8 +291,8 @@ const Home = () => {
                         </Box>
 
                         {/* Mobile Menu */}
-                        <IconButton edge="end" color="inherit" onClick={handleMenuOpen} sx={{ display: { xs: "block", sm: "none" } }}>
-                            <MoreVert color="gold" />
+                        <IconButton edge="end" color="inherit"sx={{ display: { xs: "block", sm: "none" } }}>
+                            <ImageIcon icon="dot" onclick={handleMenuOpen} />
                         </IconButton>
 
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
@@ -402,15 +410,15 @@ const Home = () => {
 
                     <GloriousButton
                         id="quick-play-button"
-                        onClick={!userName ? null : handleStartAiPlay}
-                        text="Quick Bot"
+                        onClick={!userName ? null : handleQuickPlay}
+                        text="Quick Play"
                         color="orange"
                     />
 
                     <GloriousButton
                         id="play-ai-button"
                         onClick={!userName ? null : handleStartAiPlay}
-                        text="Play with AI"
+                        text="Play with Bot"
                         color="darkblue"
                     />
 

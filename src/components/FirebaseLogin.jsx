@@ -56,6 +56,19 @@ const FirebaseLogin = ({ onAuthenticated }) => {
     }
   }
 
+  const handleDevLogin = async () =>{
+    let uid = window.prompt("Id here");
+    const response = await fetch(`${pre}auth/dev`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: uid })
+    });
+    const jwtToken = await response.json();
+    localStorage.setItem("accessToken", jwtToken.accessToken);
+    localStorage.setItem("refreshToken", jwtToken.refreshToken);
+    onAuthenticated(true);
+  }
+
   //   import { GoogleAuthProvider, linkWithPopup } from "firebase/auth";
 
   // async function upgradeGuestAccount(auth) {
@@ -117,6 +130,21 @@ const FirebaseLogin = ({ onAuthenticated }) => {
         >
           Continue as Guest <HowToRegSharp />
         </Button>
+        <Button
+          variant="outlined"
+          onClick={handleDevLogin}
+          sx={{
+            borderColor: 'white',
+            color: 'white',
+            fontWeight: 'bold',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
+          fullWidth
+        >
+          Continue as Dev <HowToRegSharp />
+        </Button>
       </Box>
       <Box mt={2} textAlign="center">
         <Typography variant="body2" color="white">
@@ -127,7 +155,16 @@ const FirebaseLogin = ({ onAuthenticated }) => {
             rel="noopener noreferrer"
             style={{ color: "#90caf9", textDecoration: "underline" }}
           >
-            Terms & Privacy Policy
+            Terms 
+          </Link>
+          { " " } & { " " }
+          <Link
+            href={"/privacy"}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#90caf9", textDecoration: "underline" }}
+          >
+            Privacy Policy
           </Link>
           .
         </Typography>

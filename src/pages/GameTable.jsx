@@ -46,7 +46,6 @@ export default function GameTable() {
 
     const [snackbar, setSnackbar] = useState({ open: false, message: null });
 
-
     const [joyrideRef, setJoyrideRef] = useState(0);
 
     const { roomId } = useParams();

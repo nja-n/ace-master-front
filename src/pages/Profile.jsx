@@ -169,238 +169,147 @@ export default function ProfilePage({ isTop10 }) {
     };
 
     return (
-        <Box sx={{ mt: 5, overflow: "auto" }}>
-            <Grid container spacing={3}>
-                {/* LEFT SECTION (Profile Info & Stats) */}
-                <Grid item xs={12} md={8}>
-                    {/* Profile Header */}
-                    <Stack alignItems="center" spacing={1} sx={{ mb: 3 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                            <CustomAvatar
-                                size={200}
-                                letter={(user.firstName || "?")?.charAt(0).toUpperCase()}
-                            />
-                            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 2, justifyContent: 'left' }}>
-
-                                {isEditing ? (
-                                    <TextField
-                                        value={changedName}
-                                        onChange={(e) => setChangedName(e.target.value)}
-                                        size="small"
-                                        variant="standard"   // 👈 use 'standard' instead of 'filled'
-                                        InputProps={{
-                                            // disableUnderline: false, // removes underline
-                                            style: {
-                                                color: "white",        // matches Typography
-                                                fontSize: "1.25rem",   // ~ Typography h6
-                                                fontWeight: 500,
-                                            },
-                                        }}
-                                        sx={{
-                                            width: "250px",
-                                            marginBottom: "10px",
-                                            "& .MuiInputBase-input": {
-                                                padding: 0,            // removes extra padding
-                                            },
-                                            "& .MuiInput-underline:before": {
-                                                borderBottomColor: "gray",   // 👈 default (inactive)
-                                            },
-                                            "& .MuiInput-underline:hover:before": {
-                                                borderBottomColor: "orange !important", // 👈 hover color
-                                            },
-                                            "& .MuiInput-underline:after": {
-                                                borderBottomColor: "yellow", // 👈 active/focused color
-                                            },
-                                        }}
-                                    />
-                                ) : (
-                                    <Typography
-                                        variant="h6"
-                                        color="white"
-                                        sx={{
-                                            fontSize: "1.25rem",
-                                            fontWeight: 500,
-                                            marginBottom: "10px",
-                                            width: "250px",          // 👈 same width as TextField
-                                        }}
-                                    >
-                                        {user.firstName || "Guest"}
-                                    </Typography>
-                                )}
-
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "left",
-                                        gap: 2,
-                                        marginTop: 2
-                                    }}
-                                >
-                                    {isEditing ? (
-                                        <>
-                                            <Button variant="contained" color="success" onClick={handleSave}>
-                                                Save
-                                            </Button>
-                                            <Button
-                                                variant="outlined"
-                                                color="error"
-                                                onClick={() => {
-                                                    setChangedName(user?.firstName || "");
-                                                    setIsEditing(false);
-                                                }}
-                                            >
-                                                Cancel
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <Button
-                                            variant="outlined"
-                                            color="warning"
-                                            onClick={() => setIsEditing(true)}
-                                        >
-                                            Edit
-                                        </Button>
-                                    )}
-                                </Box>
-                            </Box>
-
-                        </Box>
-
-                        <Typography variant="body2" color="gray">
-                            Level {profile.level || 1}
-                        </Typography>
-                        {/* Progress Bar for XP */}
-                        <Box sx={{ width: '60%', mt: 1 }}>
-                            <LinearProgress
-                                variant="determinate"
-                                value={profile.xpPercent || 0}
-                                sx={{ height: 8, borderRadius: 5, bgcolor: "#334155" }}
-                            />
-                        </Box>
-                    </Stack>
-
-                    {/* Stats Row */}
-                    <Stack direction="row" spacing={2} justifyContent="space-between" sx={{ mb: 3 }}>
-                        <Card sx={{ flex: 1, p: 2, background: "linear-gradient(135deg,#1e293b,#334155)", textAlign: "center", borderRadius: 3, boxShadow: 4 }}
-                            onClick={() => handleOpen("dayStreak")}>
-                            <FlashOnIcon sx={{ color: "#facc15", fontSize: 32 }} />
-                            <Typography variant="body2" color="#fff">Day Streak</Typography>
-                            <Typography variant="h6" color="#facc15">{profile.dayStreak || 0}</Typography>
-                        </Card>
-                        <Card sx={{ flex: 1, p: 2, background: "linear-gradient(135deg,#1e293b,#334155)", textAlign: "center", borderRadius: 3, boxShadow: 4 }}
-                            onClick={() => handleOpen("league")}>
-                            <EmojiEventsIcon sx={{ color: "#fbbf24", fontSize: 32 }} />
-                            <Typography variant="body2" color="#fff">League</Typography>
-                            <Typography variant="h6" color="#fbbf24">
-                                {(profile.league || "Bronze").toUpperCase()}
-                            </Typography>
-                        </Card>
-                        <Card sx={{ flex: 1, p: 2, background: "linear-gradient(135deg,#1e293b,#334155)", textAlign: "center", borderRadius: 3, boxShadow: 4 }}
-                            onClick={() => handleOpen("winStreak")}>
-                            <Box display="flex" justifyContent="center">
-                                <img src={CoinIcon} alt="Coin" style={{ width: '28px', height: '28px' }} />
-                            </Box>
-                            <Typography variant="body2" color="#fff">Win Streak</Typography>
-                            <Typography variant="h6" color="#fbbf24">{profile.currentStreak || 0}</Typography>
-                        </Card>
-                    </Stack>
-
-                    {/* Extra Stats */}
-                    <Stack direction="row" spacing={2} justifyContent="space-between" marginBottom={2}>
-                        <Card sx={{ flex: 1, p: 2, bgcolor: "#1e293b", textAlign: "center" }}
-                            onClick={() => handleOpen("gamesPlayed")}>
-                            <Typography variant="body2" color="gray">Games Played</Typography>
-                            <Typography variant="h6" color="white">{profile.count || 0}</Typography>
-                        </Card>
-                        <Card sx={{ flex: 1, p: 2, bgcolor: "#1e293b", textAlign: "center" }}
-                            onClick={() => handleOpen("winRate")}>
-                            <Typography variant="body2" color="gray">Win Rate</Typography>
-                            <Typography variant="h6" color="white">{profile.winRate.toFixed(2) || 0}%</Typography>
-                        </Card>
-                        <Card sx={{ flex: 1, p: 2, bgcolor: "#1e293b", textAlign: "center" }}
-                            onClick={() => handleOpen("rank")}>
-                            <Typography variant="body2" color="gray">Rank</Typography>
-                            <Typography variant="h6" color="white">{profile.rank || "Unranked"}</Typography>
-                        </Card>
-                    </Stack>
-
-                    {/* Withdraw / Connect Button */}
-                    {user.annonymous ? (
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            sx={{ bgcolor: "#3b82f6", mb: 3 }}
-                            onClick={() => alert("Open account connection flow")}
-                        >
-                            Connect Google <Google />
-                        </Button>
-                    ) : isTop10 ? (
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            sx={{ bgcolor: "#22c55e", mb: 3 }}
-                            onClick={() => alert("Withdraw triggered!")}
-                        >
-                            Claim
-                        </Button>
-                    ) : (
-                        <Tooltip title="Your rank must be in the Top 10 today to withdraw">
-                            <span style={{ width: "100%" }}>
-                                <Button
-                                    variant="contained"
-                                    fullWidth
-                                    disabled
-                                    sx={{ bgcolor: "#9ca3af", mb: 3 }}
-                                >
-                                    Claim Coins
-                                </Button>
-                            </span>
-                        </Tooltip>
-                    )}
-
-
-                    {/* For small screens, show badges & achievements here */}
-                    <Box sx={{ display: { xs: "block", md: "none" } }}>
-                        <BadgesAndAchievements />
-                    </Box>
-                </Grid>
-
-                {/* RIGHT SECTION (Badges & Achievements for big screens) */}
-                <Grid
-                    item
-                    xs={12}
-                    md={4}
-                    sx={{ display: { xs: "none", md: "block" } }}
-                >
-                    <BadgesAndAchievements />
-                </Grid>
-            </Grid>
-
-            <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-                {selectedKey && (
-                    <>
-                        <DialogTitle>{statIdeas[selectedKey].title}
-                            <IconButton
-                                aria-label="close"
-                                onClick={handleClose}
-                                sx={{
-                                    position: "absolute",
-                                    right: 8,
-                                    top: 8,
-                                    color: (theme) => theme.palette.grey[500],
-                                }}
-                            >
-                                <Close />
-                            </IconButton>
-                        </DialogTitle>
-                        <DialogContent dividers>
-                            <Typography>{statIdeas[selectedKey].description}</Typography>
-                        </DialogContent>
-                    </>
+    <Box sx={{ mt: { xs: 3, md: 5 }, px: { xs: 2, md: 5 }, overflowX: "hidden" }}>
+      <Grid container spacing={{ xs: 2, md: 3 }}>
+        {/* LEFT SECTION (Profile Info & Stats) */}
+        <Grid item xs={12} md={8}>
+          {/* Profile Header */}
+          <Stack alignItems="center" spacing={1} sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: "column", sm: "row" }, alignItems: "center", gap: 2 }}>
+              <CustomAvatar
+                size={200}
+                letter={(user.firstName || "?")?.charAt(0).toUpperCase()}
+              />
+              <Box sx={{ display: 'flex', flexDirection: 'column', ml: { xs: 0, sm: 2 }, justifyContent: 'flex-start', alignItems: { xs: "center", sm: "flex-start" } }}>
+                {isEditing ? (
+                  <TextField
+                    value={changedName}
+                    onChange={(e) => setChangedName(e.target.value)}
+                    size="small"
+                    variant="standard"
+                    InputProps={{
+                      style: { color: "white", fontSize: "1.25rem", fontWeight: 500 }
+                    }}
+                    sx={{
+                      width: { xs: "200px", sm: "250px" },
+                      mb: 1,
+                      "& .MuiInputBase-input": { padding: 0 },
+                      "& .MuiInput-underline:before": { borderBottomColor: "gray" },
+                      "& .MuiInput-underline:hover:before": { borderBottomColor: "orange !important" },
+                      "& .MuiInput-underline:after": { borderBottomColor: "yellow" },
+                    }}
+                  />
+                ) : (
+                  <Typography variant="h6" color="white" sx={{ fontSize: "1.25rem", fontWeight: 500, mb: 1, width: { xs: "200px", sm: "250px" }, textAlign: { xs: "center", sm: "left" } }}>
+                    {user.firstName || "Guest"}
+                  </Typography>
                 )}
-            </Dialog>
-        </Box>
-    );
+
+                <Stack direction="row" spacing={1} mt={1}>
+                  {isEditing ? (
+                    <>
+                      <Button variant="contained" color="success" size="small" onClick={handleSave}>Save</Button>
+                      <Button variant="outlined" color="error" size="small" onClick={() => { setChangedName(user?.firstName || ""); setIsEditing(false); }}>Cancel</Button>
+                    </>
+                  ) : (
+                    <Button variant="outlined" color="warning" size="small" onClick={() => setIsEditing(true)}>Edit</Button>
+                  )}
+                </Stack>
+              </Box>
+            </Box>
+
+            <Typography variant="body2" color="gray">Level {profile.level || 1}</Typography>
+            <Box sx={{ width: { xs: '80%', sm: '60%' }, mt: 1 }}>
+              <LinearProgress variant="determinate" value={profile.xpPercent || 0} sx={{ height: 8, borderRadius: 5, bgcolor: "#334155" }} />
+            </Box>
+          </Stack>
+
+          {/* Stats Row */}
+          <Grid container spacing={2} mb={2}>
+            {[
+              { icon: <FlashOnIcon sx={{ color: "#facc15", fontSize: 32 }} />, label: "Day Streak", value: profile.dayStreak || 0, key: "dayStreak" },
+              { icon: <EmojiEventsIcon sx={{ color: "#fbbf24", fontSize: 32 }} />, label: "League", value: (profile.league || "Bronze").toUpperCase(), key: "league" },
+              { icon: <img src={CoinIcon} alt="Coin" style={{ width: 28, height: 28 }} />, label: "Win Streak", value: profile.currentStreak || 0, key: "winStreak" }
+            ].map((stat, idx) => (
+              <Grid item xs={4} sm={4} key={idx}>
+                <Card sx={{ p: 2, background: "linear-gradient(135deg,#1e293b,#334155)", textAlign: "center", borderRadius: 3, boxShadow: 4, cursor: "pointer" }} onClick={() => handleOpen(stat.key)}>
+                  <Box display="flex" justifyContent="center">{stat.icon}</Box>
+                  <Typography variant="body2" color="#fff">{stat.label}</Typography>
+                  <Typography variant="h6" color="#fbbf24">{stat.value}</Typography>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Extra Stats */}
+          <Grid container spacing={2} mb={3}>
+            {[
+              { label: "Games Played", value: profile.count || 0, key: "gamesPlayed" },
+              { label: "Win Rate", value: profile.winRate?.toFixed(2) || 0, key: "winRate" },
+              { label: "Rank", value: profile.rank || "Unranked", key: "rank" }
+            ].map((stat, idx) => (
+              <Grid item xs={4} sm={4} key={idx}>
+                <Card sx={{ p: 2, bgcolor: "#1e293b", textAlign: "center", cursor: "pointer" }} onClick={() => handleOpen(stat.key)}>
+                  <Typography variant="body2" color="gray">{stat.label}</Typography>
+                  <Typography variant="h6" color="white">{stat.value}</Typography>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Withdraw / Connect Button */}
+          {user.annonymous ? (
+            <Button variant="contained" fullWidth sx={{ bgcolor: "#3b82f6", mb: 3 }} onClick={() => alert("Open account connection flow")}>
+              Connect Google <Google />
+            </Button>
+          ) : isTop10 ? (
+            <Button variant="contained" fullWidth sx={{ bgcolor: "#22c55e", mb: 3 }} onClick={() => alert("Withdraw triggered!")}>
+              Claim
+            </Button>
+          ) : (
+            <Tooltip title="Your rank must be in the Top 10 today to withdraw">
+              <span style={{ width: "100%" }}>
+                <Button variant="contained" fullWidth disabled sx={{ bgcolor: "#9ca3af", mb: 3 }}>
+                  Claim Coins
+                </Button>
+              </span>
+            </Tooltip>
+          )}
+
+          {/* For small screens, badges */}
+          <Box sx={{ display: { xs: "block", md: "none" } }}>
+            <BadgesAndAchievements />
+          </Box>
+        </Grid>
+
+        {/* RIGHT SECTION (Badges for big screens) */}
+        <Grid item xs={12} md={4} sx={{ display: { xs: "none", md: "block" } }}>
+          <BadgesAndAchievements />
+        </Grid>
+      </Grid>
+
+      <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+        {selectedKey && (
+          <>
+            <DialogTitle>
+              {statIdeas[selectedKey].title}
+              <IconButton
+                aria-label="close"
+                onClick={handleClose}
+                sx={{ position: "absolute", right: 8, top: 8, color: (theme) => theme.palette.grey[500] }}
+              >
+                <Close />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Typography>{statIdeas[selectedKey].description}</Typography>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
+    </Box>
+  );
+
 }
 
 function BadgesAndAchievements() {

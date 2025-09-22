@@ -5,27 +5,18 @@ import {
 import AdBanner from "../components/adsterBanner";
 import { useUser } from "../components/ui/UserContext";
 import DailyTaskBox from "./fragments/DailyTaskBox";
+import RefferalUI from "./fragments/RefferalUI";
 
 const Tasks = () => {
     const { user, setUser } = useUser();
 
-    
-
-    /*const updateBalance = async (coin) => {
-        if (!user) return;
-        setUser(prev => ({
-            ...prev,
-            coinBalance: prev.coinBalance + coin,
-        }));
-    }
-*/
     return (
         <Box
             sx={{ mx: "auto", mt: 5, px: 3 }}
         >
             <AdBanner />
             <DailyTaskBox />
-            {/* <ReferralUI coinBalance={user?.coinBalance} /> */}
+            {/* <RefferalUI code={user?.referralCode} /> */}
             <Box
                 sx={{
                     mt: 5,

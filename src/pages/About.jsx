@@ -162,7 +162,7 @@ const About = () => {
             {history.length > 0 ? (
               history.map((entry, index) => (
                 <Paper key={index} sx={{ p: 1, my: 1 }}>
-                  🗓️ {entry.date} - 🔹 {entry.version}
+                  🗓️ {entry.date.split('T')[0]} - 🔹 {entry.version}
                   <Typography variant="subtitle2">{entry.head}</Typography>
                 </Paper>
               ))

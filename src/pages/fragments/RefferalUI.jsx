@@ -19,12 +19,13 @@ import ShareIcon from "@mui/icons-material/Share";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import TelegramIcon from "@mui/icons-material/Telegram";
+import { FacebookIcon, InstagramIcon } from "lucide-react";
 
-const  ReferralUI = () => {
+const ReferralUI = ({code}) => {
   const [copied, setCopied] = useState(false);
 
-  const referralLink = "https://yourgame.com/invite/XYZ123";
-  const referralCode = "XYZ123";
+  const referralLink = "https://playacemaster.online/invite/" + code;
+  const referralCode = code;
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
@@ -32,8 +33,12 @@ const  ReferralUI = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const encodedText = encodeURIComponent(
+    `Join me in Ace Master card game! ${referralLink}`
+  );
+
   return (
-    <Box mb={3}>
+    <Box>
       <Typography variant="h5" fontWeight="bold" gutterBottom color="#fff">
         🎁 Invite Friends & Earn Rewards
       </Typography>
@@ -74,34 +79,90 @@ const  ReferralUI = () => {
           </Box>
 
           {/* Share Buttons */}
-          <Box display="flex" gap={1} mt={2}>
+          <Box
+            display="flex"
+            flexWrap="wrap"
+            gap={1}
+            mt={2}
+            justifyContent="center"
+          >
             <Button
               variant="contained"
               color="success"
               startIcon={<WhatsAppIcon />}
               onClick={() =>
-                window.open(
-                  `https://wa.me/?text=Join%20me%20in%20this%20card%20game!%20${referralLink}`,
-                  "_blank"
-                )
+                window.open(`https://wa.me/?text=${encodedText}`, "_blank")
               }
+              sx={{ flex: "1 1 120px" }}
             >
               WhatsApp
             </Button>
+
             <Button
               variant="contained"
               color="info"
               startIcon={<TelegramIcon />}
               onClick={() =>
                 window.open(
-                  `https://t.me/share/url?url=${referralLink}&text=Join%20me%20in%20this%20card%20game!`,
+                  `https://t.me/share/url?url=${referralLink}&text=${encodedText}`,
                   "_blank"
                 )
               }
+              sx={{ flex: "1 1 120px" }}
             >
               Telegram
             </Button>
-            <Button variant="outlined" startIcon={<ShareIcon />}>
+
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<InstagramIcon />}
+              onClick={() =>
+                window.open(
+                  `https://www.instagram.com/?url=${referralLink}`,
+                  "_blank"
+                )
+              }
+              sx={{ flex: "1 1 120px" }}
+            >
+              Instagram
+            </Button>
+
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<FacebookIcon />}
+              onClick={() =>
+                window.open(
+                  `https://www.facebook.com/sharer/sharer.php?u=${referralLink}`,
+                  "_blank"
+                )
+              }
+              sx={{ flex: "1 1 120px" }}
+            >
+              Facebook
+            </Button>
+
+            {/* <Button
+              variant="contained"
+              color="warning"
+              startIcon={<SnapchatIcon />}
+              onClick={() =>
+                window.open(
+                  `https://www.snapchat.com/scan?attachmentUrl=${referralLink}`,
+                  "_blank"
+                )
+              }
+              sx={{ flex: "1 1 120px" }}
+            >
+              Snapchat
+            </Button> */}
+
+            <Button
+              variant="outlined"
+              startIcon={<ShareIcon />}
+              sx={{ flex: "1 1 120px" }}
+            >
               More
             </Button>
           </Box>
