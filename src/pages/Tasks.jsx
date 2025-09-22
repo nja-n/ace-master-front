@@ -2,7 +2,6 @@ import {
     Box,
     Typography
 } from "@mui/material";
-import AdBanner from "../components/adsterBanner";
 import { useUser } from "../components/ui/UserContext";
 import DailyTaskBox from "./fragments/DailyTaskBox";
 import RefferalUI from "./fragments/RefferalUI";
@@ -14,7 +13,6 @@ const Tasks = () => {
         <Box
             sx={{ mx: "auto", mt: 5, px: 3 }}
         >
-            <AdBanner />
             <DailyTaskBox />
             {/* <RefferalUI code={user?.referralCode} /> */}
             <Box
