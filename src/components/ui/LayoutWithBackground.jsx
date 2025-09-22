@@ -11,7 +11,7 @@ const LayoutWithBackground = ({ children, version }) => {
   const isGameRoute 
     = location.pathname === "/" 
     || location.pathname.startsWith("/game")
-    || location.pathname.startsWith("/quick");
+    || location.pathname.startsWith("/play");
 
   return (
     <Box
@@ -59,6 +59,31 @@ const LayoutWithBackground = ({ children, version }) => {
           </Link>{" "} Dev Team | Trail - v{version}
         </Typography>
         <InstallPrompt />
+      </Box>
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 10,
+          left: 15,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ color: "white", opacity: 0.7 }}
+        >
+          <Link
+            href='terms'
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+          Privacy Policy
+          </Link>
+        </Typography>
       </Box>
     </Box>
   );

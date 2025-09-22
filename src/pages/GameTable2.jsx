@@ -12,13 +12,14 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import React, { Suspense, use, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { gameAi, getTimeRemains } from "../components/methods";
+import { game, gameAi, getTimeRemains } from "../components/methods";
 import CustomSnackbar from "../components/ui/CustomSnackBar";
 import PlayerAvatarWithTimer from "../components/ui/PlaterWithAvatar";
 import { Header } from "./fragments/Header";
 import GloriousButton from "../components/ui/GloriousButton";
 import { EmojiEmotionsOutlined } from "@mui/icons-material";
 import EmojiPopover from "../components/ui/EmojiPopover";
+import GameOverScreen from "./fragments/WinningScreen";
 
 export default function GameTableDesign() {
   const [selectedCard, setSelectedCard] = useState(null);
@@ -36,13 +37,13 @@ export default function GameTableDesign() {
   const dropRef = useRef(null);
   const [isOverDrop, setIsOverDrop] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState(null);
-  const [zValue, setZvalue] = useState(1000); // high zIndex for dragged card
+  const zValue = useRef(0); // high zIndex for dragged card
 
 
   const [gameData, setGameData] = useState(null);
   const token = localStorage.getItem("accessToken");
   const ws = useRef(null);
-  const { roomId } = useParams();
+  const { match } = useParams();
   const [timeLeft, setTimeLeft] = useState(15);
 
   const [snackbar, setSnackbar] = useState({
@@ -52,14 +53,12 @@ export default function GameTableDesign() {
   });
 
   const [anchorPopoverEl, setAnchorPopoverEl] = useState(null);
-  const pickerRef = useRef(null);
+  const [flyingEmojis, setFlyingEmojis] = useState([]);
 
   const [closecardFlipped, setClosecardFlipped] = useState(false);
 
   useEffect(() => {
-    if (!token) return;
-
-    ws.current = new WebSocket(`${gameAi}?token=${token}${roomId ? "&roomId=" + roomId : ""}`);
+    ws.current = new WebSocket(socketUrl(match));
 
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -69,12 +68,6 @@ export default function GameTableDesign() {
     ws.current.onopen = () => console.log("WebSocket connected");
     ws.current.onerror = (err) => console.error("WS error", err);
     ws.current.onclose = () => console.log("WS closed");
-
-    if (pickerRef.current) {
-      pickerRef.current.addEventListener("emoji-click", (event) => {
-        handleEmojiClick(event.detail.unicode);
-      });
-    }
 
     return () => ws.current.close();
 
@@ -89,6 +82,7 @@ export default function GameTableDesign() {
     }
     if (gameData && gameData?.turnIndex >= 0 && gameData.looserPlayer == null) {
       if (gameData.turnIndex === gameData.clientPlayer.gameIndex) {
+        scrollBottom();
         /*audioFlip2.current.play().catch((err) => {
           console.warn("Failed to play sound:", err);
         });*/
@@ -120,18 +114,6 @@ export default function GameTableDesign() {
   }, [gameData?.turnIndex]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth", // optional smooth scroll
-      });
-    }
-  }, [scrollRef]); // scroll on mount
-
-  useEffect(() => {
-    if (gameData?.tableCards?.length === 0) {
-      startCollectAnimation();
-    }
     const prevCards = prevTableCardsRef.current;
     const currentCards = gameData?.tableCards || [];
     //gameData?.tableCards?.[i]
@@ -162,10 +144,72 @@ export default function GameTableDesign() {
 
   }, [gameData?.tableCards]);
 
+  useEffect(() => {
+    gameData?.players.forEach(player => {
+      if (player.lastEmoji) {
+        const { emoji, timestamp } = player.lastEmoji;
 
-  let players = gameData?.players || [];
+        setFlyingEmojis(prev => {
+          const alreadyExists = prev.some(e => e.timestamp === timestamp && e.playerId === player.id);
+          if (alreadyExists) return prev;
+          const playerEl = playerRefs.current[player.gameIndex];
+          if (!playerEl) return prev;
+
+          const playerBox = playerEl.getBoundingClientRect();
+          const containerBox = containerRef.current.getBoundingClientRect();
+
+          const top = ((playerBox.top + playerBox.height / 2 - containerBox.top) / containerBox.height) * 100;
+          const left = ((playerBox.left + playerBox.width / 2 - containerBox.left) / containerBox.width) * 100;
+
+          const startX = left;
+          const startY = top;
+
+          return [
+            ...prev,
+            {
+              id: `${player.id}-${timestamp}`,
+              playerId: player.id,
+              emoji,
+              timestamp,
+              startX,
+              startY,
+            },
+          ];
+        });
+      }
+    });
+
+  }, [gameData?.players]);
+
+  useEffect(() => {
+    if (gameData?.cuttedIndex !== undefined && gameData?.cuttedIndex !== null) {
+      if (gameData?.cuttedIndex === -1)
+        startCollectAnimation();
+      else if (gameData?.cuttedIndex >= 0)
+        startCollectAnimation(gameData?.cuttedIndex)
+      else
+        setTableCards([]);
+    }
+  }, [gameData?.cuttedIndex]);
+
+
+  const playersBefore = gameData?.players || [];
   const clientPlayer = gameData?.clientPlayer || null;
-  players = players.filter(player => !player.client);
+  let players = [];
+
+  if (playersBefore.length > 0 && clientPlayer) {
+    const clientIndex = playersBefore.findIndex(p => p.id === clientPlayer.id);
+
+    if (clientIndex !== -1) {
+      const rotated = [
+        ...playersBefore.slice(clientIndex),
+        ...playersBefore.slice(0, clientIndex),
+      ];
+      players = rotated.filter(p => p.id !== clientPlayer.id);
+    } else {
+      players = playersBefore.filter(p => p.id !== clientPlayer?.id);
+    }
+  }
 
 
   const handlePlayerClick = (player, e) => {
@@ -204,14 +248,14 @@ export default function GameTableDesign() {
       }
       handlePlayCard();
     } else {
-      if( draggingIndex && zValue){
-        alert('New Index is ' + zValue)
+      if (draggingIndex && zValue) {
+        pushBackSession("ssort");
       }
     }
 
     setIsOverDrop(false);
 
-    setZvalue(draggingIndex);
+    zValue.current = draggingIndex;
     setDraggingIndex(null);
   };
 
@@ -235,12 +279,34 @@ export default function GameTableDesign() {
     if (draggingIndex === null) return;
 
     const dx = info.offset.x;
-
-    // slot width = 30px
     const shift = Math.round(dx / 30);
-    const i = draggingIndex;
-    setZvalue(i + shift);
+    const newZ = draggingIndex + shift;
 
+    if (newZ !== zValue.current) {
+      zValue.current = newZ;
+    }
+
+  }
+
+  const handleStartDrag = (index) => {
+    setDraggingIndex(index);
+  }
+
+  const pushBackSession = (way) => {
+    if (way === "ssort") {
+      ws.current.send(JSON.stringify({
+        way: way,
+        player: clientPlayer.id,
+        currentZ: draggingIndex,
+        newZ: zValue.current,
+      }));
+    } else {
+      ws.current.send(JSON.stringify({
+        way: "emoji",
+        player: clientPlayer.id,
+        emoji: way,
+      }));
+    }
   }
 
 
@@ -255,6 +321,7 @@ export default function GameTableDesign() {
   const handleStartGame = () => {
     ws.current.send(JSON.stringify({ way: "start" }));
     setSelectedCard(null);
+    setTableCards([]);
     //setJoyrideRef(3);
   };
 
@@ -285,10 +352,22 @@ export default function GameTableDesign() {
     }
   };
 
-  const startCollectAnimation = () => {
+  const handleResetGame = async () => {
+    await ws.current.send(JSON.stringify({ way: "reset" }));
+    if(match && match === "quick") {
+      await ws.current.send(JSON.stringify({ way: "start" }));
+    }
+    setSelectedCard(null);
+  };
+
+  const startCollectAnimation = (playerIndex) => {
     if (!closedRef.current) return;
 
-    const closedRect = closedRef.current.getBoundingClientRect();
+    let closedRect = closedRef.current.getBoundingClientRect();
+    if (playerIndex != null) {
+      const playerElement = playerRefs.current[playerIndex];
+      closedRect = playerElement.getBoundingClientRect();
+    }
 
     const animCards = tableCards.map((card, i) => {
       const tableRect = tableCardRefs.current[i]?.getBoundingClientRect();
@@ -307,14 +386,11 @@ export default function GameTableDesign() {
       };
     }).filter(Boolean);
 
-    // setTableCards([]); // clear table immediately
     setCollectingCards(animCards);
 
-    // clear after animation ends
     setTimeout(() => {
       setCollectingCards([]);
       setTableCards([]);
-      // update backend / move to closed pile here
     }, 1000);
   };
 
@@ -326,12 +402,28 @@ export default function GameTableDesign() {
     setAnchorPopoverEl(null);
   };
 
-  const handleEmojiClick = (emojiData, e) => {
-    setAnchorPopoverEl(null);
-    alert(`Send emoji: ${emojiData}`);
+  const handleEmojiClick = (emoji, e) => {
+    pushBackSession(emoji);
   };
 
+  const scrollBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth", // optional smooth scroll
+      });
+    }
+  }
+
   const hasMatchingCard = clientPlayer.cards && clientPlayer.cards.some(card => card.cardName === gameData.tableSuit);
+
+  if (gameData.looserPlayer)
+    return (
+      <GameOverScreen
+        gameData={gameData}
+        handleResetGame={handleResetGame}
+      />
+    );
 
   return (
     <Box
@@ -396,9 +488,8 @@ export default function GameTableDesign() {
         {/* Players on top half circle */}
         {players.map((player, index) => {
           const total = players.length;
-          const angle = (index / (total - 1)) * Math.PI; // 0 → π (top half)
+          const angle = total != 1 ? (index / (total - 1)) * Math.PI : 1.5707963267948966; // 0 → π (top half)
           const radius = { xs: 30, sm: 40, md: 40 }; // smaller on mobile
-
 
           return (
             <Box
@@ -415,6 +506,7 @@ export default function GameTableDesign() {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
+                zIndex: 9999,
               }}
             >
               <PlayerAvatarWithTimer
@@ -435,7 +527,7 @@ export default function GameTableDesign() {
                   left: "-50%",
                   transform: "translateX(-50%)",
                 }}>
-                {player.cards.map((card, i) => (
+                {player.cards?.map((card, i) => (
                   <Card
                     key={i}
                     sx={{
@@ -584,7 +676,7 @@ export default function GameTableDesign() {
               transform: "translateX(-50%)",
               width: 250,
               height: 120,
-              border: `2px dashed ${isOverDrop ? "gold" : "#fff"}`,
+              // border: `2px dashed ${isOverDrop ? "gold" : "#fff"}`,
               borderRadius: "12px",
               backgroundColor: "rgba(255,255,255,0.1)",
               display: "flex",
@@ -594,33 +686,74 @@ export default function GameTableDesign() {
               fontWeight: "bold",
             }}
           >
-            {gameData.turnIndex < 0
-              ? (
-                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                  {gameData.players.length > 2 &&
-                    <GloriousButton onClick={() => handleStartGame()}
-                      text='Start' />
-                  }
-                  <Box display="flex" flexDirection="column" alignItems="center"
-                    width="100%" style={{ fontSize: 20, }}>
-                    {gameData.countDown === 0 || gameData.countDown === '0' ? (
-                      <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                        Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
-                      </Typography>
-                    ) : (
-                      <Typography variant="body1" sx={{ mb: 1 }}>
-                        Starts in... ({gameData.countDown} Sec)
-                      </Typography>
-                    )}
+            <motion.div
+              animate={{
+                scale: isOverDrop ? 1.1 : 1,
+                backgroundColor: isOverDrop
+                  ? "rgba(255, 215, 0, 0.2)" // gold glow
+                  : "rgba(255,255,255,0.05)",
+                boxShadow: isOverDrop
+                  ? "0px 0px 20px rgba(255, 215, 0, 0.8)"
+                  : "0px 0px 6px rgba(255,255,255,0.2)",
+                borderColor: isOverDrop ? "gold" : "#fff",
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              style={{
+                //position: "absolute",
+                //bottom: 40,
+                //left: "50%",
+                transform: "translateX(-50%)",
+                width: 250,
+                height: 120,
+                border: "2px dashed",
+                borderRadius: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                overflow: "hidden",
+              }}
+            >
+              {gameData.turnIndex < 0
+                ? (
+                  <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                    {gameData.players.length > 2 &&
+                      <GloriousButton onClick={() => handleStartGame()}
+                        text='Start' />
+                    }
+                    <Box display="flex" flexDirection="column" alignItems="center"
+                      width="100%" style={{ fontSize: 20, }}>
+                      {gameData.countDown === 0 || gameData.countDown === '0' ? (
+                        <>
+                          {gameData.roomId !== null ? (
+                            <Box display="flex" flexDirection="column" alignItems="center"
+                              width="100%" style={{ fontSize: 20, }}>
+                              <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                                Room Id {gameData.roomId}
+                              </Typography>
+                            </Box>
+                          ) :
+                            <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                              Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
+                            </Typography>}
+                        </>
+                      ) : (
+                        <Typography variant="body1" sx={{ mb: 1 }}>
+                          Starts in... ({gameData.countDown} Sec)
+                        </Typography>
+                      )}
 
-                    <Box width="60%">
-                      <LinearProgress color="inherit" />
+                      <Box width="60%">
+                        <LinearProgress color="inherit" />
+                      </Box>
                     </Box>
                   </Box>
-                </Box>
-              ) : (
-                <Typography>Drop Here</Typography>
-              )}
+                ) : (
+                  <Typography>
+                    {isOverDrop ? "✨ Release to Drop!" : "Drop Here"}
+                  </Typography>
+                )}
+            </motion.div>
           </Box>
         </Box>
         {/* Flying Card Animation */}
@@ -646,6 +779,31 @@ export default function GameTableDesign() {
               {renderCardDesign(flyingCard.card, "classic")}
             </motion.div>
           )}
+          {flyingEmojis.map(({ id, emoji, startX, startY }) => (
+            <motion.div
+              key={`emoji-${id}`}
+              initial={{ opacity: 1, scale: 1 }}
+              animate={{
+                opacity: [1, 1, 0],
+                top: '70%',
+                left: '50%',
+                scale: [1, 1.3, 1],
+                rotate: Math.random() * 30 - 15,
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              style={{
+                position: "absolute",
+                top: `${startY}%`,
+                left: `${startX}%`,
+                transform: "translateX(-50%)",
+                fontSize: 40,
+                pointerEvents: "none",
+              }}
+            >
+              {emoji}
+            </motion.div>
+          ))}
         </AnimatePresence>
         {collectingCards.map((card) => (
           <motion.div
@@ -748,16 +906,16 @@ export default function GameTableDesign() {
                     key={i}
                     drag
                     dragSnapToOrigin
-                    dragConstraints={{ top: -300, bottom: 0, left: -100, right: 100 }}
+                    dragConstraints={{ top: -400, bottom: 0, left: -300, right: 300 }}
                     whileDrag={{ scale: 1.15 }}
                     onMouseDown={() => setSelectedCard(card)}
-                    onDragStart={() => setDraggingIndex(i)}
+                    onDragStart={() => handleStartDrag(i)}
                     onDragEnd={(event, info) => handleDrop(card, info, isTurn)}
                     onDrag={(event, info) => handleDragCard(event, info)}
                     style={{
                       position: "absolute",
                       left: `calc(50% - ${(clientPlayer.cards.length * 30) / 2}px + ${i * 30}px)`,
-                      zIndex: draggingIndex === i ? zValue : i,
+                      zIndex: draggingIndex === i ? zValue.current : i,
                     }}
                   >
                     <Card
@@ -806,14 +964,28 @@ export default function GameTableDesign() {
         message={snackbar.message}
         severity={snackbar.severity}
       />
-      <EmojiPopover 
+      <EmojiPopover
         anchorPopoverEl={anchorPopoverEl}
         handlePopoverClose={handlePopoverClose}
-        onEmojiSelect={handleEmojiClick}/>
+        onEmojiSelect={handleEmojiClick} />
     </Box>
   );
 }
 
+
+const socketUrl = (match) => {
+  const token = localStorage.getItem("accessToken");
+  switch (match) {
+    case "bot":
+      return `${gameAi}?token=${token}&bot=true`;
+    case "classic":
+      return `${game}?token=${token}&classic=true`;
+    case "quick":
+      return `${game}?token=${token}&roomId=quick`;
+    default:
+      return `${game}?token=${token}${match ? "&roomId=" + match : ""}`;
+  }
+}
 
 const getCardImage = (imageName) => {
   try {

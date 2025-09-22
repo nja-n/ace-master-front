@@ -17,6 +17,15 @@ const ImageIcon = ({icon, onclick}) => {
         case "lock":
             iconImage = lockIcon;
             break;
+        case "dot":
+            iconImage = dotIcon;
+            break;
+        case "question":
+            iconImage = questionIcon;
+            break;
+        case "times":
+            iconImage = timesIcon;
+            break;
         default:
             iconImage = backIcon;
             break;

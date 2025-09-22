@@ -21,8 +21,9 @@ import Leaderboard from "./pages/LeaderBoard";
 import OpenScene from './pages/OpenScene';
 import ProfilePage from "./pages/Profile";
 import Tasks from './pages/Tasks';
-import TermsPage from './pages/TermsPage';
+import TermsPage, { PrivacyReact, TermsReact } from './pages/TermsPage';
 import GameTableDesign from "./pages/GameTable2";
+import InviteRedirect from "./pages/fragments/InviteRedirect";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
@@ -48,7 +49,7 @@ function AppContent() {
     let intervalId = setInterval(fetchVersion, 60_000);
     return () => clearInterval(intervalId);
   }, []);
-  
+
   useEffect(() => {
     if (!version) {
       setLoading(true);
@@ -69,7 +70,9 @@ function AppContent() {
             <Route path="/game/:roomId" element={<GameTable />} />
             <Route path="/game" element={<GameTable />} />
             <Route path="/about" element={<About />} />
-            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/terms" element={<TermsReact />} />
+            <Route path="/privacy" element={<PrivacyReact />} />
+            <Route path="/terms-privacy" element={<TermsPage />} />
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/contact" element={<ContactUs />} />
             <Route path="/bday" element={<BirthDay />} />
@@ -78,8 +81,9 @@ function AppContent() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="*" element={<NotFound />} />
-            <Route path="/vvv" element={<VoiceRoom/>}/>
-            <Route path="/quick" element={<GameTableDesign/>}/>
+            <Route path="/vvv" element={<VoiceRoom />} />
+            <Route path="/play/:match" element={<GameTableDesign />} />
+            <Route path="/invite/:code" element={<InviteRedirect />} />
           </Routes>
         </LayoutWithBackground>
       </UserProvider>
