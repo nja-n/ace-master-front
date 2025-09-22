@@ -24,6 +24,7 @@ import Tasks from './pages/Tasks';
 import TermsPage, { PrivacyReact, TermsReact } from './pages/TermsPage';
 import GameTableDesign from "./pages/GameTable2";
 import InviteRedirect from "./pages/fragments/InviteRedirect";
+import AdManager from "./components/force/AdManager";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
@@ -96,6 +97,7 @@ function App() {
     <Router>
       <LoadingProvider>
         <AlertProvider>
+          <AdManager />
           <AppContent />
         </AlertProvider>
       </LoadingProvider>
