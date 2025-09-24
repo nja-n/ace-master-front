@@ -3,7 +3,6 @@ import { initializeApp } from "firebase/app";
 import { FacebookAuthProvider, getAuth, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
 //testing
-/**
 const firebaseConfig = {
   apiKey: "AIzaSyB_9t2s6gv43J9fKdUI1DLl4Z3v9yiJHnk",
   authDomain: "aeither-e6a79.firebaseapp.com",
@@ -13,9 +12,10 @@ const firebaseConfig = {
   messagingSenderId: "932846636737",
   appId: "1:932846636737:web:c9d2121791f7669aeace40",
   measurementId: "G-04KH9RD19G"
-};*/
+};
 
 //serving
+/*
 const firebaseConfig = {
   apiKey: "AIzaSyC2EfYopbh4CMr5tsPf3YxTCORZqbwsUss",
   authDomain: "aeit-her.firebaseapp.com",
@@ -25,7 +25,7 @@ const firebaseConfig = {
   messagingSenderId: "39246248865",
   appId: "1:39246248865:web:50bc9affb0f8a34461a9e0",
   measurementId: "G-PVYMSLM7BR"
-};
+};*/
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
