@@ -1,18 +1,21 @@
-import { MoreVert } from "@mui/icons-material";
+import { MoreVert, Task } from "@mui/icons-material";
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import {
     AppBar,
     Box,
     Button,
+    Collapse,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
     IconButton, Menu, MenuItem,
+    Paper,
     Stack,
     TextField,
     Toolbar,
-    Typography
+    Typography,
+    useMediaQuery
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +35,8 @@ import CoinWithText from "./fragments/CoinWithText";
 import InstallPrompt from "../components/force/Promote";
 import { emit } from "../components/utils/eventBus";
 import ImageIcon from "../components/ui/CustomImageIcon";
+import HamburgerArrow from "./fragments/Header";
+import { HelpCircleIcon, HomeIcon, InfoIcon, PersonStandingIcon } from "lucide-react";
 
 const Home = () => {
     const { user, loading } = useUser();
@@ -61,7 +66,17 @@ const Home = () => {
 
     const [roomModalOpen, setRoomModalOpen] = useState(false);
 
-    const alreadyInstalled = isInStandaloneMode();
+    const [openMenu, setOpenMenu] = useState(false);
+    const isMobile = useMediaQuery("(max-width:600px)");
+
+
+    const menuItems = [
+        { icon: <HomeIcon />, label: "Home", onClick: () => navigate("/") },
+        { icon: <PersonStandingIcon />, label: "Profile", onClick: () => navigate("/profile") },
+        { icon: <Task />, label: "Tasks", onClick: () => navigate("/tasks") },
+        { icon: <InfoIcon />, label: "About", onClick: () => navigate("/about") },
+        { icon: <HelpCircleIcon />, label: "FAQ", onClick: () => navigate("/faq") },
+    ];
 
     useEffect(() => {
         emit("user:refresh");
@@ -286,29 +301,62 @@ const Home = () => {
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                         <CoinWithText coinBalance={coinBalance} />
 
-                        {/* Desktop Buttons */}
-                        <Box sx={{ display: { xs: "none", sm: "flex" }, gap: 2 }}>
-                            {/* <Button color="inherit" onClick={() => handleMenuSelected(1)}>Chat</Button> */}
-                            <Button color="inherit" onClick={() => handleMenuSelected(1)}>Task</Button>
-                            <Button color="inherit" onClick={() => handleMenuSelected(5)}>Leaderboard</Button>
-                            <Button color="inherit" onClick={() => handleMenuSelected(2)}>About</Button>
-                            {!alreadyInstalled && false && <Button color="inherit" onClick={() => handleMenuSelected(6)}>Install App</Button>}
-                            {/* <Button color="inherit" onClick={() => handleMenuSelected(4)}>Contact Us</Button> */}
-                        </Box>
+                        {isMobile ? (
+                            <HamburgerArrow open={openMenu} onClick={() => setOpenMenu((prev) => !prev)} />
+                        ) : (
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                {menuItems.map((item) => (
+                                    <Box
+                                        key={item.label}
+                                        sx={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                            cursor: "pointer",
+                                            color: "Home" !== item.label ? "gold" : "lightgray",
+                                        }}
+                                        onClick={item.onClick}
+                                    >
+                                        {item.icon}
+                                        <Typography variant="caption">{item.label}</Typography>
+                                    </Box>
+                                ))}
+                            </Box>
+                        )}
 
-                        {/* Mobile Menu */}
-                        <IconButton edge="end" color="inherit"sx={{ display: { xs: "block", sm: "none" } }}>
-                            <ImageIcon icon="dot" onclick={handleMenuOpen} />
-                        </IconButton>
-
-                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-                            <MenuItem onClick={() => { handleMenuSelected(1); handleMenuClose(); }}>Task</MenuItem>
-                            <MenuItem onClick={() => { handleMenuSelected(5); handleMenuClose(); }}>Leaderboard</MenuItem>
-                            <MenuItem onClick={() => { handleMenuSelected(2); handleMenuClose(); }}>About</MenuItem>
-                            {/* <MenuItem onClick={() => { handleMenuSelected(4); handleMenuClose(); }}>Contact Us</MenuItem> */}
-                        </Menu>
                     </Box>
                 </Toolbar>
+                {isMobile && (
+                    <Collapse in={openMenu}>
+                        <Paper elevation={3}
+                            sx={{
+                                background: "linear-gradient(135deg, rgba(30,41,59,0.55), rgba(51,65,85,0.55))",
+                                color: "gold"
+                            }}>
+                            <Box sx={{ display: "flex", justifyContent: "space-around", py: 1 }}>
+                                {menuItems.map((item) => (
+                                    <Box
+                                        key={item.label}
+                                        sx={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                            cursor: "pointer",
+                                            color: "Home" !== item.label ? "gold" : "lightgray",
+                                        }}
+                                        onClick={() => {
+                                            item.onClick();
+                                            setOpenMenu(false);
+                                        }}
+                                    >
+                                        {item.icon}
+                                        <Typography variant="caption">{item.label}</Typography>
+                                    </Box>
+                                ))}
+                            </Box>
+                        </Paper>
+                    </Collapse>
+                )}
             </AppBar>
 
             {/* User Info */}
@@ -518,10 +566,3 @@ const Home = () => {
 };
 
 export default Home;
-
-function isInStandaloneMode() {
-    return (
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.navigator.standalone === true // For iOS Safari
-    );
-}

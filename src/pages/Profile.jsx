@@ -1,222 +1,197 @@
-import { Close, Google } from "@mui/icons-material";
+import { Close, Google, PhotoCamera } from "@mui/icons-material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
-import { Box, Button, Card, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, LinearProgress, Stack, TextField, Tooltip, Typography } from "@mui/material";
+import { Avatar, Box, Button, Card, Dialog, DialogContent, DialogTitle, Grid, IconButton, LinearProgress, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { GoogleAuthProvider, linkWithPopup } from "firebase/auth";
+import { useEffect, useState } from "react";
 import { useLoading } from "../components/LoadingContext";
+import { fetchAchievements } from "../components/methods";
 import CustomAvatar from "../components/ui/CustomAvathar";
 import { useUser } from "../components/ui/UserContext";
-import { auth } from "../firebase-config";
-import CoinIcon from '../images/aeither_coin.png';
-import { useEffect, useState } from "react";
 import { apiClient } from "../components/utils/ApIClient";
-import { fetchAchievements, saveUser } from "../components/methods";
-import { getDeviceInfo } from "../components/Utiliy";
+import { auth, googleProvider } from "../firebase-config";
+import CoinIcon from '../images/aeither_coin.png';
+import GloriousButton from "../components/ui/GloriousButton";
+import { orange } from "@mui/material/colors";
+import { LedgerDialog } from "./fragments/LedgerDialog";
+import UserCard from "./fragments/UserCard";
 
 export default function ProfilePage({ isTop10 }) {
-    const { user, loading } = useUser();
-    const { setLoading } = useLoading();
-    const [profile, setProfile] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
-    const [changedName, setChangedName] = useState(user?.firstName || "");
+  const { user, loading } = useUser();
+  const { setLoading } = useLoading();
+  const [profile, setProfile] = useState(null);
 
-    const [open, setOpen] = useState(false);
-    const [selectedKey, setSelectedKey] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [selectedKey, setSelectedKey] = useState(null);
 
-    const statIdeas = {
-        dayStreak: {
-            title: "Day Streak",
-            value: 1,
-            description: "Number of consecutive days you played.",
-        },
-        league: {
-            title: "League",
-            value: "BRONZE",
-            description: "Your league tier based on Wins (Bronze → Silver → Gold).",
-        },
-        winStreak: {
-            title: "Win Streak",
-            value: 3,
-            description: "Number of games won in a row.",
-        },
-        gamesPlayed: {
-            title: "Games Played",
-            value: 3,
-            description: "Total matches completed (Wins + Draws + Losses).",
-        },
-        winRate: {
-            title: "Win Rate",
-            value: "33%",
-            description: "Calculated as Wins ÷ Games Played × 100.",
-        },
-        rank: {
-            title: "Rank",
-            value: "Unranked",
-            description: "Your position compared to other players.",
-        },
-    };
+  const [gameLedger, setGameLedger] = useState(false);
+  const [coinLedger, setCoinLedger] = useState(false);
+
+  const [avatar, setAvatar] = useState(null);
+
+  const statIdeas = {
+    dayStreak: {
+      title: "Day Streak",
+      value: 1,
+      description: "Number of consecutive days you played.",
+    },
+    league: {
+      title: "League",
+      value: "BRONZE",
+      description: "Your league tier based on Wins (Bronze → Silver → Gold).",
+    },
+    winStreak: {
+      title: "Win Streak",
+      value: 3,
+      description: "Number of games won in a row.",
+    },
+    gamesPlayed: {
+      title: "Games Played",
+      value: 3,
+      description: "Total matches completed (Wins + Draws + Losses).",
+    },
+    winRate: {
+      title: "Win Rate",
+      value: "33%",
+      description: "Calculated as Wins ÷ Games Played × 100.",
+    },
+    rank: {
+      title: "Rank",
+      value: "Unranked",
+      description: "Your position compared to other players.",
+    },
+  };
 
 
-    useEffect(() => {
-        if (user === null) {
-            setLoading(true);
-        } else {
-            setLoading(false);
-        }
-    }, [user, setLoading]);
+  useEffect(() => {
+    if (user === null) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [user, setLoading]);
 
-    useEffect(() => {
-        async function fetchProfile() {
-            try {
-                const response = await apiClient(fetchAchievements, { userId: user.id });
-                setProfile(response);
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const response = await apiClient(fetchAchievements, { userId: user.id });
+        setProfile(response);
 
-            } catch (error) {
-                console.error("Error fetching profile:", error);
-            }
-        }
-
-        if (user && user.id) {
-            fetchProfile();
-        }
-    }, [user]);
-    //isTop10 = isTop10 || true;
-
-    if (user === null || profile === null) {
-        return (
-            <Box sx={{ p: 2, textAlign: "center", color: "#fff" }}>
-                Loading...
-            </Box>
-        );
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
     }
 
-    async function upgradeGuestAccount() {
-        const provider = new GoogleAuthProvider();
-        try {
-            const result = await linkWithPopup(auth.currentUser, provider);
-
-            // Get the fresh token (contains updated Firebase claims)
-            const idToken = await result.user.getIdToken(true);
-
-            // Send it to your backend to trigger the upgrade logic
-            const res = await fetch("/api/upgrade-guest", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${idToken}`,
-                }
-            });
-
-            if (res.ok) {
-                const updatedUser = await res.json();
-                console.log("Backend confirms upgrade:", updatedUser);
-            } else {
-                console.error("Backend upgrade failed");
-            }
-
-        } catch (error) {
-            console.error("Upgrade failed:", error);
-        }
+    if (user && user.id) {
+      fetchProfile();
     }
+  }, [user]);
+  //isTop10 = isTop10 || true;
 
-    const handleSave = async () => {
-        if (changedName.trim()) {
-            setLoading(true);
-            const deviceInfo = await getDeviceInfo();
-            try {
-                const payload = {
-                    id : user.id,
-                    firstName: changedName,
-                    os: deviceInfo.platform,
-                    platform: deviceInfo.userAgent,
-                    screenWidth: deviceInfo.screenWidth,
-                    screenHeight: deviceInfo.screenHeight
-                };
-
-                const response = await apiClient(saveUser, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: payload,
-                    refreshOnSuccess: true,
-                });
-
-                if (!response) throw new Error("Failed to save user");
-
-                const data = await response;
-
-                alert('Player Name have been saved.');
-
-            } catch (error) {
-                alert('something went wrong, please try again');
-                console.error("Error saving user:", error);
-                setLoading(false);
-            }
-            setLoading(false);
-        }
-        setIsEditing(false);
-    };
-    const handleOpen = (key) => {
-        setSelectedKey(key);
-        alert(statIdeas[key].description);
-        //setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-        setSelectedKey(null);
-    };
-
+  if (user === null || profile === null) {
     return (
+      <Box sx={{ p: 2, textAlign: "center", color: "#fff" }}>
+        Loading...
+      </Box>
+    );
+  }
+
+  async function upgradeGuestAccount() {
+    // const provider = new GoogleAuthProvider();
+    try {
+      const result = await linkWithPopup(auth.currentUser, googleProvider);
+
+      // Get the fresh token (contains updated Firebase claims)
+      const idToken = await result.user.getIdToken(true);
+
+      // Send it to your backend to trigger the upgrade logic
+      const res = await fetch("/api/upgrade-guest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        }
+      });
+
+      if (res.ok) {
+        const updatedUser = await res.json();
+        console.log("Backend confirms upgrade:", updatedUser);
+      } else {
+        console.error("Backend upgrade failed");
+      }
+
+    } catch (error) {
+      console.error("Upgrade failed:", error);
+    }
+  }
+
+  const handleOpen = (key) => {
+    setSelectedKey(key);
+    alert(statIdeas[key].description);
+    //setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedKey(null);
+  };
+
+  const handleAvatarUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAvatar(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+
+  return (
     <Box sx={{ mt: { xs: 3, md: 5 }, px: { xs: 2, md: 5 }, overflowX: "hidden" }}>
-      <Grid container spacing={{ xs: 2, md: 3 }}>
+      <Grid container >
         {/* LEFT SECTION (Profile Info & Stats) */}
-        <Grid item xs={12} md={8}>
+        <Grid>
           {/* Profile Header */}
           <Stack alignItems="center" spacing={1} sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', flexDirection: { xs: "column", sm: "row" }, alignItems: "center", gap: 2 }}>
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: "center", gap: 2,
+                border: "2px dashed rgba(0,0,0,0.2)", 
+                borderRadius: "20px",
+                p:2,
+                boxShadow:"0 2px 4px rgba(0,0,0,0.6)"
+            }}>
+              {/* <Box sx={{ position: "relative", display: "inline-block", flexDirection: { xs: "column", sm: "row" }, alignItems: "center", gap: 2 }}> */}
               <CustomAvatar
                 size={200}
                 letter={(user.firstName || "?")?.charAt(0).toUpperCase()}
+                settings={true}
+                user={user}
               />
-              <Box sx={{ display: 'flex', flexDirection: 'column', ml: { xs: 0, sm: 2 }, justifyContent: 'flex-start', alignItems: { xs: "center", sm: "flex-start" } }}>
-                {isEditing ? (
-                  <TextField
-                    value={changedName}
-                    onChange={(e) => setChangedName(e.target.value)}
-                    size="small"
-                    variant="standard"
-                    InputProps={{
-                      style: { color: "white", fontSize: "1.25rem", fontWeight: 500 }
-                    }}
-                    sx={{
-                      width: { xs: "200px", sm: "250px" },
-                      mb: 1,
-                      "& .MuiInputBase-input": { padding: 0 },
-                      "& .MuiInput-underline:before": { borderBottomColor: "gray" },
-                      "& .MuiInput-underline:hover:before": { borderBottomColor: "orange !important" },
-                      "& .MuiInput-underline:after": { borderBottomColor: "yellow" },
-                    }}
+              <UserCard isTop10={false} 
+                upgradeGuestAccount={upgradeGuestAccount}
+                user={user}/>
+            </Box> 
+            <Box display={"flex"}
+                  flexDirection={"row"}
+                  justifyContent="space-between"
+                  gap={1} width="100%">
+                  <GloriousButton
+                    color={"green"}
+                    onClick={() => setGameLedger(true)}
+                    text="Last Games"
+                    sx={{width:"100%"}}
                   />
-                ) : (
-                  <Typography variant="h6" color="white" sx={{ fontSize: "1.25rem", fontWeight: 500, mb: 1, width: { xs: "200px", sm: "250px" }, textAlign: { xs: "center", sm: "left" } }}>
-                    {user.firstName || "Guest"}
-                  </Typography>
-                )}
-
-                <Stack direction="row" spacing={1} mt={1}>
-                  {isEditing ? (
-                    <>
-                      <Button variant="contained" color="success" size="small" onClick={handleSave}>Save</Button>
-                      <Button variant="outlined" color="error" size="small" onClick={() => { setChangedName(user?.firstName || ""); setIsEditing(false); }}>Cancel</Button>
-                    </>
-                  ) : (
-                    <Button variant="outlined" color="warning" size="small" onClick={() => setIsEditing(true)}>Edit</Button>
-                  )}
-                </Stack>
-              </Box>
-            </Box>
+                  <GloriousButton
+                    color={"green"}
+                    onClick={() => setCoinLedger(true)}
+                    text="Coin History"
+                    sx={{width:"100%"}}
+                  />
+                </Box>
 
             <Typography variant="body2" color="gray">Level {profile.level || 1}</Typography>
             <Box sx={{ width: { xs: '80%', sm: '60%' }, mt: 1 }}>
@@ -257,35 +232,20 @@ export default function ProfilePage({ isTop10 }) {
             ))}
           </Grid>
 
-          {/* Withdraw / Connect Button */}
-          {user.annonymous ? (
-            <Button variant="contained" fullWidth sx={{ bgcolor: "#3b82f6", mb: 3 }} onClick={() => alert("Open account connection flow")}>
-              Connect Google <Google />
-            </Button>
-          ) : isTop10 ? (
-            <Button variant="contained" fullWidth sx={{ bgcolor: "#22c55e", mb: 3 }} onClick={() => alert("Withdraw triggered!")}>
-              Claim
-            </Button>
-          ) : (
-            <Tooltip title="Your rank must be in the Top 10 today to withdraw">
-              <span style={{ width: "100%" }}>
-                <Button variant="contained" fullWidth disabled sx={{ bgcolor: "#9ca3af", mb: 3 }}>
-                  Claim Coins
-                </Button>
-              </span>
-            </Tooltip>
-          )}
+          {(gameLedger || coinLedger) &&
+            <LedgerDialog setOpenGame={setGameLedger} user = {user.id}
+              setOpenCoin={setCoinLedger} view={gameLedger ? "game" : "coin"} />}
 
           {/* For small screens, badges */}
-          <Box sx={{ display: { xs: "block", md: "none" } }}>
+          {/* <Box sx={{ display: { xs: "block", md: "none" } }}>
             <BadgesAndAchievements />
-          </Box>
+          </Box> */}
         </Grid>
 
         {/* RIGHT SECTION (Badges for big screens) */}
-        <Grid item xs={12} md={4} sx={{ display: { xs: "none", md: "block" } }}>
+        {/* <Grid item xs={12} md={4} sx={{ display: { xs: "none", md: "block" } }}>
           <BadgesAndAchievements />
-        </Grid>
+        </Grid> */}
       </Grid>
 
       <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
@@ -313,19 +273,19 @@ export default function ProfilePage({ isTop10 }) {
 }
 
 function BadgesAndAchievements() {
-    return (
-        <>
-            {/* Badges */}
-            <Typography variant="h6" sx={{ mb: 1 }} color="white">Badges</Typography>
-            <Typography variant="body2" color="gray" sx={{ mb: 3 }}>
-                Coming soon...
-            </Typography>
+  return (
+    <>
+      {/* Badges */}
+      <Typography variant="h6" sx={{ mb: 1 }} color="white">Badges</Typography>
+      <Typography variant="body2" color="gray" sx={{ mb: 3 }}>
+        Coming soon...
+      </Typography>
 
-            {/* Achievements */}
-            <Typography variant="h6" sx={{ mb: 1 }} color="white">Achievements</Typography>
-            <Typography variant="body2" color="gray">
-                Coming soon...
-            </Typography>
-        </>
-    );
+      {/* Achievements */}
+      <Typography variant="h6" sx={{ mb: 1 }} color="white">Achievements</Typography>
+      <Typography variant="body2" color="gray">
+        Coming soon...
+      </Typography>
+    </>
+  );
 }

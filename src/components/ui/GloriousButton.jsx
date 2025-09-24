@@ -1,7 +1,7 @@
 import { Button } from '@mui/material';
 import { hover } from 'framer-motion';
 
-const GloriousButton = ({ onClick, text, color, id }) => {
+const GloriousButton = ({ onClick, text, color, id, sx }) => {
     const styles = {
         red: {
             background: 'linear-gradient(180deg, #8B2E1A, #7A1E10)',
@@ -30,6 +30,7 @@ const GloriousButton = ({ onClick, text, color, id }) => {
             onClick={onClick}
             variant="contained"
             sx={{
+                ...sx,
                 background: selectedStyle.background,
                 border: '2px solid #FFD700',
                 color: '#FFD700',

@@ -69,7 +69,7 @@ const OpenScene = ({forceSplash = false}) => {
                             <LinearProgress color="grey"/>
                         </Box>
                     </div>
-                    <Countdown />
+                    {/* <Countdown /> */}
                 </>
 
             ) : (

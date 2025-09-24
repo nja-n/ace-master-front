@@ -80,7 +80,7 @@ const About = () => {
           In this case, the player with the highest card takes the pile.
         </Typography>
         <Typography paragraph>
-          The winner of a round chooses the next suit. The last player holding cards at the end is the
+          Player with the highest card of a round chooses the next suit. The last player holding cards at the end is the
           <b> Kazhutha (Donkey) 🐴</b>.
         </Typography>
         <Divider sx={{ my: 2 }} />
@@ -97,7 +97,7 @@ const About = () => {
           📱 Game Categories
         </Typography>
         <Typography paragraph>
-          Choose from 3 categories – <b>AI</b>, <b>Online</b>, and <b>Room</b> – each with unique bet ranges.
+          Choose from 4 categories – <b>Online</b> and <b>Quick</b> with unique bet ranges. <b>AI</b>, and <b>Room</b> are non betting. {/*– each with*/}
         </Typography>
         <Typography paragraph>
           Online and Rooms have 3–6 seats. Join by tapping an empty chair. Invite friends via shareable link or play with bots if fewer players join.

@@ -24,6 +24,7 @@ const Tasks = () => {
                     borderRadius: 2
                 }}
             >
+                {/* <RewardedAd/> */}
                 <Typography variant="h6" color="grey">
                     🔒 More tasks will be updated later
                 </Typography>

@@ -1,6 +1,12 @@
-import { Box, Typography } from '@mui/material';
+import { Settings } from '@mui/icons-material';
+import { Box, IconButton, Typography } from '@mui/material';
+import { useState } from 'react';
+import { SettingsDialog } from '../../pages/fragments/SettingsDialog';
+import { motion } from 'framer-motion';
 
-const CustomAvatar = ({ size = 64, letter = 'I', rank }) => {
+const CustomAvatar = ({ size = 64, letter = 'I', rank, settings = false, user }) => {
+  const [openSettings, setOpenSettings] = useState(false);
+
   return (
     <Box
       sx={{
@@ -13,9 +19,31 @@ const CustomAvatar = ({ size = 64, letter = 'I', rank }) => {
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4)',
+        boxShadow: "0 8px 20px rgba(0,0,0,0.5)",
+        // boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4)',
       }}
     >
+      {settings &&
+        <IconButton
+          onClick={() => setOpenSettings(true)}
+          sx={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            bgcolor: "rgba(30,41,59,0.8)",
+            "&:hover": { bgcolor: "rgba(30,41,59,1)" },
+            width: 36,
+            height: 36,
+          }}
+        >
+          <motion.div
+            animate={{ rotate: openSettings ? 180 : 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          >
+            <Settings sx={{ color: "gold", fontSize: 24 }} />
+          </motion.div>
+        </IconButton>
+      }
       <Typography
         sx={{
           color: '#f5f5dc',
@@ -56,6 +84,10 @@ const CustomAvatar = ({ size = 64, letter = 'I', rank }) => {
           </Typography>
         </Box>
       )}
+      {openSettings &&
+        <SettingsDialog
+          setOpenSettings={setOpenSettings}
+          user={user} />}
     </Box>
   );
 };

@@ -25,6 +25,7 @@ import TermsPage, { PrivacyReact, TermsReact } from './pages/TermsPage';
 import GameTableDesign from "./pages/GameTable2";
 import InviteRedirect from "./pages/fragments/InviteRedirect";
 import AdManager from "./components/force/AdManager";
+import AdGuardedInterstitial from "./components/force/AdGuardedInterstitial";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
@@ -93,11 +94,13 @@ function AppContent() {
 }
 
 function App() {
+
   return (
     <Router>
       <LoadingProvider>
         <AlertProvider>
-          <AdManager />
+          {/* <AdManager /> */}
+          {/* <AdGuardedInterstitial zone="17300X" load="onAction" /> */}
           <AppContent />
         </AlertProvider>
       </LoadingProvider>

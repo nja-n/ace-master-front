@@ -33,3 +33,6 @@ export const fetchDailyTasks = `${protocol}://${server}/tasks/daily`;
 export const claimDailyTask = `${protocol}://${server}/tasks/daily/claim`;
 
 export const fetchAchievements = `${protocol}://${server}/profile/fetch-achievements`;
+export const fetchGameLedger = `${protocol}://${server}/profile/fetch-lastgames`;
+export const fetchCoinLedger = `${protocol}://${server}/profile/fetch-lastcoins`;
+

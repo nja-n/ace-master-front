@@ -30,7 +30,7 @@ const LayoutWithBackground = ({ children, version }) => {
       }}
 
     >
-      {!isGameRoute && <Header />}
+      {!isGameRoute && <Header/>}
       {children}
       <Box
         sx={{
@@ -77,6 +77,15 @@ const LayoutWithBackground = ({ children, version }) => {
         >
           <Link
             href='terms'
+            target="_blank"
+            rel="noopener noreferrer"
+            underline="hover"
+          >
+          Terms
+          </Link>
+          {" & "}
+          <Link
+            href='privacy'
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"

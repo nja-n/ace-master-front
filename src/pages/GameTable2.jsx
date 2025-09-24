@@ -20,6 +20,7 @@ import GloriousButton from "../components/ui/GloriousButton";
 import { EmojiEmotionsOutlined } from "@mui/icons-material";
 import EmojiPopover from "../components/ui/EmojiPopover";
 import GameOverScreen from "./fragments/WinningScreen";
+import { emit } from "../components/utils/eventBus";
 
 export default function GameTableDesign() {
   const [selectedCard, setSelectedCard] = useState(null);
@@ -192,6 +193,13 @@ export default function GameTableDesign() {
     }
   }, [gameData?.cuttedIndex]);
 
+  useEffect(() => {
+    if(gameData?.countDown===0){
+      emit("user:refresh");
+    }
+
+  }, [gameData?.countDown])
+
 
   const playersBefore = gameData?.players || [];
   const clientPlayer = gameData?.clientPlayer || null;
@@ -322,6 +330,7 @@ export default function GameTableDesign() {
     ws.current.send(JSON.stringify({ way: "start" }));
     setSelectedCard(null);
     setTableCards([]);
+    
     //setJoyrideRef(3);
   };
 
@@ -417,13 +426,15 @@ export default function GameTableDesign() {
 
   const hasMatchingCard = clientPlayer.cards && clientPlayer.cards.some(card => card.cardName === gameData.tableSuit);
 
-  if (gameData.looserPlayer)
+  if (gameData.looserPlayer) {
+    emit("user:refresh");
     return (
       <GameOverScreen
         gameData={gameData}
         handleResetGame={handleResetGame}
       />
     );
+  }
 
   return (
     <Box
@@ -893,7 +904,7 @@ export default function GameTableDesign() {
               display="flex"
               justifyContent="center"
               position="relative"
-              sx={{ height: 120, width: "100%", mt: 1 }}
+              sx={{ height: 100, width: "100%", mt: 1 }}
             >
               {clientPlayer.cards.map((card, i) => {
                 const isSelected = selectedCard && selectedCard.id === card.id;
@@ -940,7 +951,7 @@ export default function GameTableDesign() {
 
 
             {/* Action Buttons */}
-            <Box display="flex" justifyContent="center" gap={2}>
+            <Box display="flex" justifyContent="center" gap={2} mb={3}>
               {!clientPlayer.sorted && gameData.turnIndex >= 0 && (
                 <GloriousButton
                   onClick={() => handleSortCard()}
