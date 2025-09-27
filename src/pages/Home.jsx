@@ -32,7 +32,7 @@ import RoomSessionModal from "../components/ui/RoomSession";
 import { useLoading } from "../components/LoadingContext";
 import { useUser } from "../components/ui/UserContext";
 import CoinWithText from "./fragments/CoinWithText";
-import InstallPrompt from "../components/force/Promote";
+import InstallPrompt from "../components/force/need/Promote";
 import { emit } from "../components/utils/eventBus";
 import ImageIcon from "../components/ui/CustomImageIcon";
 import HamburgerArrow from "./fragments/Header";

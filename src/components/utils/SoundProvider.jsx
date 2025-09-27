@@ -6,15 +6,19 @@ import selectSound from '../../assets/sounds/button-press.mp3';
 import cardClick from '../../assets/sounds/flip-card.mp3';
 import pushCard from '../../assets/sounds/page-flip.mp3';
 import shuffleCard from '../../assets/sounds/riffle-card-shuffle.mp3';
+import celebration from '../../assets/sounds/tadaa.mp3';
+import windowBreak from '../../assets/sounds/window-break.mp3';
 
 const SoundContext = createContext();
 
 const sounds = {
   click: selectSound,
   shuffle: shuffleCard,
-  cardDrop: pullCard,
+  drop: pullCard,
   cardClick: cardClick,
   pageFlip: pushCard,
+  celebration: celebration,
+  break:windowBreak,
 };
 
 export function SoundProvider({ children }) {

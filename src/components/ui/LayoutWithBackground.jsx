@@ -1,7 +1,7 @@
 import { Box, Link, Typography } from "@mui/material";
 import bgGreenTable from "../../images/bg-home.png";
 import { protocol, server } from "../serverURL";
-import InstallPrompt from "../force/Promote";
+import InstallPrompt from "../force/need/Promote";
 import { useLocation } from "react-router-dom";
 import { Header } from "../../pages/fragments/Header";
 import useLocalStorage from "../utils/UseLocalStorage";

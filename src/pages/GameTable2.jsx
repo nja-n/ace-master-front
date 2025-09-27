@@ -59,7 +59,9 @@ export default function GameTableDesign() {
 
   const [closecardFlipped, setClosecardFlipped] = useState(false);
 
-  const {playSound} = useSound();
+  const { playSound } = useSound();
+
+  const [breaks, setBreak] = useState([]);
 
   useEffect(() => {
     ws.current = new WebSocket(socketUrl(match));
@@ -139,6 +141,9 @@ export default function GameTableDesign() {
 
       setFlyingCard({ card, top, left });
 
+      if (addedTurnIndex !== clientPlayer.gameIndex)
+        playSound("drop");
+
       setTimeout(() => {
         setTableCards((prev) => [...prev, card]); // add to table
         setFlyingCard(null);
@@ -197,12 +202,18 @@ export default function GameTableDesign() {
   }, [gameData?.cuttedIndex]);
 
   useEffect(() => {
-    if(gameData?.countDown===0){
+    if (gameData?.countDown === 0) {
       emit("user:refresh");
-    } else if (gameData?.countDown===3) {
+    } else if (gameData?.countDown === 3) {
       playSound("shuffle");
     }
   }, [gameData?.countDown])
+
+  useEffect(() => {
+    if (selectedCard) {
+      playSound("cardClick")
+    }
+  }, [selectedCard]);
 
 
   const playersBefore = gameData?.players || [];
@@ -334,7 +345,7 @@ export default function GameTableDesign() {
     ws.current.send(JSON.stringify({ way: "start" }));
     setSelectedCard(null);
     setTableCards([]);
-    
+
     //setJoyrideRef(3);
   };
 
@@ -345,9 +356,7 @@ export default function GameTableDesign() {
         if (isTurn) {
           let selectedCardValue = selectedCard.id;
           ws.current.send(JSON.stringify({ way: "push", player: clientPlayer.id, card: selectedCardValue }));
-          /*audioPlace.current.play().catch((err) => {
-            console.warn("Failed to play sound:", err)
-          });*/
+          playSound("drop");
         } else {
           setSnackbar({ open: true, message: "You must follow the suit!", severity: "warning" });
         }
@@ -363,11 +372,12 @@ export default function GameTableDesign() {
       setSelectedCard(null);
       ws.current.send(JSON.stringify({ way: "sort", player: clientPlayer.id }));
     }
+    playSound("click");
   };
 
   const handleResetGame = async () => {
     await ws.current.send(JSON.stringify({ way: "reset" }));
-    if(match && match === "quick") {
+    if (match && match === "quick") {
       await ws.current.send(JSON.stringify({ way: "start" }));
     }
     setSelectedCard(null);
@@ -380,6 +390,10 @@ export default function GameTableDesign() {
     if (playerIndex != null) {
       const playerElement = playerRefs.current[playerIndex];
       closedRect = playerElement.getBoundingClientRect();
+      playSound("break");
+      setBreak(prev => [...prev, playerIndex]);
+    } else {
+      playSound("pageFlip");
     }
 
     const animCards = tableCards.map((card, i) => {
@@ -404,6 +418,9 @@ export default function GameTableDesign() {
     setTimeout(() => {
       setCollectingCards([]);
       setTableCards([]);
+      if (playerIndex != null) {
+        setBreak(prev => prev.filter(idx => idx !== playerIndex));
+      }
     }, 1000);
   };
 
@@ -432,6 +449,7 @@ export default function GameTableDesign() {
 
   if (gameData.looserPlayer) {
     emit("user:refresh");
+    playSound("celebration")
     return (
       <GameOverScreen
         gameData={gameData}
@@ -528,6 +546,7 @@ export default function GameTableDesign() {
                 gameData={gameData}
                 player={player}
                 timeLeft={timeLeft}
+                breaks={breaks.includes(player.gameIndex)}
               />
               <Typography color="white" fontWeight="bold" fontSize={{ xs: 10, sm: 12, md: 14 }}>
                 {player.firstName}
@@ -881,6 +900,7 @@ export default function GameTableDesign() {
             gameData={gameData}
             player={clientPlayer}
             timeLeft={timeLeft}
+            breaks={breaks === clientPlayer.gameIndex}
           />
           <IconButton
             size="small"
