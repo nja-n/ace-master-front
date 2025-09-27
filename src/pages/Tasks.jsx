@@ -14,7 +14,7 @@ const Tasks = () => {
             sx={{ mx: "auto", mt: 5, px: 3 }}
         >
             <DailyTaskBox />
-            {/* <RefferalUI code={user?.referralCode} /> */}
+            <RefferalUI code={user?.referralCode} />
             <Box
                 sx={{
                     mt: 5,

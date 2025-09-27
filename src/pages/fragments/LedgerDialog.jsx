@@ -2,21 +2,34 @@ import { Close, KeyboardArrowDown } from "@mui/icons-material";
 import { Dialog, DialogContent, DialogTitle, IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { fetchGameLedger } from "../../components/methods";
+import { fetchCoinLedger, fetchGameLedger } from "../../components/methods";
 import { apiClient } from "../../components/utils/ApIClient";
+import { formatDate } from "../../components/Utiliy";
 
 export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
     const [gameHistory, setGameHistory] = useState([]);
+    const [coinHistory, setCoinHistory] = useState([]);
     const [openRow, setOpenRow] = useState(-1);
 
     useEffect(() => {
         async function fetchProfile() {
-            try {
-                const response = await apiClient(fetchGameLedger, {});
-                setGameHistory(response);
-                console.log(response);
-            } catch (error) {
-                console.error("Error fetching profile:", error);
+            if (view === "game") {
+                try {
+                    const response = await apiClient(fetchGameLedger, {});
+                    setGameHistory(response);
+                    console.log(response);
+                } catch (error) {
+                    console.error("Error fetching profile:", error);
+                }
+            } else {
+                try {
+                    const response = await apiClient(fetchCoinLedger, {});
+                    setCoinHistory(response);
+                    console.log(response);
+                } catch (error) {
+                    console.error("Error fetching profile:", error);
+                }
+
             }
         }
         fetchProfile();
@@ -55,23 +68,29 @@ export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
                             </TableHead>
                             <TableBody>
                                 {gameHistory.map((row) => {
-                                    // format date
-                                    const formattedDate = row.startedOn
-                                        ? new Date(row.startedOn).toLocaleString()
-                                        : "-";
 
                                     const usedCoins = row.totalPrizeAmount / row.players.split(",").length;
-                                    let rank = row.winningOrder?.split(",").indexOf(String(user));
-                                    rank = rank != null ? rank+1 : null;
+                                    const winningOrder = row.winningOrder?.split(",");
+
+                                    let rank = null;
+                                    let winningCoin = null;
+
+                                    if (winningOrder) {
+                                        const index = winningOrder.findIndex(entry => entry.split("-")[0] === String(user));
+                                        if (index !== -1) {
+                                            rank = index + 1; // rank is index + 1
+                                            winningCoin = winningOrder[index].split("-")[1]; // coin part
+                                        }
+                                    }
 
                                     return (
                                         <>
                                             <TableRow key={row.id}>
                                                 <TableCell>{row.sessionId.slice(0, 6)}...</TableCell>
                                                 <TableCell>{row.roomId ? "Room" : "Classic"}</TableCell>
-                                                <TableCell>{formattedDate}</TableCell>
+                                                <TableCell>{row.startedOn ? formatDate(row.startedOn, true) : "-"}</TableCell>
                                                 <TableCell>{usedCoins ?? 0}</TableCell>
-                                                <TableCell sx={{ color: "gold" }}>{row.earnedCoin ?? 0}</TableCell>
+                                                <TableCell sx={{ color: "gold" }}>{winningCoin ?? 0}</TableCell>
                                                 <TableCell>{rank ?? "-"}</TableCell>
                                                 <TableCell align="center">
                                                     <motion.div
@@ -92,11 +111,16 @@ export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
                                                 <TableRow>
                                                     <TableCell colSpan={7}>
                                                         <Stack spacing={1}>
-                                                            {row.players.split(",").map((p, i) => (
+                                                            {row.playerList?.map((p, i) => (
                                                                 <Typography key={i} sx={{ color: "lightblue" }}>
-                                                                    Player ID: {p}
+                                                                    Player Name: {p.firstName},{" "}
+                                                                    Rank:{" "}
+                                                                    {winningOrder
+                                                                        ? winningOrder.findIndex(entry => entry.split("-")[0] === String(p.id)) + 1
+                                                                        : "--"}
                                                                 </Typography>
                                                             ))}
+
                                                         </Stack>
                                                     </TableCell>
                                                 </TableRow>
@@ -138,19 +162,19 @@ export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
                                     <TableCell>Date & Time</TableCell>
                                     <TableCell>Item</TableCell>
                                     <TableCell>Coin</TableCell>
-                                    <TableCell>Remaining Balance</TableCell>
+                                    <TableCell sx={{ textAlign: "center" }}>Remaining Balance</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {coinData.map((row) => (
-                                    <TableRow key={row.sl}>
-                                        <TableCell>{row.sl}</TableCell>
-                                        <TableCell>{row.date}</TableCell>
-                                        <TableCell>{row.item}</TableCell>
-                                        <TableCell sx={{ color: row.coin > 0 ? "lime" : "red" }}>
-                                            {row.coin > 0 ? `+${row.coin}` : row.coin}
+                                {coinHistory.map((row, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>{formatDate(row.transactionDate, true)}</TableCell>
+                                        <TableCell>{row.transactionType}</TableCell>
+                                        <TableCell sx={{ color: row.creditAmount > 0 ? "lime" : "red" }}>
+                                            {row.creditAmount > 0 ? `+${row.creditAmount}` : row.debitAmount}
                                         </TableCell>
-                                        <TableCell sx={{ color: "gold" }}>{row.balance}</TableCell>
+                                        <TableCell sx={{ color: "gold", textAlign: "center" }}>{row.currentBalance}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -160,12 +184,6 @@ export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
             </Dialog></>
     );
 }
-
-const coinData = [
-    { sl: 1, date: "2025-09-20 10:00", item: "Daily Bonus", coin: +100, balance: 1200 },
-    { sl: 2, date: "2025-09-20 14:30", item: "Game Entry", coin: -50, balance: 1150 },
-    { sl: 3, date: "2025-09-22 19:45", item: "Game Reward", coin: +200, balance: 1350 },
-];
 
 const tableStyles = {
     background: "linear-gradient(135deg, #0f172a, #1e293b)",

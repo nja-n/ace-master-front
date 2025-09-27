@@ -4,8 +4,14 @@ import dotIcon from '../../images/icons/dots.png';
 import questionIcon from '../../images/icons/question.png';
 import lockIcon from '../../images/icons/lock.png';
 import timesIcon from '../../images/icons/times.png';
+import leaderImg from '../../images/leader.png';
+import cartImg from '../../images/carts.png';
+import { useSound } from '../utils/SoundProvider';
+import { IconButton } from '@mui/material';
 
-const ImageIcon = ({icon, onclick}) => {
+const ImageIcon = ({ icon, onclick, content }) => {
+    const { playSound } = useSound();
+
     let iconImage;
     switch (icon) {
         case "home":
@@ -26,14 +32,28 @@ const ImageIcon = ({icon, onclick}) => {
         case "times":
             iconImage = timesIcon;
             break;
+        case "leader":
+            iconImage = leaderImg;
+            break
+        case "cart":
+            iconImage = cartImg;
+            break;
         default:
-            iconImage = backIcon;
+            iconImage = null;
             break;
     }
+
+    const handleOnClick = () => {
+        playSound("click");
+        onclick();
+    }
+
     return (
-        <img src={iconImage} width={33} height={33}
-            onClick={onclick} style={{ cursor: "pointer" }}
-        />
+        iconImage ?
+            <img src={iconImage} width={33} height={33}
+                onClick={() => handleOnClick()} style={{ cursor: "pointer" }}
+            /> :
+            <IconButton>{content}</IconButton>
     );
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -20,12 +20,33 @@ import QrCodeIcon from "@mui/icons-material/QrCode";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import { FacebookIcon, InstagramIcon } from "lucide-react";
+import { apiClient } from "../../components/utils/ApIClient";
+import { useLoading } from "../../components/LoadingContext";
+import { fetchReferalTasks } from "../../components/methods";
 
-const ReferralUI = ({code}) => {
+const ReferralUI = ({ code }) => {
   const [copied, setCopied] = useState(false);
+  const {setLoading} = useLoading();
+  const [task, setTask] = useState({});
 
   const referralLink = "https://playacemaster.online/invite/" + code;
   const referralCode = code;
+
+  useEffect(() => {
+    setLoading(true);
+
+    const loadRefTask = async () => {
+      try {
+        const response = await apiClient(fetchReferalTasks);
+        setTask(response);
+      } catch (error) {
+        console.error("Error loading daily tasks:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRefTask();
+  }, []);
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
@@ -34,7 +55,7 @@ const ReferralUI = ({code}) => {
   };
 
   const encodedText = encodeURIComponent(
-    `Join me in Ace Master card game! ${referralLink}`
+    `Join with Ace Master card game. You can Earn Referral Bonus! ${referralLink}`
   );
 
   return (
@@ -170,7 +191,7 @@ const ReferralUI = ({code}) => {
       </Card>
 
       {/* Rewards Progress */}
-      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 4 }}>
+      {/* <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 4 }}>
         <CardContent>
           <Typography variant="subtitle1" gutterBottom>
             Progress towards next reward
@@ -184,15 +205,15 @@ const ReferralUI = ({code}) => {
             4/10 friends invited 🎉
           </Typography>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Stats */}
       <Grid container spacing={2} mb={3}>
         {[
-          { label: "Friends Invited", value: 12 },
-          { label: "Currently Playing", value: 5 },
-          { label: "Rewards Earned", value: "500 Coins" },
-          { label: "Tier", value: "Silver" },
+          { label: "Friends Invited", value: task.countRef },
+          { label: "Rewards Earned", value: task.coinsEarned?.split(".")[0] + " Coins" },
+          { label: "Total Friends", value: task.countFriends },
+          { label: "Collected Badges", value: "0" },
         ].map((stat, idx) => (
           <Grid item xs={6} sm={3} key={idx}>
             <Card sx={{ borderRadius: 3, textAlign: "center", boxShadow: 3 }}>
@@ -208,7 +229,7 @@ const ReferralUI = ({code}) => {
       </Grid>
 
       {/* Invite List */}
-      <Card sx={{ borderRadius: 3, boxShadow: 4 }}>
+      {/* <Card sx={{ borderRadius: 3, boxShadow: 4 }}>
         <CardContent>
           <Typography variant="subtitle1">Recent Invites</Typography>
           <Divider sx={{ my: 1 }} />
@@ -227,7 +248,7 @@ const ReferralUI = ({code}) => {
             ))}
           </List>
         </CardContent>
-      </Card>
+      </Card> */}
     </Box>
   );
 };

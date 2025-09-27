@@ -1,13 +1,23 @@
 
 import { Google, HowToRegSharp } from "@mui/icons-material";
-import { Box, Button, Link, Typography } from "@mui/material";
+import { Box, Button, Link, TextField, Typography } from "@mui/material";
 import { signInAnonymously, signInWithPopup } from "firebase/auth";
 import { useLoading } from "../components/LoadingContext";
 import { auth, facebookProvider, googleProvider } from "../firebase-config";
 import { firebaseAuth, pre } from "./methods";
+import { useEffect, useState } from "react";
 
 const FirebaseLogin = ({ onAuthenticated }) => {
   const { setLoading } = useLoading();
+  const [referralCode, setReferralCode] = useState(null);
+
+  useEffect(() => {
+    const code = localStorage.getItem("referralCode");
+    if (code) {
+      setReferralCode(code);
+    }
+  }, []);
+
 
   const handleGoogleLogin = async () => {
     try {
@@ -33,7 +43,7 @@ const FirebaseLogin = ({ onAuthenticated }) => {
     const response = await fetch(firebaseAuth, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken: firebaseIdToken })
+      body: JSON.stringify({ idToken: firebaseIdToken, ref: referralCode })
     });
     const jwtToken = await response.json();
     localStorage.setItem("accessToken", jwtToken.accessToken);
@@ -86,6 +96,17 @@ const FirebaseLogin = ({ onAuthenticated }) => {
 
   return (
     <>
+      {referralCode && (
+        <Box>
+          <TextField
+            label="Referral Code"
+            value={referralCode}
+            disabled
+            fullWidth
+            sx={{ mb: 2 }}
+          />
+        </Box>
+      )}
       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
         <Button
           variant="outlined"
@@ -157,9 +178,9 @@ const FirebaseLogin = ({ onAuthenticated }) => {
             rel="noopener noreferrer"
             style={{ color: "#90caf9", textDecoration: "underline" }}
           >
-            Terms 
+            Terms
           </Link>
-          { " " } & { " " }
+          {" "} & {" "}
           <Link
             href={"/privacy"}
             target="_blank"

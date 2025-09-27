@@ -1,3 +1,4 @@
+import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
 
 function InstallPrompt() {
@@ -28,7 +29,7 @@ function InstallPrompt() {
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
-      window.removeEventListener("appinstalled", () => {});
+      window.removeEventListener("appinstalled", () => { });
     };
   }, []);
 
@@ -46,16 +47,23 @@ function InstallPrompt() {
   };
 
   return (
-    <>
+    <Box sx={{
+      position: "fixed",
+      bottom: 10,
+      left: 15,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 1,
+    }}>
       {!installed && deferredPrompt && (
         <button
           onClick={handleInstallClick}
-          style={{ position: "fixed", bottom: 20, right: 20 }}
         >
           📲 Install App
         </button>
       )}
-    </>
+    </Box>
   );
 }
 

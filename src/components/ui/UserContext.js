@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from "react";
-import { pre, userByToken } from "../methods";
+import { pre, unmountOnline, userByToken } from "../methods";
 import { apiClient } from "../utils/ApIClient";
 import { on } from "../utils/eventBus";
 import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from "@mui/material";
@@ -46,8 +46,44 @@ export function UserProvider({ children }) {
         fetchUser();
         // 👇 Listen for "user:refresh" events from apiClient
         const unsubscribe = on("user:refresh", fetchUser);
-        return () => unsubscribe();
+        return () => {
+            unsubscribe();
+            /*(async () => {
+                try {
+                    await apiClient(unmountOnline, {
+                        method: "POST",
+                        body: { userId: user?.id },
+                    });
+                } catch (err) {
+                    console.error("Failed to notify unmount:", err);
+                }
+            })();*/
+        }
     }, [fetchUser]);
+
+    useEffect(() => {
+        const handleUnload = async () => {
+            if (user?.id) {
+                try {
+                    const res = await apiClient(unmountOnline + "?userId=" + user?.id, {
+                        method: "POST",
+                        keepalive: true
+                    });
+                } catch (err) {
+                    console.log(err)
+                }
+            }
+        };
+
+        window.addEventListener("beforeunload", handleUnload);
+        window.addEventListener("unload", handleUnload);
+
+        return () => {
+            window.removeEventListener("beforeunload", handleUnload);
+            window.removeEventListener("unload", handleUnload);
+        };
+    }, [user]);
+
 
     const handleCloseNotif = () => {
         if (currentNotifIndex < notifications.length - 1) {
@@ -115,7 +151,7 @@ export function UserProvider({ children }) {
                                 }}
                             />
                         )}
-                        <Typography sx={{ mt: 2, color: "grey",  }}>
+                        <Typography sx={{ mt: 2, color: "grey", }}>
                             {notifications[currentNotifIndex]?.message ||
                                 JSON.stringify(notifications[currentNotifIndex])}
                         </Typography>

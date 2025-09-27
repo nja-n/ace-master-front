@@ -19,15 +19,14 @@ import { useLoading } from "../../components/LoadingContext";
 import { getDeviceInfo } from "../../components/Utiliy";
 import { apiClient } from "../../components/utils/ApIClient";
 import { saveUser } from "../../components/methods";
-
+import { useSound } from "../../components/utils/SoundProvider"
 export const SettingsDialog = ({ setOpenSettings, user }) => {
   const [activeTab, setActiveTab] = useState(0);
 
-  const [soundOn, setSoundOn] = useState(true);
-  const [musicOn, setMusicOn] = useState(true);
-
   const [changedName, setChangedName] = useState("");
-  const {setLoading} = useLoading();
+  const { setLoading } = useLoading();
+
+  const { soundOn, setSoundOn, musicOn, setMusicOn } = useSound();
 
 
   const tabVariants = {
@@ -53,43 +52,43 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
   };
 
   const handleSave = async () => {
-      if (changedName.trim()) {
-        setLoading(true);
-        const deviceInfo = await getDeviceInfo();
-        try {
-          const payload = {
-            id: user.id,
-            firstName: changedName,
-            os: deviceInfo.platform,
-            platform: deviceInfo.userAgent,
-            screenWidth: deviceInfo.screenWidth,
-            screenHeight: deviceInfo.screenHeight
-          };
-  
-          const response = await apiClient(saveUser, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: payload,
-            refreshOnSuccess: true,
-          });
-  
-          if (!response) throw new Error("Failed to save user");
-  
-          const data = await response;
-  
-          alert('Player Name have been saved.');
-  
-        } catch (error) {
-          alert('something went wrong, please try again');
-          console.error("Error saving user:", error);
-          setLoading(false);
-        }
-        setOpenSettings(false);
+    if (changedName.trim()) {
+      setLoading(true);
+      const deviceInfo = await getDeviceInfo();
+      try {
+        const payload = {
+          id: user.id,
+          firstName: changedName,
+          os: deviceInfo.platform,
+          platform: deviceInfo.userAgent,
+          screenWidth: deviceInfo.screenWidth,
+          screenHeight: deviceInfo.screenHeight
+        };
+
+        const response = await apiClient(saveUser, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: payload,
+          refreshOnSuccess: true,
+        });
+
+        if (!response) throw new Error("Failed to save user");
+
+        const data = await response;
+
+        alert('Player Name have been saved.');
+
+      } catch (error) {
+        alert('something went wrong, please try again');
+        console.error("Error saving user:", error);
         setLoading(false);
       }
-    };
+      setOpenSettings(false);
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog
@@ -199,7 +198,7 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
                   alignItems="center"
                 >
                   <Button
-                    onClick={()=>handleSave()}
+                    onClick={() => handleSave()}
                     variant="outlined"
                     color="info"
                     sx={{
@@ -253,8 +252,8 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
                 >
                   <Typography>Background Music</Typography>
                   <SpringSwitch
-                    checked={soundOn}
-                    onChange={(val) => setSoundOn(val)}
+                    checked={musicOn}
+                    onChange={(val) => setMusicOn(val)}
                   />
                 </Stack>
               </Stack>

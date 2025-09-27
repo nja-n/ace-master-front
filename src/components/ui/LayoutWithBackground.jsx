@@ -4,6 +4,7 @@ import { protocol, server } from "../serverURL";
 import InstallPrompt from "../force/Promote";
 import { useLocation } from "react-router-dom";
 import { Header } from "../../pages/fragments/Header";
+import useLocalStorage from "../utils/UseLocalStorage";
 
 const LayoutWithBackground = ({ children, version }) => {
   const location = useLocation();
@@ -58,9 +59,9 @@ const LayoutWithBackground = ({ children, version }) => {
             Aeither
           </Link>{" "} Dev Team | Trail - v{version}
         </Typography>
-        <InstallPrompt />
       </Box>
-      <Box
+      <InstallPrompt />
+      {/* <Box
         sx={{
           position: "fixed",
           bottom: 10,
@@ -93,7 +94,7 @@ const LayoutWithBackground = ({ children, version }) => {
           Privacy Policy
           </Link>
         </Typography>
-      </Box>
+      </Box> */}
     </Box>
   );
 };

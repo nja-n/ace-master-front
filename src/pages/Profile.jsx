@@ -5,7 +5,7 @@ import { Avatar, Box, Button, Card, Dialog, DialogContent, DialogTitle, Grid, Ic
 import { GoogleAuthProvider, linkWithPopup } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useLoading } from "../components/LoadingContext";
-import { fetchAchievements } from "../components/methods";
+import { fetchAchievements, gConnect } from "../components/methods";
 import CustomAvatar from "../components/ui/CustomAvathar";
 import { useUser } from "../components/ui/UserContext";
 import { apiClient } from "../components/utils/ApIClient";
@@ -89,15 +89,15 @@ export default function ProfilePage({ isTop10 }) {
   //isTop10 = isTop10 || true;
 
   if (user === null || profile === null) {
-    return (
-      <Box sx={{ p: 2, textAlign: "center", color: "#fff" }}>
-        Loading...
-      </Box>
-    );
+    setLoading(true);
+    return
+  } else {
+    setLoading(false);
   }
 
   async function upgradeGuestAccount() {
     // const provider = new GoogleAuthProvider();
+    setLoading(true);
     try {
       const result = await linkWithPopup(auth.currentUser, googleProvider);
 
@@ -105,23 +105,18 @@ export default function ProfilePage({ isTop10 }) {
       const idToken = await result.user.getIdToken(true);
 
       // Send it to your backend to trigger the upgrade logic
-      const res = await fetch("/api/upgrade-guest", {
+      const res = await apiClient(gConnect, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        }
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: idToken }),
+        refreshOnSuccess : true
       });
-
-      if (res.ok) {
-        const updatedUser = await res.json();
-        console.log("Backend confirms upgrade:", updatedUser);
-      } else {
-        console.error("Backend upgrade failed");
-      }
+      alert("Successfully Connected.")
 
     } catch (error) {
       console.error("Upgrade failed:", error);
+    } finally {
+      setLoading(false);
     }
   }
 

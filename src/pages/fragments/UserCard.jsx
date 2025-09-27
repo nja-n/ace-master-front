@@ -19,10 +19,10 @@ export default function UserCard({ user, isTop10, upgradeGuestAccount }) {
           {user.firstName || "Guest"}
         </Typography>
         <Typography variant="body2" sx={{ mb: 0.5, color: "#cbd5e1" }}>
-          {user.email || "guest@example.com"}
+          {user.email || "email@not.linked"}
         </Typography>
         <Typography variant="body2" sx={{ mb: 0.5, color: "#cbd5e1" }}>
-          {user.mobile || "+91 XXXXX XXXXX"}
+          {user.mobile || "mobile not linked"}
         </Typography>
         <Typography variant="body2" sx={{ mb: 2, color: "#cbd5e1" }}>
           UID: {user.referralCode || "N/A"}

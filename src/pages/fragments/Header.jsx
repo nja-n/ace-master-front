@@ -1,6 +1,6 @@
-import { Task } from "@mui/icons-material";
+import { Refresh, Task } from "@mui/icons-material";
 import { AppBar, Box, Collapse, IconButton, Paper, Toolbar, Typography, useMediaQuery } from "@mui/material";
-import { HelpCircleIcon, HomeIcon, InfoIcon, PersonStandingIcon } from "lucide-react";
+import { CircleQuestionMark, HelpCircleIcon, HomeIcon, InfoIcon, PersonStandingIcon, RefreshCcw } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ImageIcon from "../../components/ui/CustomImageIcon";
@@ -8,7 +8,7 @@ import AceMasterLogo from "../../components/ui/GameLogoHeader";
 import { useUser } from "../../components/ui/UserContext";
 import CoinWithText from "./CoinWithText";
 
-export const Header = () => {
+export const Header = ({ game = false }) => {
   const navigate = useNavigate();
   const { user } = useUser();
   const location = useLocation();
@@ -61,31 +61,45 @@ export const Header = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <CoinWithText coinBalance={user && user.coinBalance} />
           {/* <ImageIcon onclick={() => navigate("/")} icon="home" /> */}
-          {isMobile ? (
-            <HamburgerArrow open={openMenu} onClick={() => setOpenMenu((prev) => !prev)} />
-          ) : (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              {menuItems.map((item) => (
-                <Box
-                  key={item.label}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    cursor: "pointer",
-                    color: activeTab !== item.label ? "gold" : "lightgray",
-                  }}
-                  onClick={item.onClick}
-                >
-                  {item.icon}
-                  <Typography variant="caption">{item.label}</Typography>
-                </Box>
-              ))}
-            </Box>
-          )}
+          {game ? (
+            <>
+              <Box display="flex" flexDirection="row">
+                <IconButton color="inherit" onClick={() => alert("How to play in FAQ Session")}>{/**setJoyrideRef(1) */}
+                  <CircleQuestionMark />
+                </IconButton>
+                <IconButton color="inherit" onClick={() => window.location.reload()}>
+                  <Refresh />
+                </IconButton>
+              </Box>
+              {/* <ImageIcon onclick={() => alert("Question Clicked")} icon="question" />
+            <ImageIcon onclick={() => alert("Refresh Clicked")} icon="refresh" /> */}
+            </>
+          )
+            : isMobile ? (
+              <HamburgerArrow open={openMenu} onClick={() => setOpenMenu((prev) => !prev)} />
+            ) : (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {menuItems.map((item) => (
+                  <Box
+                    key={item.label}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      color: activeTab !== item.label ? "gold" : "lightgray",
+                    }}
+                    onClick={item.onClick}
+                  >
+                    {item.icon}
+                    <Typography variant="caption">{item.label}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
         </Box>
       </Toolbar>
-      {isMobile && (
+      {!game && isMobile && (
         <Collapse in={openMenu}>
           <Paper elevation={3}
             sx={{

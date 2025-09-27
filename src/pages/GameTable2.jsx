@@ -21,6 +21,7 @@ import { EmojiEmotionsOutlined } from "@mui/icons-material";
 import EmojiPopover from "../components/ui/EmojiPopover";
 import GameOverScreen from "./fragments/WinningScreen";
 import { emit } from "../components/utils/eventBus";
+import { useSound } from "../components/utils/SoundProvider";
 
 export default function GameTableDesign() {
   const [selectedCard, setSelectedCard] = useState(null);
@@ -57,6 +58,8 @@ export default function GameTableDesign() {
   const [flyingEmojis, setFlyingEmojis] = useState([]);
 
   const [closecardFlipped, setClosecardFlipped] = useState(false);
+
+  const {playSound} = useSound();
 
   useEffect(() => {
     ws.current = new WebSocket(socketUrl(match));
@@ -196,8 +199,9 @@ export default function GameTableDesign() {
   useEffect(() => {
     if(gameData?.countDown===0){
       emit("user:refresh");
+    } else if (gameData?.countDown===3) {
+      playSound("shuffle");
     }
-
   }, [gameData?.countDown])
 
 
@@ -452,7 +456,7 @@ export default function GameTableDesign() {
         overflow: "auto",
       }}
     >
-      <Header />
+      <Header game={true} />
       <Box
         sx={{
           position: "absolute",

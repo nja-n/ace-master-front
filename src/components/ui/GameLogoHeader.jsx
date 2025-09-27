@@ -1,7 +1,9 @@
 import { Typography, Box } from '@mui/material';
 import capImage from '../../images/confetti-svgrepo-com.svg';
+import { useNavigate } from 'react-router-dom';
 
 const AceMasterLogo = () => {
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -14,6 +16,7 @@ const AceMasterLogo = () => {
     >
       <Typography
         variant="h2"
+        onClick = {() =>navigate("/")}
         sx={{
           fontWeight: 900,
           fontSize: {

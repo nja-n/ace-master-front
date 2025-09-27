@@ -1,4 +1,4 @@
-import { MoreVert, Task } from "@mui/icons-material";
+import { EmojiEventsOutlined, MoreVert, Task } from "@mui/icons-material";
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import {
     AppBar,
@@ -9,7 +9,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    IconButton, Menu, MenuItem,
+    IconButton, keyframes, Menu, MenuItem,
     Paper,
     Stack,
     TextField,
@@ -60,7 +60,7 @@ const Home = () => {
 
     const [coinBalance, setCoinBalance] = useState(0);
 
-    const [authenticated, setAuthenticated] = useState(storedId ? true : false);
+    const [authenticated, setAuthenticated] = useState(true);
 
     const [tutorialSeen, setTutorialSeen] = useState(true);
 
@@ -108,12 +108,6 @@ const Home = () => {
             setTutorialSeen(false);
         }
     }, [storedId]);
-
-    useEffect(() => {
-        if (!storedId && authenticated) {
-            window.location.reload();
-        }
-    }, [authenticated]);
 
     const handleChangeName = (value) => {
         const capitalizedValue = value.replace(/\b\w/g, (char) => char.toUpperCase());
@@ -264,11 +258,12 @@ const Home = () => {
         }
     }
 
-    const handleStartQucikPlay = async () => {
-        if (await window.confirm('Are you ready to play with AI?')) {
-            navigate("/quick");
-        }
-    }
+    const pulse = keyframes`
+  0% { transform: scale(1); color: gold; }
+  50% { transform: scale(1.2); color: orange; }
+  100% { transform: scale(1); color: gold; }
+`;
+
 
     return (
         <Box
@@ -360,7 +355,38 @@ const Home = () => {
             </AppBar>
 
             {/* User Info */}
-            <Box sx={{ textAlign: "center", marginTop: "20px" }}>
+            <Box sx={{ textAlign: "center", marginTop: "20px", position: "relative", width: "100%" }}>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 8,
+                        left: 16,
+                        animation: `${pulse} 1.5s infinite ease-in-out`,
+                        cursor: "pointer"
+                    }}
+                    onClick={() => console.log("Go to leaderboard")} // replace with navigation
+                >
+                    <ImageIcon icon="leader" onclick={() => navigate("ranking")} />
+                        <br/>
+                    {/* <ImageIcon icon="cart" onclick={() => navigate("payment")}/> */}
+                </Box>
+
+                {/* Top Right: Online Count */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 16,
+                        right: 16,
+                        color: "gold",
+                        fontWeight: "bold",
+                        fontSize: "1rem",
+                        cursor: "pointer"
+                    }}
+                    onClick={() => alert(`There are currently ${user?.onlineCount ?? 0} players enjoying this game!`)}
+                >
+                    🟢 {user?.onlineCount ?? 0}
+                </Box>
+
 
                 <Box sx={{
                     display: "flex",

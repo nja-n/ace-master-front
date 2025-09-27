@@ -24,6 +24,8 @@ export const signUp = `${protocol}://${server}/auth/sign-up`;
 export const userByToken = `${protocol}://${server}/user-by-token`;
 export const firebaseAuth = `${protocol}://${server}/auth/firebase`;
 export const refreshAuth = `${protocol}://${server}/auth/refresh`;
+export const gConnect = `${protocol}://${server}/auth/firebase/connect`;
+export const unmountOnline = `${protocol}://${server}/presence/leave`;
 
 export const terms = `${protocol}://${server}/public/terms-pdf`;
 
@@ -31,6 +33,7 @@ export const feedback = `${protocol}://${server}/feedback`;
 
 export const fetchDailyTasks = `${protocol}://${server}/tasks/daily`;
 export const claimDailyTask = `${protocol}://${server}/tasks/daily/claim`;
+export const fetchReferalTasks = `${protocol}://${server}/tasks/ref`;
 
 export const fetchAchievements = `${protocol}://${server}/profile/fetch-achievements`;
 export const fetchGameLedger = `${protocol}://${server}/profile/fetch-lastgames`;

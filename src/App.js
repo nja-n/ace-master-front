@@ -26,6 +26,11 @@ import GameTableDesign from "./pages/GameTable2";
 import InviteRedirect from "./pages/fragments/InviteRedirect";
 import AdManager from "./components/force/AdManager";
 import AdGuardedInterstitial from "./components/force/AdGuardedInterstitial";
+import useLocalStorage from "./components/utils/UseLocalStorage";
+import MusicPlayer from "./components/utils/MusicPlayer";
+import { SoundProvider } from "./components/utils/SoundProvider";
+import PaymentPage from "./components/utils/pay/PaymentPage";
+import PaymentSuccess from "./components/utils/pay/PaymentSuccess";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
@@ -86,6 +91,8 @@ function AppContent() {
             <Route path="/vvv" element={<VoiceRoom />} />
             <Route path="/play/:match" element={<GameTableDesign />} />
             <Route path="/invite/:code" element={<InviteRedirect />} />
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
           </Routes>
         </LayoutWithBackground>
       </UserProvider>
@@ -99,9 +106,12 @@ function App() {
     <Router>
       <LoadingProvider>
         <AlertProvider>
-          {/* <AdManager /> */}
-          {/* <AdGuardedInterstitial zone="17300X" load="onAction" /> */}
-          <AppContent />
+          <SoundProvider>
+            <MusicPlayer />
+            {/* <AdManager /> */}
+            {/* <AdGuardedInterstitial zone="17300X" load="onAction" /> */}
+            <AppContent />
+          </SoundProvider>
         </AlertProvider>
       </LoadingProvider>
     </Router>

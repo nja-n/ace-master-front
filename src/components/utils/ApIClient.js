@@ -9,6 +9,7 @@ export const apiClient = async (endpoint, {
   contentType = "application/json",
   credentials = "include", // can be 'same-origin', 'omit', or 'include'
   refreshOnSuccess = false,
+  keepalive = false,
 } = {}) => {
 
   const defaultHeaders = {};
@@ -26,7 +27,7 @@ export const apiClient = async (endpoint, {
   }
 
   const doFetch = async () => {
-    const response = await fetch(endpoint, {
+    const fetchOptions = {
       method,
       headers: {
         ...defaultHeaders,
@@ -41,13 +42,18 @@ export const apiClient = async (endpoint, {
               ? JSON.stringify(body)
               : null,
       credentials,
-    });
+    };
+
+    if (keepalive) {
+      fetchOptions.keepalive = true;
+    }
+    const response = await fetch(endpoint, fetchOptions);
 
     console.log("API response:", {
-    endpoint,
-    status: response.status,
-    ok: response.ok,
-  });
+      endpoint,
+      status: response.status,
+      ok: response.ok,
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -87,9 +93,6 @@ export const apiClient = async (endpoint, {
         defaultHeaders["Authorization"] = `Bearer ${data.accessToken}`;
         return await doFetch();
       } catch (refreshError) {
-        // localStorage.removeItem("accessToken");
-        // localStorage.removeItem("refreshToken");
-        //window.location.href = "/login";
         throw refreshError;
       }
     }
