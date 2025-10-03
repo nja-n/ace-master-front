@@ -22,6 +22,10 @@ import EmojiPopover from "../components/ui/EmojiPopover";
 import GameOverScreen from "./fragments/WinningScreen";
 import { emit } from "../components/utils/eventBus";
 import { useSound } from "../components/utils/SoundProvider";
+import ShuffleAnimation from '../components/ui/CardShuffle'
+import { getCardImage } from "../components/Utiliy";
+import { useLoading } from "../components/LoadingContext";
+import { useUser } from "../components/ui/UserContext";
 
 export default function GameTableDesign() {
   const [selectedCard, setSelectedCard] = useState(null);
@@ -60,8 +64,11 @@ export default function GameTableDesign() {
   const [closecardFlipped, setClosecardFlipped] = useState(false);
 
   const { playSound } = useSound();
+  const { setLoading } = useLoading();
+  const { user } = useUser();
 
   const [breaks, setBreak] = useState([]);
+  const [hasStarted, setStartButton] = useState(false);
 
   useEffect(() => {
     ws.current = new WebSocket(socketUrl(match));
@@ -89,9 +96,7 @@ export default function GameTableDesign() {
     if (gameData && gameData?.turnIndex >= 0 && gameData.looserPlayer == null) {
       if (gameData.turnIndex === gameData.clientPlayer.gameIndex) {
         scrollBottom();
-        /*audioFlip2.current.play().catch((err) => {
-          console.warn("Failed to play sound:", err);
-        });*/
+        playSound("alert");
       }
 
       const interval = setInterval(() => {
@@ -104,12 +109,10 @@ export default function GameTableDesign() {
               if (time < 1) {
                 if (gameData?.turnIndex === gameData.clientPlayer.gameIndex) {
                   setSnackbar({ open: true, message: "Time Out!", severity: "info" });
-                  // setSnackbar({ open: true, message: "Time Out!" });
-                  /*audioPlace.current.play().catch((err) => {
-                    console.warn("Failed to play sound:", err)
-                  });*/
                 }
                 setSelectedCard(null);
+              } else if(time<6 && gameData?.turnIndex === gameData.clientPlayer.gameIndex) {
+                playSound('beep');
               }
             });
         }
@@ -172,6 +175,8 @@ export default function GameTableDesign() {
 
           const startX = left;
           const startY = top;
+
+          playSound("message");
 
           return [
             ...prev,
@@ -266,10 +271,7 @@ export default function GameTableDesign() {
       y >= dropBox.top &&
       y <= dropBox.bottom
     ) {
-      if (!selectedCard) {
-        setSelectedCard(card);
-      }
-      handlePlayCard();
+      handlePlayCard(card);
     } else {
       if (draggingIndex && zValue) {
         pushBackSession("ssort");
@@ -334,8 +336,14 @@ export default function GameTableDesign() {
 
 
   if (!gameData) {
+    setLoading(true);
     return <Typography color="white">Loading...</Typography>;
+  } else if ((match === 'classic' || match === 'qucik') && user?.coinBalance < 100) {
+    alert("Coin under flow. Please complete some Tasks");
+    return <Typography color="white">Click On Back...</Typography>;
   }
+  setLoading(false);
+
 
   const snackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -345,26 +353,32 @@ export default function GameTableDesign() {
     ws.current.send(JSON.stringify({ way: "start" }));
     setSelectedCard(null);
     setTableCards([]);
+    setStartButton(true);
 
     //setJoyrideRef(3);
   };
 
-  const handlePlayCard = () => {
-    if (selectedCard !== null) {
-      if (gameData.turnIndex === clientPlayer.gameIndex) {
-        const isTurn = (!hasMatchingCard || gameData.tableSuit == null || selectedCard.cardName === gameData.tableSuit);
-        if (isTurn) {
-          let selectedCardValue = selectedCard.id;
-          ws.current.send(JSON.stringify({ way: "push", player: clientPlayer.id, card: selectedCardValue }));
-          playSound("drop");
-        } else {
-          setSnackbar({ open: true, message: "You must follow the suit!", severity: "warning" });
-        }
-      } else {
-        setSnackbar({ open: true, message: "It's not your turn!", severity: "warning" });
-      }
-      setSelectedCard(null);
+  const handlePlayCard = (card) => {
+    const chosenCard = card ?? selectedCard; // prefer passed card, fallback to state
+
+    if (!chosenCard) {
+      console.log("No card selected");
+      return;
     }
+
+    if (gameData.turnIndex === clientPlayer.gameIndex) {
+      const isTurn = (!hasMatchingCard || gameData.tableSuit == null || chosenCard.cardName === gameData.tableSuit);
+      if (isTurn) {
+        let selectedCardValue = chosenCard.id;
+        ws.current.send(JSON.stringify({ way: "push", player: clientPlayer.id, card: selectedCardValue }));
+        playSound("drop");
+      } else {
+        setSnackbar({ open: true, message: "You must follow the suit!", severity: "warning" });
+      }
+    } else {
+      setSnackbar({ open: true, message: "It's not your turn!", severity: "warning" });
+    }
+    setSelectedCard(null);
   };
 
   const handleSortCard = () => {
@@ -381,6 +395,7 @@ export default function GameTableDesign() {
       await ws.current.send(JSON.stringify({ way: "start" }));
     }
     setSelectedCard(null);
+    setStartButton(false);
   };
 
   const startCollectAnimation = (playerIndex) => {
@@ -540,6 +555,7 @@ export default function GameTableDesign() {
                 alignItems: "center",
                 justifyContent: "center",
                 zIndex: 9999,
+                mt: angle > 0 && angle < Math.PI ? 4 : 0,
               }}
             >
               <PlayerAvatarWithTimer
@@ -751,7 +767,7 @@ export default function GameTableDesign() {
               {gameData.turnIndex < 0
                 ? (
                   <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                    {gameData.players.length > 2 &&
+                    {gameData.players.length > 2 && hasStarted === false &&
                       <GloriousButton onClick={() => handleStartGame()}
                         text='Start' />
                     }
@@ -772,9 +788,10 @@ export default function GameTableDesign() {
                             </Typography>}
                         </>
                       ) : (
-                        <Typography variant="body1" sx={{ mb: 1 }}>
-                          Starts in... ({gameData.countDown} Sec)
-                        </Typography>
+                        <ShuffleAnimation />
+                        // <Typography variant="body1" sx={{ mb: 1 }}>
+                        //   Starts in... ({gameData.countDown} Sec)
+                        // </Typography>
                       )}
 
                       <Box width="60%">
@@ -949,7 +966,7 @@ export default function GameTableDesign() {
                     onDrag={(event, info) => handleDragCard(event, info)}
                     style={{
                       position: "absolute",
-                      left: `calc(50% - ${(clientPlayer.cards.length * 30) / 2}px + ${i * 30}px)`,
+                      left: `calc(50% - ${(clientPlayer.cards.length * 22) / 2}px + ${i * 22}px)`,
                       zIndex: draggingIndex === i ? zValue.current : i,
                     }}
                   >
@@ -1022,14 +1039,6 @@ const socketUrl = (match) => {
   }
 }
 
-const getCardImage = (imageName) => {
-  try {
-    return require(`../images/cards/${imageName}`);
-  } catch (error) {
-    return require(`../images/card-back.png`); // Fallback
-  }
-};
-
 const renderCardDesign = (card, theme, isMatched = true) => {
   switch (theme) {
     case "classic":
@@ -1061,8 +1070,12 @@ const renderCardDesign = (card, theme, isMatched = true) => {
             <span> {card.cardNumber}</span>
             <span>{card.cardIcon}</span>
           </Box>
-          <Box sx={{ position: "absolute", bottom: 5, right: 5, fontSize: 16, color: card.color }}>
-            {card.cardIcon} {card.cardNumber}
+          <Box sx={{ position: "absolute", bottom: 5, right: 5, fontSize: 16, 
+              color: card.color, display: "flex", alignItems: "flex-start",
+            flexDirection: "column", }}>
+              <span> {card.cardNumber}</span>
+            <span>{card.cardIcon}</span>
+            {/* {card.cardIcon} {card.cardNumber} */}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 36, color: card.color }}>
             {card.cardIcon}

@@ -22,10 +22,12 @@ export const sendOtp = `${protocol}://${server}/auth/send-otp`;
 export const verifyOtp = `${protocol}://${server}/auth/verify-otp`;
 export const signUp = `${protocol}://${server}/auth/sign-up`;
 export const userByToken = `${protocol}://${server}/user-by-token`;
-export const firebaseAuth = `${protocol}://${server}/auth/firebase`;
+// export const firebaseAuth = `${protocol}://${server}/auth/firebase`;
 export const refreshAuth = `${protocol}://${server}/auth/refresh`;
-export const gConnect = `${protocol}://${server}/auth/firebase/connect`;
+// export const gConnect = `${protocol}://${server}/auth/firebase/connect`;
 export const unmountOnline = `${protocol}://${server}/presence/leave`;
+export const googleAuth = `${protocol}://${server}/auth/google`;
+export const guestAuth = `${protocol}://${server}/auth/guest`;
 
 export const terms = `${protocol}://${server}/public/terms-pdf`;
 
@@ -38,4 +40,7 @@ export const fetchReferalTasks = `${protocol}://${server}/tasks/ref`;
 export const fetchAchievements = `${protocol}://${server}/profile/fetch-achievements`;
 export const fetchGameLedger = `${protocol}://${server}/profile/fetch-lastgames`;
 export const fetchCoinLedger = `${protocol}://${server}/profile/fetch-lastcoins`;
+export const fetchNotificationHistory = `${protocol}://${server}/profile/fetch-notifications`;
 
+export const uploadImage = `${protocol}://${server}/profile/update-image`;
+export const readProfileImage = `${protocol}://${server}/profile/image`;

@@ -1,59 +1,45 @@
-import { EmojiEventsOutlined, MoreVert, Task } from "@mui/icons-material";
+import { NotificationsActiveSharp, Task } from "@mui/icons-material";
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import {
-    AppBar,
+    Badge,
     Box,
     Button,
-    Collapse,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
-    IconButton, keyframes, Menu, MenuItem,
-    Paper,
+    keyframes,
     Stack,
-    TextField,
-    Toolbar,
     Typography,
     useMediaQuery
 } from "@mui/material";
+import { HelpCircleIcon, HomeIcon, InfoIcon, PersonStandingIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiClient } from "../components/utils/ApIClient";
 import FirebaseLogin from "../components/FirebaseLogin";
-import Login from "../components/Login";
-import { getDeviceInfo, getRandomProTip } from "../components/Utiliy";
-import { createUniqueRoom, saveUser, validateUniqueRoom } from '../components/methods';
+import { useLoading } from "../components/LoadingContext";
+import { getRandomProTip } from "../components/Utiliy";
+import InstallPrompt from "../components/force/need/Promote";
+import { createUniqueRoom, validateUniqueRoom } from '../components/methods';
 import GameTutorial from "../components/tutorial/GameTutorial";
 import CustomAvatar from "../components/ui/CustomAvathar";
-import AceMasterLogo from "../components/ui/GameLogoHeader";
+import ImageIcon from "../components/ui/CustomImageIcon";
 import GloriousButton from "../components/ui/GloriousButton";
 import RoomSessionModal from "../components/ui/RoomSession";
-import { useLoading } from "../components/LoadingContext";
 import { useUser } from "../components/ui/UserContext";
-import CoinWithText from "./fragments/CoinWithText";
-import InstallPrompt from "../components/force/need/Promote";
+import { apiClient } from "../components/utils/ApIClient";
 import { emit } from "../components/utils/eventBus";
-import ImageIcon from "../components/ui/CustomImageIcon";
-import HamburgerArrow from "./fragments/Header";
-import { HelpCircleIcon, HomeIcon, InfoIcon, PersonStandingIcon } from "lucide-react";
+import { NotificationListDialog } from "./fragments/NotificationListDialog";
+import { SettingsDialog } from "./fragments/SettingsDialog";
+import Login from "../components/Login";
 
 const Home = () => {
     const { user, loading } = useUser();
     const { setLoading } = useLoading();
 
-    const [changedName, setChangedName] = useState("");
-    const [userName, setUserName] = useState("");
-    //const [storedName, setStoredName] = useState("");
     const [storedId, setStoredId] = useState("");
 
-    const [isEditing, setIsEditing] = useState(false);
     const navigate = useNavigate();
-
-    const [anchorEl, setAnchorEl] = useState(null);
-
-    const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
-    const handleMenuClose = () => setAnchorEl(null);
 
     const [installProm, setInstallProm] = useState(false);
     const [roomIdInput, setRoomIdInput] = useState('');
@@ -66,17 +52,7 @@ const Home = () => {
 
     const [roomModalOpen, setRoomModalOpen] = useState(false);
 
-    const [openMenu, setOpenMenu] = useState(false);
-    const isMobile = useMediaQuery("(max-width:600px)");
-
-
-    const menuItems = [
-        { icon: <HomeIcon />, label: "Home", onClick: () => navigate("/") },
-        { icon: <PersonStandingIcon />, label: "Profile", onClick: () => navigate("/profile") },
-        { icon: <Task />, label: "Tasks", onClick: () => navigate("/tasks") },
-        { icon: <InfoIcon />, label: "About", onClick: () => navigate("/about") },
-        { icon: <HelpCircleIcon />, label: "FAQ", onClick: () => navigate("/faq") },
-    ];
+    const [notification, setNotification] = useState(false);
 
     useEffect(() => {
         emit("user:refresh");
@@ -92,7 +68,6 @@ const Home = () => {
             setStoredId(user.id);
             setAuthenticated(true);
             setCoinBalance(user.coinBalance || -1);
-            setUserName(user.firstName || "");
         } else {
             setAuthenticated(false);
         }
@@ -108,48 +83,6 @@ const Home = () => {
             setTutorialSeen(false);
         }
     }, [storedId]);
-
-    const handleChangeName = (value) => {
-        const capitalizedValue = value.replace(/\b\w/g, (char) => char.toUpperCase());
-        setChangedName(capitalizedValue);
-    };
-
-    const handleSaveName = async () => {
-        setLoading(true);
-        const deviceInfo = await getDeviceInfo();
-        try {
-            const payload = {
-                id: storedId,
-                firstName: changedName,
-                os: deviceInfo.platform,
-                platform: deviceInfo.userAgent,
-                screenWidth: deviceInfo.screenWidth,
-                screenHeight: deviceInfo.screenHeight
-            };
-
-            const response = await apiClient(saveUser, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: payload,
-            });
-
-            if (!response) throw new Error("Failed to save user");
-
-            const data = await response;
-
-            setStoredId(data.id)
-            setUserName(data.firstName);
-            alert('Player Name have been saved.');
-
-        } catch (error) {
-            alert('something went wrong, please try again');
-            console.error("Error saving user:", error);
-            setLoading(false);
-        }
-        setLoading(false);
-    };
 
     const handleStartGame = async () => {
         if (coinBalance < 100) {
@@ -219,31 +152,6 @@ const Home = () => {
         }
     };
 
-    const handleMenuSelected = (i) => {
-        switch (i) {
-            case 1:
-                navigate('/tasks');
-                break;
-            case 2:
-                navigate('/about');
-                break;
-            case 4:
-                navigate('/contact');
-                break;
-            case 3:
-                window.location.href = "mailto:aeither.dev@hotmail.com?subject=Contact Request&body=Hello, I need assistance with...";
-                break;
-            case 5:
-                navigate('/ranking');
-                break;
-            case 6:
-                setInstallProm(true);
-                break;
-            default:
-                alert('Please select correct action');
-        }
-    };
-
     const handleStartAiPlay = async () => {
         if (await window.confirm('Are you ready to play with AI?')) {
             // navigate("/game/ai");
@@ -268,91 +176,17 @@ const Home = () => {
     return (
         <Box
             sx={{
-                //backgroundColor: "#2e7d32",
-                //backgroundImage: `url(${bgGreenTable})`,
                 backgroundSize: "contain",       // Show full image without cutting
                 backgroundPosition: "top",    // Center the image
-                height: "100vh",
+                height: "calc(100vh - 120px)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "space-around",
             }}
         >
             {!tutorialSeen && authenticated
                 && <GameTutorial joyrideRef={0} sceneNum={1} />}
-
-            {/* AppBar */}
-            <AppBar position="static" sx={{
-                backgroundColor: "#1b5e2000",
-                marginTop: '10px',
-            }}>
-                <Toolbar sx={{
-                    display: "flex", justifyContent: "space-between",
-                    marginLeft: '15px', marginRight: '15px',
-                }}>
-                    <AceMasterLogo />
-
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <CoinWithText coinBalance={coinBalance} />
-
-                        {isMobile ? (
-                            <HamburgerArrow open={openMenu} onClick={() => setOpenMenu((prev) => !prev)} />
-                        ) : (
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                {menuItems.map((item) => (
-                                    <Box
-                                        key={item.label}
-                                        sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "center",
-                                            cursor: "pointer",
-                                            color: "Home" !== item.label ? "gold" : "lightgray",
-                                        }}
-                                        onClick={item.onClick}
-                                    >
-                                        {item.icon}
-                                        <Typography variant="caption">{item.label}</Typography>
-                                    </Box>
-                                ))}
-                            </Box>
-                        )}
-
-                    </Box>
-                </Toolbar>
-                {isMobile && (
-                    <Collapse in={openMenu}>
-                        <Paper elevation={3}
-                            sx={{
-                                background: "linear-gradient(135deg, rgba(30,41,59,0.55), rgba(51,65,85,0.55))",
-                                color: "gold"
-                            }}>
-                            <Box sx={{ display: "flex", justifyContent: "space-around", py: 1 }}>
-                                {menuItems.map((item) => (
-                                    <Box
-                                        key={item.label}
-                                        sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            alignItems: "center",
-                                            cursor: "pointer",
-                                            color: "Home" !== item.label ? "gold" : "lightgray",
-                                        }}
-                                        onClick={() => {
-                                            item.onClick();
-                                            setOpenMenu(false);
-                                        }}
-                                    >
-                                        {item.icon}
-                                        <Typography variant="caption">{item.label}</Typography>
-                                    </Box>
-                                ))}
-                            </Box>
-                        </Paper>
-                    </Collapse>
-                )}
-            </AppBar>
 
             {/* User Info */}
             <Box sx={{ textAlign: "center", marginTop: "20px", position: "relative", width: "100%" }}>
@@ -367,7 +201,7 @@ const Home = () => {
                     onClick={() => console.log("Go to leaderboard")} // replace with navigation
                 >
                     <ImageIcon icon="leader" onclick={() => navigate("ranking")} />
-                        <br/>
+                    <br />
                     {/* <ImageIcon icon="cart" onclick={() => navigate("payment")}/> */}
                 </Box>
 
@@ -382,9 +216,22 @@ const Home = () => {
                         fontSize: "1rem",
                         cursor: "pointer"
                     }}
-                    onClick={() => alert(`There are currently ${user?.onlineCount ?? 0} players enjoying this game!`)}
                 >
-                    🟢 {user?.onlineCount ?? 0}
+                    <Typography
+                        onClick={() => alert(`There are currently ${user?.onlineCount ?? 0} players enjoying this game!`)}
+                    >
+                        🟢 {user?.onlineCount ?? 0}
+                    </Typography>
+
+                    <br />
+                    {/*<Box display={'flex'}
+                        sx={{ position: 'relative' }}
+                        onClick={() => setNotification(true)}
+                    >
+                        <Badge>2</Badge>
+                        <NotificationsActiveSharp />
+                        {notification && <NotificationListDialog setClose={setNotification} />}
+                    </Box>*/}
                 </Box>
 
 
@@ -399,69 +246,31 @@ const Home = () => {
                     />
                 </Box>
 
-                {userName && !isEditing ? (
-                    <>
-                        <Typography variant="h4" color="white" sx={{ marginTop: "10px" }}>
-                            {userName}
-                        </Typography>
-                        {/* <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 2 }}>
-                            <Button
-                                variant="outlined"
-                                color="warning"
-                                onClick={() => {
-                                    setIsEditing(true);
-                                    setChangedName(user?.firstName);
-                                }}
-                            >
-                                Edit
-                            </Button>
-                        </Box> */}
-                    </>
-                ) : (
-                    <Box sx={{ marginTop: "20px", textAlign: "center" }}>
-                        <TextField
-                            id="name-input"
-                            value={changedName}
-                            onChange={(e) => handleChangeName(e.target.value)}
-                            placeholder="Enter your name"
-                            variant="outlined"
-                            sx={{ backgroundColor: "white", borderRadius: "5px", marginBottom: "10px", width: "250px" }}
-                        />
-                        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, marginTop: 1 }}>
-                            <GloriousButton
-                                onClick={() => {
-                                    handleSaveName();
-                                    setIsEditing(false);
-                                }
-                                }
-                                text={"Save Name"}
-                            />
-                            {/* <Button
-                                variant="contained"
-                                color="secondary"
-                                onClick={() => {
-                                    handleSaveName();
-                                    setIsEditing(false);
-                                }}
-                                disabled={!userName}
-                            >
-                                Save
-                            </Button> */}
-                            {user?.firstName && (
-                                <Button
-                                    variant="outlined"
-                                    color="inherit"
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setChangedName(""); // or revert to storedName
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                            )}
-                        </Box>
-                    </Box>
-                )}
+                <Typography variant="h4" color="white" sx={{ marginTop: "10px" }}>
+                    {user?.firstName}
+                </Typography>
+
+                {/* <motion.div
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <Button
+          variant="contained"
+          sx={{
+            mt: 2,
+            bgcolor: "gold",
+            color: "#111",
+            fontWeight: "bold",
+            fontSize: "18px",
+            px: 4,
+            py: 1.2,
+            borderRadius: "30px",
+            boxShadow: "0 0 20px rgba(255,215,0,0.6)",
+          }}
+        >
+          🎮 PLAY NOW
+        </Button>
+      </motion.div> */}
             </Box>
 
             {/* Bottom Buttons */}
@@ -469,6 +278,7 @@ const Home = () => {
                 display: "flex",
                 justifyContent: "center",
                 gap: 3,
+                px:1,
                 marginBottom: "2%"
             }}>
                 <div
@@ -483,28 +293,28 @@ const Home = () => {
 
                     <GloriousButton
                         id="play-online-button"
-                        onClick={!userName || coinBalance < 100 ? null : handleStartGame}
+                        onClick={!user?.firstName || coinBalance < 100 ? null : handleStartGame}
                         text="Start Online"
                         color="orange"
                     />
 
                     <GloriousButton
                         id="quick-play-button"
-                        onClick={!userName ? null : handleQuickPlay}
+                        onClick={!user?.firstName ? null : handleQuickPlay}
                         text="Quick Play"
                         color="orange"
                     />
 
                     <GloriousButton
                         id="play-ai-button"
-                        onClick={!userName ? null : handleStartAiPlay}
-                        text="Play with Bot"
+                        onClick={!user?.firstName ? null : handleStartAiPlay}
+                        text="Bot Play"
                         color="darkblue"
                     />
 
                     <GloriousButton
                         id="room-session-button"
-                        onClick={!userName ? null : () => setRoomModalOpen(true)}
+                        onClick={!user?.firstName ? null : () => setRoomModalOpen(true)}
                         text="Room Session"
                         color="darkblue"
                     />
@@ -582,11 +392,12 @@ const Home = () => {
 
                     <Stack spacing={2}>
 
-                        {/* <Login onAuthenticated={() => setAuthenticated(true)} /> */}
-                        <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} />
+                        <Login onAuthenticated={() => setAuthenticated(true)} />
+                        {/* <FirebaseLogin onAuthenticated={() => setAuthenticated(true)} /> */}
                     </Stack>
                 </DialogContent>
             </Dialog>
+            {/* { !user?.firstName && <SettingsDialog user={user}/> } */}
         </Box>
     );
 };

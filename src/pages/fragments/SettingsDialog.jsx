@@ -1,5 +1,6 @@
 import { Close } from "@mui/icons-material";
 import {
+  Box,
   Button,
   Dialog,
   DialogContent,
@@ -20,6 +21,7 @@ import { getDeviceInfo } from "../../components/Utiliy";
 import { apiClient } from "../../components/utils/ApIClient";
 import { saveUser } from "../../components/methods";
 import { useSound } from "../../components/utils/SoundProvider"
+import ProfileImageUpload from "../../components/utils/upload/ProfileUpload";
 export const SettingsDialog = ({ setOpenSettings, user }) => {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -85,7 +87,9 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
         console.error("Error saving user:", error);
         setLoading(false);
       }
-      setOpenSettings(false);
+      if(setOpenSettings) {
+        setOpenSettings(false);
+      }
       setLoading(false);
     }
   };
@@ -93,7 +97,7 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
   return (
     <Dialog
       open={true}
-      onClose={() => setOpenSettings(false)}
+      onClose={() => setOpenSettings ? setOpenSettings(false) : null}
       maxWidth="md"
       fullWidth
       PaperProps={{
@@ -115,7 +119,7 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
         Settings
         <IconButton
           aria-label="close"
-          onClick={() => setOpenSettings(false)}
+          onClick={() => setOpenSettings ? setOpenSettings(false) : null}
           sx={{ position: "absolute", right: 8, top: 8 }}
         >
           <Close sx={{ color: "#f1f5f9" }} />
@@ -190,6 +194,15 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
                       },
                     }}
                   />
+                </Stack>
+
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography>Image</Typography>
+                  <Box sx={{width :"50%"}}><ProfileImageUpload onUpload={setOpenSettings}/></Box>
                 </Stack>
 
                 <Stack

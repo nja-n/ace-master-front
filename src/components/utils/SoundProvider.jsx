@@ -8,6 +8,9 @@ import pushCard from '../../assets/sounds/page-flip.mp3';
 import shuffleCard from '../../assets/sounds/riffle-card-shuffle.mp3';
 import celebration from '../../assets/sounds/tadaa.mp3';
 import windowBreak from '../../assets/sounds/window-break.mp3';
+import incomeMessgage from '../../assets/sounds/income-message.wav';
+import alert from '../../assets/sounds/alert.mp3';
+import beepBeep from '../../assets/sounds/beep-beep.mp3';
 
 const SoundContext = createContext();
 
@@ -19,6 +22,9 @@ const sounds = {
   pageFlip: pushCard,
   celebration: celebration,
   break:windowBreak,
+  message:incomeMessgage,
+  alert:alert,
+  beep:beepBeep,
 };
 
 export function SoundProvider({ children }) {

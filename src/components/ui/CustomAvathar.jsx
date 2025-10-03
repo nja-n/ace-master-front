@@ -1,11 +1,28 @@
 import { Settings } from '@mui/icons-material';
-import { Box, IconButton, Typography } from '@mui/material';
-import { useState } from 'react';
+import { Avatar, Box, IconButton, Typography } from '@mui/material';
+import { use, useEffect, useState } from 'react';
 import { SettingsDialog } from '../../pages/fragments/SettingsDialog';
 import { motion } from 'framer-motion';
+import { apiClient } from '../utils/ApIClient';
+import { readProfileImage } from '../methods';
 
 const CustomAvatar = ({ size = 64, letter = 'I', rank, settings = false, user }) => {
   const [openSettings, setOpenSettings] = useState(false);
+  const [hasImage, setHasImage] = useState(null);
+
+  useEffect(() => {
+    async function fetchImg() {
+      try {
+        const img = await apiClient(readProfileImage, { method: 'GET' });
+        if (img) {
+          setHasImage(img.imageUrl);
+        }
+      } catch (err) {
+        setHasImage(null);
+      }
+    }
+    fetchImg();
+  }, [user]);
 
   return (
     <Box
@@ -44,17 +61,29 @@ const CustomAvatar = ({ size = 64, letter = 'I', rank, settings = false, user })
           </motion.div>
         </IconButton>
       }
-      <Typography
-        sx={{
-          color: '#f5f5dc',
-          fontSize: size * 0.35,
-          fontWeight: 600,
-          fontFamily: '"Cinzel", helvetica, sans-serif',
-          textTransform: 'uppercase',
-        }}
-      >
-        {letter}
-      </Typography>
+      {hasImage ? (
+        <Avatar
+          src={hasImage}
+          alt={user?.firstName || "U"}
+          sx={{
+            width: size / 1.05,
+            height: size / 1.05,
+            borderRadius: "50%",
+          }}
+        />
+      ) : (
+        <Typography
+          sx={{
+            color: '#f5f5dc',
+            fontSize: size * 0.35,
+            fontWeight: 600,
+            fontFamily: '"Cinzel", helvetica, sans-serif',
+            textTransform: 'uppercase',
+          }}
+        >
+          {letter}
+        </Typography>
+      )}
 
       {rank && (
         <Box

@@ -31,6 +31,7 @@ import MusicPlayer from "./components/utils/MusicPlayer";
 import { SoundProvider } from "./components/utils/SoundProvider";
 import PaymentPage from "./components/utils/pay/PaymentPage";
 import PaymentSuccess from "./components/utils/pay/PaymentSuccess";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 function AppContent() {
   const { loading, loadingMessage, setLoading } = useLoading();
@@ -106,12 +107,14 @@ function App() {
     <Router>
       <LoadingProvider>
         <AlertProvider>
+          <GoogleOAuthProvider clientId="39246248865-jbfsrag7gl0te8lre26ddasalso7n4u6.apps.googleusercontent.com">
           <SoundProvider>
             <MusicPlayer />
             {/* <AdManager /> */}
             {/* <AdGuardedInterstitial zone="17300X" load="onAction" /> */}
             <AppContent />
           </SoundProvider>
+          </GoogleOAuthProvider>
         </AlertProvider>
       </LoadingProvider>
     </Router>

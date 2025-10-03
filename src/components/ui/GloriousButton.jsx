@@ -1,7 +1,9 @@
 import { Button } from '@mui/material';
 import { hover } from 'framer-motion';
+import { useSound } from '../utils/SoundProvider';
 
 const GloriousButton = ({ onClick, text, color, id, sx }) => {
+    const { playSound } = useSound();
     const styles = {
         red: {
             background: 'linear-gradient(180deg, #8B2E1A, #7A1E10)',
@@ -23,11 +25,16 @@ const GloriousButton = ({ onClick, text, color, id, sx }) => {
 
     const selectedStyle = styles[color] || styles.red;
 
+    const handleClick = () => {
+        playSound("click");
+        onClick();
+    }
+
     return (
         <Button
             id={id}
             disabled={!onClick}
-            onClick={onClick}
+            onClick={handleClick}
             variant="contained"
             sx={{
                 ...sx,

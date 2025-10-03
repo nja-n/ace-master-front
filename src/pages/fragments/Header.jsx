@@ -33,11 +33,16 @@ export const Header = ({ game = false }) => {
   };
   const activeTab = pathToLabel[location.pathname] || "Home";
 
+  const isHome = location.pathname === "/";
+  const bg = isHome 
+            ? "linear-gradient(135deg, rgba(30,41,59,0), rgba(51,65,85,0))"
+            : "linear-gradient(135deg, rgba(30,41,59,0.55), rgba(51,65,85,0.55))";
+
   return (
     <AppBar
-      position="static"
+      position="sticky"
       sx={{
-        background: "linear-gradient(135deg, rgba(30,41,59,0.55), rgba(51,65,85,0.55))",
+        background: bg,
         boxShadow: 3,
         borderRadius: 2,
         color: "gold",
@@ -51,8 +56,9 @@ export const Header = ({ game = false }) => {
           edge="start"
           color="inherit"
         >
-          <ImageIcon onclick={() => navigate(-1)} icon="back" />
-
+          {!isHome &&
+            <ImageIcon onclick={() => navigate(-1)} icon="back" />
+          }
         </IconButton>
         {/* Left side: Logo */}
         <AceMasterLogo />
@@ -71,8 +77,6 @@ export const Header = ({ game = false }) => {
                   <Refresh />
                 </IconButton>
               </Box>
-              {/* <ImageIcon onclick={() => alert("Question Clicked")} icon="question" />
-            <ImageIcon onclick={() => alert("Refresh Clicked")} icon="refresh" /> */}
             </>
           )
             : isMobile ? (

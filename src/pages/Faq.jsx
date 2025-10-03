@@ -13,7 +13,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 const FAQ = () => {
   const faqs = [
     {
-      question: "What is AceMaster?",
+      question: "What is Ace Master?",
       answer:
         "AceMaster is a free online multiplayer card & puzzle game where you can play matches, challenge friends, and climb the leaderboard."
     },
@@ -25,7 +25,7 @@ const FAQ = () => {
     {
       question: "Is AceMaster free to play?",
       answer:
-        "Yes! AceMaster is completely free to play. Optional premium features may be added in the future."
+        "Yes! Ace Master can be played for free. Players can enjoy matches without paying. For extra perks, optional subscriptions may be available in the future, and you can also reload coins to unlock premium features or continue playing."
     },
     {
       question: "Can I play with my friends?",

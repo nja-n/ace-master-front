@@ -1,5 +1,7 @@
 import { Box, Card, CardMedia } from "@mui/material";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
+import { getCardImage } from "../Utiliy";
 
 const ShuffleAnimation = ({ duration = 3, onFinish }) => {
   const cards = Array.from({ length: 5 }, (_, i) => i); // 5 cards for shuffle
@@ -55,3 +57,5 @@ const ShuffleAnimation = ({ duration = 3, onFinish }) => {
     </Box>
   );
 };
+
+export default ShuffleAnimation;

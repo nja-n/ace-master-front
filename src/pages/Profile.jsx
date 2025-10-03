@@ -5,7 +5,7 @@ import { Avatar, Box, Button, Card, Dialog, DialogContent, DialogTitle, Grid, Ic
 import { GoogleAuthProvider, linkWithPopup } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useLoading } from "../components/LoadingContext";
-import { fetchAchievements, gConnect } from "../components/methods";
+import { fetchAchievements } from "../components/methods";
 import CustomAvatar from "../components/ui/CustomAvathar";
 import { useUser } from "../components/ui/UserContext";
 import { apiClient } from "../components/utils/ApIClient";
@@ -105,12 +105,12 @@ export default function ProfilePage({ isTop10 }) {
       const idToken = await result.user.getIdToken(true);
 
       // Send it to your backend to trigger the upgrade logic
-      const res = await apiClient(gConnect, {
+      /*const res = await apiClient(gConnect, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken: idToken }),
         refreshOnSuccess : true
-      });
+      });*/
       alert("Successfully Connected.")
 
     } catch (error) {
@@ -190,7 +190,13 @@ export default function ProfilePage({ isTop10 }) {
 
             <Typography variant="body2" color="gray">Level {profile.level || 1}</Typography>
             <Box sx={{ width: { xs: '80%', sm: '60%' }, mt: 1 }}>
-              <LinearProgress variant="determinate" value={profile.xpPercent || 0} sx={{ height: 8, borderRadius: 5, bgcolor: "#334155" }} />
+              <LinearProgress variant="determinate" value={profile.xpPercent || 0} 
+                sx={{
+            height: 8,
+            borderRadius: 5,
+            backgroundColor: "#333",
+            "& .MuiLinearProgress-bar": { backgroundColor: "gold" },
+          }} />
             </Box>
           </Stack>
 

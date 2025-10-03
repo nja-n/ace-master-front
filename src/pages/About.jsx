@@ -59,6 +59,17 @@ const About = () => {
         <meta name="description" content="Learn about AceMaster, the multiplayer card and puzzle game that combines fun and strategy." />
         <meta name="robots" content="index, follow" />
       </Helmet> */}
+      <Grid container spacing={2} justifyContent="center" sx={{ mb: 4 }}>
+        <Grid item>
+                    <GloriousButton text="Contact Us" color="darkblue" onClick={() => navigate("/contact")}/>
+
+        </Grid>
+        <Grid item>
+                    <GloriousButton text="Terms & Conditions" onClick={() => window.open("/terms", "_blank")}
+              color="darkblue"/>
+
+        </Grid>
+      </Grid>
       <Typography variant="h3" align="center" fontWeight="bold" gutterBottom>
         🃏 Kazhutha – Multiplayer Card Game
       </Typography>
@@ -178,24 +189,6 @@ const About = () => {
           </>
         )}
       </Paper>
-
-      {/* Footer Buttons */}
-      <Grid container spacing={2} justifyContent="center" sx={{ mb: 4 }}>
-        <Grid item>
-                    <GloriousButton text="Contact Us" color="darkblue" onClick={() => navigate("/contact")}/>
-
-        </Grid>
-        <Grid item>
-                    <GloriousButton text="Terms & Conditions" onClick={() => window.open("/terms", "_blank")}
-              color="darkblue"/>
-
-        </Grid>
-        {/* <Grid item>
-          <Button variant="text" onClick={() => navigate(-1)}>
-            ⬅ Back to Home
-          </Button>
-        </Grid> */}
-      </Grid>
     </Box>
   );
 };

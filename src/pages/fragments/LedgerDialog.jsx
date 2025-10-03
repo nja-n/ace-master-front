@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchCoinLedger, fetchGameLedger } from "../../components/methods";
 import { apiClient } from "../../components/utils/ApIClient";
-import { formatDate } from "../../components/Utiliy";
+import { formatDate, tableStyles } from "../../components/Utiliy";
 
 export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
     const [gameHistory, setGameHistory] = useState([]);
@@ -17,7 +17,6 @@ export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
                 try {
                     const response = await apiClient(fetchGameLedger, {});
                     setGameHistory(response);
-                    console.log(response);
                 } catch (error) {
                     console.error("Error fetching profile:", error);
                 }
@@ -25,7 +24,6 @@ export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
                 try {
                     const response = await apiClient(fetchCoinLedger, {});
                     setCoinHistory(response);
-                    console.log(response);
                 } catch (error) {
                     console.error("Error fetching profile:", error);
                 }
@@ -185,19 +183,3 @@ export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
     );
 }
 
-const tableStyles = {
-    background: "linear-gradient(135deg, #0f172a, #1e293b)",
-    color: "white",
-    "& .MuiTableCell-root": {
-        color: "white",
-        borderColor: "#334155",
-    },
-    "& .MuiTableHead-root .MuiTableCell-root": {
-        backgroundColor: "#1e293b",
-        fontWeight: "bold",
-        color: "#06b6d4",
-    },
-    "& .MuiTableRow-root:hover": {
-        backgroundColor: "rgba(255, 215, 0, 0.1)",
-    },
-};
