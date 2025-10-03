@@ -14,7 +14,7 @@ export const apiClient = async (endpoint, {
 
   const defaultHeaders = {};
 
-  if (contentType && contentType !== "multipart/form-data") {
+  if (!(body instanceof FormData) && contentType) {
     defaultHeaders["Content-Type"] = contentType;
   }
 

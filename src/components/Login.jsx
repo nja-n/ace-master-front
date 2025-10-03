@@ -1,11 +1,14 @@
-import React, { useRef, useState } from "react";
-import { Box, TextField, InputAdornment, Button, CircularProgress, Switch, FormControlLabel, styled } from "@mui/material";
-import { Check, Close, LoginRounded, LoginSharp, SaveAs } from "@mui/icons-material";
-import { sendOtp, signUp, verifyOtp } from "./methods";
+import React, { useEffect, useRef, useState } from "react";
+import { Box, TextField, InputAdornment, Button, CircularProgress, Switch, FormControlLabel, styled, Typography } from "@mui/material";
+import { Check, Close, Google, HowToRegSharp, LoginRounded, LoginSharp, SaveAs } from "@mui/icons-material";
+import { guestAuth, sendOtp, signUp, verifyOtp } from "./methods";
 import { apiClient } from "./utils/ApIClient";
 import { useNavigate } from "react-router-dom";
 import { tr } from "framer-motion/client";
 import MaterialUISwitch from "./ui/MaterialUISwitch";
+import GoogleButton from "./utils/GoogleAuth";
+import { getDeviceInfo } from "./Utiliy";
+import { emit } from "./utils/eventBus";
 
 const Login = ({ onAuthenticated }) => {
     const userForm = useRef();
@@ -19,7 +22,18 @@ const Login = ({ onAuthenticated }) => {
     const [newUser, setNewUser] = useState(false);
 
     const [rememberMe, setRememberMe] = useState(false);
+    const [email, setEmail] = useState("");
+    const [referralCode, setReferralCode] = useState(null);
+    const [signUpError, setSignUpError] = useState("");
+    const [resendTimer, setResendTimer] = useState(0);
+    const [annonymous, setAnonymous] = useState(true);
 
+    useEffect(() => {
+        const code = localStorage.getItem("referralCode");
+        if (code) {
+            setReferralCode(code);
+        }
+    }, []);
     const handleNumberChange = (e) => {
         const input = e.target.value.replace(/\D/g, "");
         if (input.length <= 10) {
@@ -28,7 +42,9 @@ const Login = ({ onAuthenticated }) => {
     };
 
     const handleSendOtp = async () => {
-        if (number.length !== 10) return;
+        const numberValid = number.length === 10 && /^\d+$/.test(number); // only digits
+  const emailValid = email.includes("@"); // basic email check
+        if (!(numberValid || emailValid)) return;
 
         setIsLoading(true);
         setOtp(Array(4).fill(""));
@@ -39,14 +55,17 @@ const Login = ({ onAuthenticated }) => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ mobileNumber: number })
+                body: JSON.stringify({ mobileNumber: number, email: email, ref: referralCode })
             });
 
             const result = await response.json();
 
+            console.log("OTP send response:", result);
             if (result.status === "Y") {
                 setUid(result.uuid);
                 setShowOtpScreen(true);
+            } else {
+                alert("Failed to send OTP. Please try again.");
             }
         } catch (error) {
             alert('Failed to send OTP. Please try again later.');
@@ -82,12 +101,13 @@ const Login = ({ onAuthenticated }) => {
             const result = await response.json();
 
             if (result.status === "Y") {
-                console.log("Login successful:", result);
-
-                localStorage.setItem("accessToken", result.authResponse.token);
                 if (result.userStatus === "N") {
+                    setEmail(result.email || "");
                     setNewUser(true);
+                    setAnonymous(false);
                 } else {
+                    localStorage.setItem("accessToken", result.accessToken);
+                    localStorage.setItem("refreshToken", result.refreshToken);
                     onAuthenticated();
                 }
                 alert("OTP Verified!");
@@ -103,210 +123,384 @@ const Login = ({ onAuthenticated }) => {
 
     const saveNewUser = async () => {
         const formData = new FormData(userForm.current);
-        //const deviceInfo = await getDeviceInfo();
-        
-        // const payload = {
-        //     ...Object.fromEntries(formData.entries()),
-        //     ...deviceInfo
-        // };
+        const deviceInfo = await getDeviceInfo();
+
         const payload = {
-  firstName: "Vishnu",
-  lastName: "MG",
-  email: "v4vishnumg25@gmail.com",
-//   userAgent: deviceInfo.userAgent,
-//   platform: deviceInfo.platform,
-//   screenWidth: deviceInfo.screenWidth,
-//   screenHeight: deviceInfo.screenHeight
-};
-        console.log("Payload for sign up:", payload);
-        
-        const response = await apiClient(signUp, {
+            ...Object.fromEntries(formData.entries()),
+            ...deviceInfo,
+            annonymous: annonymous,
+        };
+        if (!validateSignUp(payload)) {
+            return
+        }
+
+        const response = await fetch(signUp, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: payload,
+            body: JSON.stringify(payload),
             credentials: 'include'
         });
 
-        //const result = await response.json();
-        if (response.status === "Y") {
+        const result = await response.json();
+        if (result.status === "Y") {
+            localStorage.setItem("accessToken", result.accessToken);
+            localStorage.setItem("refreshToken", result.refreshToken)
             alert("User registered successfully!");
             onAuthenticated();
-            navigate(`/game/ai`);
+            emit("user:refresh");
         }
     }
 
+    const handleGuestLogin = async () => {
+        setIsLoading(true);
+        try {
+            /*const response = await fetch(guestAuth, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: 'include'
+            });
+            const jwtToken = await response.json();
+            localStorage.setItem("accessToken", jwtToken.accessToken);
+            localStorage.setItem("refreshToken", jwtToken.refreshToken);*/
+            /*emit("user:refresh");
+            onAuthenticated(true);*/
+            setShowOtpScreen(true);
+            setNewUser(true);
+        } catch (error) {
+            console.error("Guest login failed:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const validateSignUp = (payload) => {
+        const errors = [];
+        console.log(payload)
+
+        if (!payload.firstName || payload.firstName.trim().length === 0) {
+            errors.push("First Name is required");
+        }
+
+        if (!payload.lastName || payload.lastName.trim().length === 0) {
+            errors.push("Last Name is required");
+        }
+
+        if (payload.email && payload.email.trim().length > 0) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(payload.email)) {
+                errors.push("Invalid email address");
+            }
+        }
+
+        if (errors.length > 0) {
+            setSignUpError(errors.join(" • ")); // store message in state
+            return false;
+        }
+
+        setSignUpError(""); // clear if valid
+        return true;
+    };
+
+
     return (
-        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+        <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            gap={2}
+            sx={{
+                width: "100%",
+                p: 3,
+                borderRadius: 3,
+                background: "linear-gradient(145deg, #1a1a1a, #000000)",
+                boxShadow: "0 4px 25px rgba(0,0,0,0.7)",
+            }}
+        >
             {!showOtpScreen ? (
                 <>
+                    {referralCode && (
+                        <Box sx={{ width: "100%" }}>
+                            <TextField
+                                label="Referred By"
+                                value={referralCode}
+                                fullWidth
+                                InputLabelProps={{ style: { color: "#FFD700" } }}
+                                InputProps={{
+                                    style: {
+                                        backgroundColor: "#111",
+                                        borderRadius: "8px",
+                                        color: "white",
+                                    },
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        "& fieldset": { borderColor: "#FFD700" },
+                                    },
+                                    mb: 2,
+                                }}
+                            />
+                        </Box>
+                    )}
+
+                    {/* 📱 Mobile Field */}
+                    {/* <TextField
+        id="mobile-input"
+        size="small"
+        placeholder="Mobile Number"
+        variant="outlined"
+        value={number}
+        onChange={handleNumberChange}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start" sx={{ color: "#FFD700", fontWeight: "bold" }}>
+              +91
+            </InputAdornment>
+          ),
+          style: {
+            backgroundColor: "#111",
+            borderRadius: "8px",
+            color: "white",
+          },
+        }}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            "& fieldset": { borderColor: "#FFD700" },
+            "&:hover fieldset": { borderColor: "#FFC107" },
+            "&.Mui-focused fieldset": { borderColor: "#FFD700" },
+          },
+        }}
+        fullWidth
+      /> */}
+
+                    {/* 📧 Email Field */}
                     <TextField
-                        id="mobile-input"
                         size="small"
-                        placeholder="Mobile Number"
+                        placeholder="Email Address"
                         variant="outlined"
-                        value={number}
-                        onChange={handleNumberChange}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         InputProps={{
-                            startAdornment: <InputAdornment position="start">+91</InputAdornment>,
+                            style: {
+                                backgroundColor: "#111",
+                                borderRadius: "8px",
+                                color: "white",
+                            },
                         }}
                         sx={{
-                            backgroundColor: "white",
-                            borderRadius: "5px",
-                            //width: "250px",
+                            "& .MuiOutlinedInput-root": {
+                                "& fieldset": { borderColor: "#FFD700" },
+                                "&:hover fieldset": { borderColor: "#FFC107" },
+                                "&.Mui-focused fieldset": { borderColor: "#FFD700" },
+                            },
                         }}
                         fullWidth
                     />
+
+                    {/* 🔘 Send OTP */}
                     <Button
                         variant="contained"
-                        disabled={isLoading || number.length !== 10}
+                        disabled={isLoading || (number.length !== 10 && !email.includes("@"))}
                         startIcon={
                             isLoading ? (
-                                <CircularProgress size={20} color="inherit" />
+                                <CircularProgress size={20} sx={{ color: "black" }} />
                             ) : (
                                 <LoginRounded />
                             )
                         }
-
                         onClick={handleSendOtp}
                         sx={{
-                            backgroundColor: '#1877F2',
-                            color: 'white',
-                            '&:hover': {
-                                backgroundColor: '#145dbf'
+                            background: "linear-gradient(90deg, #FFD700, #FFC107)",
+                            color: "black",
+                            fontWeight: "bold",
+                            borderRadius: "10px",
+                            "&:hover": {
+                                background: "linear-gradient(90deg, #FFC107, #FFA000)",
+                                boxShadow: "0 0 15px #FFD700",
                             },
-                            fontWeight: 'bold'
                         }}
                         fullWidth
                     >
-                        {isLoading ? 'Sending...' : 'Send OTP'}
+                        {isLoading ? "Sending..." : "Send OTP"}
                     </Button>
+
+                    {/* 🔗 Social/Guest */}
+                    <Box sx={{ display: "flex", justifyContent: "center", gap: 2, width: "100%" }}>
+                        <GoogleButton onAuthenticated={onAuthenticated} referralCode={referralCode} />
+
+                        <Button
+                            variant="outlined"
+                            onClick={handleGuestLogin}
+                            sx={{
+                                borderColor: "#FFD700",
+                                color: "#FFD700",
+                                fontWeight: "bold",
+                                borderRadius: "10px",
+                                "&:hover": {
+                                    backgroundColor: "rgba(255, 215, 0, 0.1)",
+                                    boxShadow: "0 0 10px #FFD700",
+                                },
+                            }}
+                            fullWidth
+                        >
+                            Continue as Guest <HowToRegSharp />
+                        </Button>
+                    </Box>
                 </>
-            ) : (
-                newUser ? (
-                    <form ref={userForm}>
-                        <Box display="flex" flexDirection="column" gap={2}>
+            ) : newUser ? (
+                /* 🆕 Sign Up Form */
+                <Box
+                    component="form"
+                    ref={userForm}
+                    sx={{
+                        width: "100%",
+                        p: 3,
+                        borderRadius: 3,
+                        background: "linear-gradient(145deg, #1a1a1a, #000000)",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.7)",
+                    }}
+                >
+                    <Box display="flex" flexDirection="column" gap={2}>
+                        {[
+                            { label: "First Name", name: "firstName" },
+                            { label: "Last Name", name: "lastName" },
+                            { label: "Email (optional)", name: "email" },
+                        ].map((field, i) => (
                             <TextField
-                                label="First Name"
-                                name="firstName"
-                                variant="filled"
-                                sx={{
-                                    backgroundColor: "white",
-                                    borderRadius: "5px",
-                                    //width: "250px",
-                                }}
-                                fullWidth
-                            />
-                            <TextField
-                                label="Last Name"
-                                name="lastName"
-                                variant="filled"
-                                sx={{
-                                    backgroundColor: "white",
-                                    borderRadius: "5px",
-                                    //width: "250px",
-                                }}
-                                fullWidth
-                            />
-                            <TextField
-                                label="Email (optional)"
-                                name="email"
-                                variant="filled"
-                                sx={{
-                                    backgroundColor: "white",
-                                    borderRadius: "5px",
-                                    //width: "250px",
-                                }}
-                                fullWidth
-                            />
-                            <Button
-                                variant="contained"
-                                startIcon={<SaveAs />}
-                                onClick={saveNewUser}
-                                sx={{
-                                    backgroundColor: '#1877F2',
-                                    color: 'white',
-                                    '&:hover': {
-                                        backgroundColor: '#145dbf'
+                                key={i}
+                                label={field.label}
+                                name={field.name}
+                                variant="outlined"
+                                InputLabelProps={{ style: { color: "#FFD700" } }}
+                                InputProps={{
+                                    style: {
+                                        backgroundColor: "#111",
+                                        borderRadius: "8px",
+                                        color: "white",
                                     },
-                                    fontWeight: 'bold'
+                                }}
+                                sx={{
+                                    "& .MuiOutlinedInput-root": {
+                                        "& fieldset": { borderColor: "#FFD700" },
+                                        "&:hover fieldset": { borderColor: "#FFC107" },
+                                        "&.Mui-focused fieldset": { borderColor: "#FFD700" },
+                                    },
                                 }}
                                 fullWidth
-                            >Sign Up</Button>
-                        </Box>
-                    </form>
-                ) : (
-                    <>
-                        <Box display="flex" gap={1}>
-                            {otp.map((digit, idx) => (
-                                <TextField
-                                    key={idx}
-                                    id={`otp-${idx}`}
-                                    value={digit}
-                                    onChange={(e) => handleOtpChange(idx, e.target.value)}
-                                    inputProps={{ maxLength: 1, style: { textAlign: "center" } }}
-                                    sx={{
-                                        width: 50,
-                                        backgroundColor: "white",
-                                        borderRadius: "5px",
-                                        color: "red"
-                                    }}
-                                />
-                            ))}
-                        </Box>
-                        <Box sx={{ color: "yellow", fontSize: "0.8rem" }}>
-                            <Box display="flex" alignItems="center" gap={1}>
-                                <FormControlLabel
-                                    control={
-                                        <MaterialUISwitch
-                                            checked={rememberMe}
-                                            onChange={() => setRememberMe(!rememberMe)}
-                                        />
-                                    }
-                                    label="Remember Me"
-                                />
-                                {rememberMe ? (
-                                    <Check color="success" fontSize="small" />
-                                ) : (
-                                    <Close color="error" fontSize="small" />
-                                )}
-                            </Box>
-                            {/* <TextField
+                            />
+                        ))}
+
+                        <Button
+                            variant="contained"
+                            onClick={saveNewUser}
+                            startIcon={
+                                isLoading ? <CircularProgress size={20} sx={{ color: "black" }} /> : <LoginRounded />
+                            }
+                            sx={{
+                                background: "linear-gradient(90deg, #FFD700, #FFC107)",
+                                color: "black",
+                                fontWeight: "bold",
+                                borderRadius: "10px",
+                                "&:hover": {
+                                    background: "linear-gradient(90deg, #FFC107, #FFA000)",
+                                    boxShadow: "0 0 15px #FFD700",
+                                },
+                            }}
+                            fullWidth
+                        >
+                            {isLoading ? "Signing..." : "Sign Up"}
+                        </Button>
+                    </Box>
+                    <Box justifyContent="center">
+                        {signUpError && (
+                            <Typography
+                                sx={{
+                                    color: "#FF4C4C",
+                                    fontSize: "0.9rem",
+                                    fontWeight: "bold",
+                                    mt: 1,
+                                    textAlign: "center",
+                                }}
+                            >
+                                {signUpError}
+                            </Typography>
+                        )}
+
+                    </Box>
+                </Box>
+            ) : (
+                /* 🔢 OTP Screen */
+                <>
+                    <Box display="flex" gap={1}>
+                        {otp.map((digit, idx) => (
+                            <TextField
                                 key={idx}
                                 id={`otp-${idx}`}
                                 value={digit}
                                 onChange={(e) => handleOtpChange(idx, e.target.value)}
-                                inputProps={{ maxLength: 1, style: { textAlign: "center" } }}
-                                sx={{
-                                    width: 50,
-                                    backgroundColor: "white",
-                                    borderRadius: "5px",
-                                    color: "red"
+                                inputProps={{
+                                    maxLength: 1,
+                                    style: {
+                                        textAlign: "center",
+                                        fontSize: "1.5rem",
+                                        color: "white",
+                                    },
                                 }}
-                            /> */}
+                                sx={{
+                                    width: 55,
+                                    backgroundColor: "#111",
+                                    borderRadius: "8px",
+                                    "& .MuiOutlinedInput-root": {
+                                        "& fieldset": { borderColor: "#FFD700" },
+                                        "&:hover fieldset": { borderColor: "#FFC107" },
+                                        "&.Mui-focused fieldset": {
+                                            borderColor: "#FFD700",
+                                            boxShadow: "0 0 8px #FFD700",
+                                        },
+                                    },
+                                }}
+                            />
+                        ))}
+                    </Box>
+
+                    <Box sx={{ color: "#FFD700", fontSize: "0.85rem", mt: 1 }}>
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <FormControlLabel
+                                control={
+                                    <MaterialUISwitch checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
+                                }
+                                label="Remember Me"
+                            />
+                            {rememberMe ? <Check color="success" fontSize="small" /> : <Close color="error" fontSize="small" />}
                         </Box>
-                        <Button
-                            variant="contained"
-                            disabled={number.length !== 10}
-                            startIcon={<LoginSharp />}
-                            onClick={handleVerifyOtp}
-                            sx={{
-                                backgroundColor: '#1877F2',
-                                color: 'white',
-                                '&:hover': {
-                                    backgroundColor: '#145dbf'
-                                },
-                                fontWeight: 'bold'
-                            }}
-                            fullWidth
-                        >
-                            Verify OTP
-                        </Button>
-                    </>
-                )
+                    </Box>
+
+                    <Button
+                        variant="contained"
+                        disabled={number.length !== 10 && !email.includes("@")}
+                        startIcon={<LoginSharp />}
+                        onClick={handleVerifyOtp}
+                        sx={{
+                            background: "linear-gradient(90deg, #FFD700, #FFC107)",
+                            color: "black",
+                            fontWeight: "bold",
+                            borderRadius: "10px",
+                            "&:hover": {
+                                background: "linear-gradient(90deg, #FFC107, #FFA000)",
+                                boxShadow: "0 0 15px #FFD700",
+                            },
+                        }}
+                        fullWidth
+                    >
+                        Verify OTP
+                    </Button>
+                </>
             )}
         </Box>
+
     );
 };
 

@@ -2,10 +2,10 @@
 import { Google, HowToRegSharp } from "@mui/icons-material";
 import { Box, Button, Link, TextField, Typography } from "@mui/material";
 import { signInAnonymously, signInWithPopup } from "firebase/auth";
+import { useEffect, useState } from "react";
 import { useLoading } from "../components/LoadingContext";
 import { auth, facebookProvider, googleProvider } from "../firebase-config";
-import { firebaseAuth, pre } from "./methods";
-import { useEffect, useState } from "react";
+import { emit } from "./utils/eventBus";
 
 const FirebaseLogin = ({ onAuthenticated }) => {
   const { setLoading } = useLoading();
@@ -40,7 +40,7 @@ const FirebaseLogin = ({ onAuthenticated }) => {
   };
 
   const sendTokenToBackend = async (firebaseIdToken) => {
-    const response = await fetch(firebaseAuth, {
+    /*const response = await fetch(firebaseAuth, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ idToken: firebaseIdToken, ref: referralCode })
@@ -48,7 +48,8 @@ const FirebaseLogin = ({ onAuthenticated }) => {
     const jwtToken = await response.json();
     localStorage.setItem("accessToken", jwtToken.accessToken);
     localStorage.setItem("refreshToken", jwtToken.refreshToken);
-    onAuthenticated(true);
+    emit("user:refresh");
+    onAuthenticated(true);*/
   };
 
   async function handleGuestLogin() {
