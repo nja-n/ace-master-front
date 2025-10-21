@@ -5,6 +5,7 @@ import { getCroppedImg } from "../../Utiliy";
 import { uploadImage } from "../../methods";
 import { apiClient } from "../../utils/ApIClient";
 import { useLoading } from "../../LoadingContext";
+import { emit } from "../eventBus";
 
 const ProfileImageUpload = ({ onUpload }) => {
   const [imageSrc, setImageSrc] = useState(null);
@@ -47,6 +48,7 @@ const ProfileImageUpload = ({ onUpload }) => {
 
       setOpen(false);
       onUpload && onUpload(false);
+      emit("user:refresh"); // refresh user data
       alert("Profile image updated successfully!");
     } catch (err) {
       alert("Failed to crop the image.");

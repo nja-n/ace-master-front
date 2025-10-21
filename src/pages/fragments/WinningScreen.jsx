@@ -7,10 +7,42 @@ import AceMasterLogo from "../../components/ui/GameLogoHeader";
 import GloriousButton from "../../components/ui/GloriousButton";
 import { useNavigate } from "react-router-dom";
 import { Header } from "./Header";
+import { useEffect, useState } from "react";
+import { useSound } from "../../components/utils/SoundProvider";
+import { emit } from "../../components/utils/eventBus";
+import { apiClient } from "../../components/utils/ApIClient";
+import { readLastSession } from "../../components/methods";
 
 export default function GameOverScreen({ gameData, handleResetGame }) {
-//   const { width, height } = useWindowSize();
+  //   const { width, height } = useWindowSize();
   const navigate = useNavigate();
+  const { playSound } = useSound();
+  const [gameSession, setGameSession] = useState(null);
+
+  useEffect(() => {
+    playSound("celebration");
+    emit("user:refresh");
+
+    const gameSessionRead = async () => {
+      console.log("Ending game session for ID:", gameData.lastId);
+      if(!gameData.lastId) return;
+      try {
+        const response = await apiClient(`${readLastSession}/${gameData.lastId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        setGameSession(response);
+        console.log("Game session ended:", response);
+        alert("Game session ended successfully.");
+      } catch (error) {
+        console.error("Error ending game session:", error);
+      }
+    };
+    
+    gameSessionRead();
+  }, []);
 
   if (!gameData.looserPlayer) return null;
 
@@ -38,11 +70,11 @@ export default function GameOverScreen({ gameData, handleResetGame }) {
       <AnimatePresence>
         {sortedPlayers[0] && sortedPlayers[0].winningRank === 0 && (
           <Confetti numberOfPieces={200} recycle={false} />
-        //   width={width} height={height}
+          //   width={width} height={height}
         )}
       </AnimatePresence>
 
-      <Header/>
+      <Header />
 
       {/* 🏆 Game Over Content */}
       <Box
@@ -96,7 +128,7 @@ export default function GameOverScreen({ gameData, handleResetGame }) {
                   textShadow: player.winningRank === 0 ? "0 0 10px gold" : "none",
                 }}
               >
-                {player.winningRank === 1 ? "👑" : player.winningRank === 2 ? "🥈" : "😭"}
+                {player.winningRank === 1 ? "👑" : player.winningRank === 2 ? "" : "😭"}
                 {getOrdinalSuffix(player.winningRank)} :{" "}
                 {player.firstName ? player.firstName : "You"}
                 {player.winningAmount
@@ -132,19 +164,19 @@ export default function GameOverScreen({ gameData, handleResetGame }) {
 }
 
 function getOrdinalSuffix(rank) {
-    if (rank == 0) {
-        return 'Looser';
-    }
-    const j = rank % 10,
-        k = rank % 100;
-    if (j === 1 && k !== 11) {
-        return `🥇 ${rank}st\n-`;
-    }
-    if (j === 2 && k !== 12) {
-        return `🥈 ${rank}nd\n-`;
-    }
-    if (j === 3 && k !== 13) {
-        return `🥉 ${rank}rd\n-`;
-    }
-    return `${rank}th\n-`;
+  if (rank == 0) {
+    return 'Looser';
+  }
+  const j = rank % 10,
+    k = rank % 100;
+  if (j === 1 && k !== 11) {
+    return `🥇 ${rank}st\n-`;
+  }
+  if (j === 2 && k !== 12) {
+    return `🥈 ${rank}nd\n-`;
+  }
+  if (j === 3 && k !== 13) {
+    return `🥉 ${rank}rd\n-`;
+  }
+  return `${rank}th\n-`;
 }

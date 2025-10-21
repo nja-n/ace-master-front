@@ -26,6 +26,7 @@ import ShuffleAnimation from '../components/ui/CardShuffle'
 import { getCardImage } from "../components/Utiliy";
 import { useLoading } from "../components/LoadingContext";
 import { useUser } from "../components/ui/UserContext";
+import GameTutorial from "../components/tutorial/GameTutorial";
 
 export default function GameTableDesign() {
   const [selectedCard, setSelectedCard] = useState(null);
@@ -44,7 +45,6 @@ export default function GameTableDesign() {
   const [isOverDrop, setIsOverDrop] = useState(false);
   const [draggingIndex, setDraggingIndex] = useState(null);
   const zValue = useRef(0); // high zIndex for dragged card
-
 
   const [gameData, setGameData] = useState(null);
   const token = localStorage.getItem("accessToken");
@@ -79,7 +79,10 @@ export default function GameTableDesign() {
     };
 
     ws.current.onopen = () => console.log("WebSocket connected");
-    ws.current.onerror = (err) => console.error("WS error", err);
+    ws.current.onerror = (err) => {
+      console.error("WebSocket error:", err);
+      //setSnackbar({ open: true, message: "WebSocket error occurred", severity: "error" });
+    };
     ws.current.onclose = () => console.log("WS closed");
 
     return () => ws.current.close();
@@ -111,7 +114,7 @@ export default function GameTableDesign() {
                   setSnackbar({ open: true, message: "Time Out!", severity: "info" });
                 }
                 setSelectedCard(null);
-              } else if(time<6 && gameData?.turnIndex === gameData.clientPlayer.gameIndex) {
+              } else if (time < 6 && gameData?.turnIndex === gameData.clientPlayer.gameIndex) {
                 playSound('beep');
               }
             });
@@ -259,7 +262,7 @@ export default function GameTableDesign() {
     }, 1000);
   };
 
-  const handleDrop = (card, info, isValid) => {
+  /*const handleDrop = (card, info, isValid) => {
     if (!dropRef.current) return;
 
     const dropBox = dropRef.current.getBoundingClientRect();
@@ -282,11 +285,40 @@ export default function GameTableDesign() {
 
     zValue.current = draggingIndex;
     setDraggingIndex(null);
+  };*/
+  const handleDrop = (card, event) => {
+    if (!tableCardRefs.current.length) return;
+
+    const { clientX: x, clientY: y } = event;
+
+    let droppedOnIndex = -1;
+
+    // check if the drop position is within any card slot
+    tableCardRefs.current.forEach((el, i) => {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        droppedOnIndex = i;
+      }
+    });
+
+    if (droppedOnIndex !== -1) {
+      handlePlayCard(card, droppedOnIndex);
+    } else {
+      if (draggingIndex && zValue) {
+        pushBackSession("ssort");
+      }
+    }
+
+    setIsOverDrop(false);
+    zValue.current = draggingIndex;
+    setDraggingIndex(null);
   };
+
 
   const handleDragCard = (event, info) => {
     if (!dropRef.current) return;
-    const dropBox = dropRef.current.getBoundingClientRect();
+    /*const dropBox = dropRef.current.getBoundingClientRect();
     const { x, y } = info.point;
 
     // 👇 highlight drop zone while hovering
@@ -299,12 +331,24 @@ export default function GameTableDesign() {
       if (!isOverDrop) setIsOverDrop(true);
     } else {
       if (isOverDrop) setIsOverDrop(false);
-    }
+    }*/
+    let isOverAny = false;
+    const { clientX: x, clientY: y } = event;
+    tableCardRefs.current.forEach((el) => {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        isOverAny = true;
+      }
+    });
+
+    setIsOverDrop(isOverAny);
+
 
     if (draggingIndex === null) return;
 
     const dx = info.offset.x;
-    const shift = Math.round(dx / 30);
+    const shift = Math.round(dx / 22);
     const newZ = draggingIndex + shift;
 
     if (newZ !== zValue.current) {
@@ -463,8 +507,6 @@ export default function GameTableDesign() {
   const hasMatchingCard = clientPlayer.cards && clientPlayer.cards.some(card => card.cardName === gameData.tableSuit);
 
   if (gameData.looserPlayer) {
-    emit("user:refresh");
-    playSound("celebration")
     return (
       <GameOverScreen
         gameData={gameData}
@@ -489,6 +531,7 @@ export default function GameTableDesign() {
         overflow: "auto",
       }}
     >
+      <GameTutorial onStartGame={handleStartGame} />
       <Header game={true} />
       <Box
         sx={{
@@ -505,17 +548,18 @@ export default function GameTableDesign() {
           opacity: 0.4,
         }}
       >
-        Session ID: {gameData.sessionId}
+        TABLE: {gameData.sessionId}
       </Box>
 
       {/* Opponents Section */}
       <Box
+        id="opponent-info"
         ref={containerRef}
         sx={{
           position: "relative",
           width: "100%",  // full width of parent
           // maxWidth: 700, 
-          minHeight: "60vh", // limit height
+          // minHeight: "60vh", // limit height
           maxWidth: { xs: "100%", sm: 500, md: 600 }, // cap on bigger screens
           aspectRatio: {
             xs: "3/4",   // mobile (taller oval)
@@ -617,6 +661,7 @@ export default function GameTableDesign() {
             <>
               {/* Closed Cards */}
               <Card
+                id="closed-cards"
                 ref={closedRef}
                 onClick={() => setClosecardFlipped(!closecardFlipped)}
                 sx={{
@@ -685,7 +730,8 @@ export default function GameTableDesign() {
 
 
               {/* Table Cards */}
-              <Box display="flex" gap={{ xs: 1, sm: 1.5, md: 2 }}>
+              <Box display="flex" gap={{ xs: 1, sm: 1.5, md: 2 }}
+                id="table-cards">
                 {Array.from({ length: gameData?.players.length }).map((_, i) => {
                   const c = tableCards[i]; // slot i may or may not have a card
 
@@ -697,7 +743,9 @@ export default function GameTableDesign() {
                         // position: "absolute",
                         width: { xs: 50, sm: 50, md: 60 },
                         height: { xs: 75, sm: 75, md: 90 },
-                        border: !c ? "2px dashed rgba(0,0,0,0.2)" : "", // outline for empty slot
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                        border: isOverDrop ? "2px dashed gold" : c ? "none" : "2px dashed rgba(255,255,255,0.2)",
+                        // border: !c ? "2px dashed rgba(0,0,0,0.2)" : "", // outline for empty slot
                         opacity: c ? 1 : 0.5,
                         zIndex: c ? 1 : 0,
                       }}
@@ -736,7 +784,7 @@ export default function GameTableDesign() {
               fontWeight: "bold",
             }}
           >
-            <motion.div
+            {/* <motion.div
               animate={{
                 scale: isOverDrop ? 1.1 : 1,
                 backgroundColor: isOverDrop
@@ -763,48 +811,50 @@ export default function GameTableDesign() {
                 fontWeight: "bold",
                 overflow: "hidden",
               }}
-            >
-              {gameData.turnIndex < 0
-                ? (
-                  <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                    {gameData.players.length > 2 && hasStarted === false &&
+            > */}
+            {gameData.turnIndex < 0
+              ? (
+                <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+                  {gameData.players.length > 2 && hasStarted === false &&
+                    <Box id="start-button">
                       <GloriousButton onClick={() => handleStartGame()}
                         text='Start' />
-                    }
-                    <Box display="flex" flexDirection="column" alignItems="center"
-                      width="100%" style={{ fontSize: 20, }}>
-                      {gameData.countDown === 0 || gameData.countDown === '0' ? (
-                        <>
-                          {gameData.roomId !== null ? (
-                            <Box display="flex" flexDirection="column" alignItems="center"
-                              width="100%" style={{ fontSize: 20, }}>
-                              <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                                Room Id {gameData.roomId}
-                              </Typography>
-                            </Box>
-                          ) :
+                    </Box>
+                  }
+                  <Box display="flex" flexDirection="column" alignItems="center"
+                    width="100%" style={{ fontSize: 20, }}>
+                    {gameData.countDown === 0 || gameData.countDown === '0' ? (
+                      <>
+                        {gameData.roomId !== null ? (
+                          <Box display="flex" flexDirection="column" alignItems="center"
+                            width="100%" style={{ fontSize: 20, }}>
                             <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                              Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
-                            </Typography>}
-                        </>
-                      ) : (
-                        <ShuffleAnimation />
-                        // <Typography variant="body1" sx={{ mb: 1 }}>
-                        //   Starts in... ({gameData.countDown} Sec)
-                        // </Typography>
-                      )}
+                              Room Id {gameData.roomId}
+                            </Typography>
+                          </Box>
+                        ) :
+                          <Typography variant="body1" sx={{ mb: 1, fontWeight: 'bold' }}>
+                            Finding Opponents... ({gameData.players.length} / {gameData.maxPlayers})
+                          </Typography>}
+                      </>
+                    ) : (
+                      <ShuffleAnimation />
+                      // <Typography variant="body1" sx={{ mb: 1 }}>
+                      //   Starts in... ({gameData.countDown} Sec)
+                      // </Typography>
+                    )}
 
-                      <Box width="60%">
-                        <LinearProgress color="inherit" />
-                      </Box>
+                    <Box width="60%">
+                      <LinearProgress color="inherit" />
                     </Box>
                   </Box>
-                ) : (
-                  <Typography>
-                    {isOverDrop ? "✨ Release to Drop!" : "Drop Here"}
-                  </Typography>
-                )}
-            </motion.div>
+                </Box>
+              ) : (
+                <Typography>
+                  {/* {isOverDrop ? "✨ Release to Drop!" : "Drop Here"} */}
+                </Typography>
+              )}
+            {/* </motion.div> */}
           </Box>
         </Box>
         {/* Flying Card Animation */}
@@ -912,7 +962,8 @@ export default function GameTableDesign() {
         width="100%"
       >
         {/* Avatar with smiley button */}
-        <Box position="relative" display="inline-block">
+        <Box position="relative" display="inline-block"
+          id="player-info">
           <PlayerAvatarWithTimer
             gameData={gameData}
             player={clientPlayer}
@@ -942,10 +993,11 @@ export default function GameTableDesign() {
         {gameData.turnIndex >= 0 && (
           <>
             <Box
-              display="flex"
-              justifyContent="center"
-              position="relative"
+              //display="flex"
+              //justifyContent="center"
+              //position="relative"
               sx={{ height: 100, width: "100%", mt: 1 }}
+              id="client-player-cards"
             >
               {clientPlayer.cards.map((card, i) => {
                 const isSelected = selectedCard && selectedCard.id === card.id;
@@ -962,7 +1014,7 @@ export default function GameTableDesign() {
                     whileDrag={{ scale: 1.15 }}
                     onMouseDown={() => setSelectedCard(card)}
                     onDragStart={() => handleStartDrag(i)}
-                    onDragEnd={(event, info) => handleDrop(card, info, isTurn)}
+                    onDragEnd={(event, info) => handleDrop(card, event)}
                     onDrag={(event, info) => handleDragCard(event, info)}
                     style={{
                       position: "absolute",
@@ -994,10 +1046,12 @@ export default function GameTableDesign() {
             {/* Action Buttons */}
             <Box display="flex" justifyContent="center" gap={2} mb={3}>
               {!clientPlayer.sorted && gameData.turnIndex >= 0 && (
-                <GloriousButton
-                  onClick={() => handleSortCard()}
-                  text='SORT'
-                />
+                <Box id="sort-button">
+                  <GloriousButton
+                    onClick={() => handleSortCard()}
+                    text='SORT'
+                  />
+                </Box>
               )}
               <GloriousButton
                 onClick={selectedCard !== null
@@ -1070,10 +1124,12 @@ const renderCardDesign = (card, theme, isMatched = true) => {
             <span> {card.cardNumber}</span>
             <span>{card.cardIcon}</span>
           </Box>
-          <Box sx={{ position: "absolute", bottom: 5, right: 5, fontSize: 16, 
-              color: card.color, display: "flex", alignItems: "flex-start",
-            flexDirection: "column", }}>
-              <span> {card.cardNumber}</span>
+          <Box sx={{
+            position: "absolute", bottom: 5, right: 5, fontSize: 16,
+            color: card.color, display: "flex", alignItems: "flex-start",
+            flexDirection: "column",
+          }}>
+            <span> {card.cardNumber}</span>
             <span>{card.cardIcon}</span>
             {/* {card.cardIcon} {card.cardNumber} */}
           </Box>

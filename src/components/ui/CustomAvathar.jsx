@@ -5,24 +5,57 @@ import { SettingsDialog } from '../../pages/fragments/SettingsDialog';
 import { motion } from 'framer-motion';
 import { apiClient } from '../utils/ApIClient';
 import { readProfileImage } from '../methods';
+import useLocalStorage from '../utils/UseLocalStorage';
 
-const CustomAvatar = ({ size = 64, letter = 'I', rank, settings = false, user }) => {
+const CACHE_TTL = 1000 * 60 * 60 * 12; // 12 hours validity
+
+const CustomAvatar = ({ size = 64, letter = 'I', rank, settings = false, user, pid = null }) => {
   const [openSettings, setOpenSettings] = useState(false);
   const [hasImage, setHasImage] = useState(null);
 
+  const [avatarCache, setAvatarCache] = useLocalStorage("avatar_cache_v1", {});
+
   useEffect(() => {
+    const cached = avatarCache[pid];
+    const now = Date.now();
+
+    if (cached && now - cached.timestamp < CACHE_TTL) {
+      setHasImage(cached.imageUrl);
+      return;
+    }
+
     async function fetchImg() {
       try {
-        const img = await apiClient(readProfileImage, { method: 'GET' });
+        let endpoint = readProfileImage;
+        if (pid) {
+          endpoint += `?pid=${encodeURIComponent(pid)}`;
+        }
+
+        const img = await apiClient(endpoint, { method: 'GET' });
         if (img) {
           setHasImage(img.imageUrl);
+          setAvatarCache({
+            ...avatarCache,
+            [pid]: { imageUrl: img.imageUrl, timestamp: now },
+          });
         }
       } catch (err) {
         setHasImage(null);
       }
     }
     fetchImg();
-  }, [user]);
+  }, [pid]);
+
+  useEffect(() => {
+    const now = Date.now();
+    const updatedCache = Object.fromEntries(
+      Object.entries(avatarCache).filter(([_, entry]) => now - entry.timestamp < CACHE_TTL)
+    );
+
+    if (Object.keys(updatedCache).length !== Object.keys(avatarCache).length) {
+      setAvatarCache(updatedCache);
+    }
+  }, []); // run once on mount
 
   return (
     <Box

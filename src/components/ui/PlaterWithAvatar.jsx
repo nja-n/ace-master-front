@@ -33,6 +33,7 @@ const PlayerAvatarWithTimer = ({ gameData, player, timeLeft, breaks }) => {
                 letter={timeLeft > 0 ? timeLeft : displayLetter}
                 rank={null}
                 textColor={timeLeft > 5 ? '#ffffff' : '#ff1744'}
+                pid={player.id}
               />
             </Box>
             {breaks && (
@@ -49,13 +50,17 @@ const PlayerAvatarWithTimer = ({ gameData, player, timeLeft, breaks }) => {
             )}
           </>
         ) : (
-          <CustomAvatar size={64} letter={displayLetter} rank={rank} />
+          <CustomAvatar size={64} letter={displayLetter} rank={rank}
+            pid={player.id}
+          />
         )}
       </Box>
       {breaks !== -1 && (
         <GlassShatterSVG
           size={64}
           trigger={breaks}
+          shardCount={60}
+          radiusMultiplier={1.8}
           onComplete={() => console.log('Cutting Animation Played')}
         />
       )}

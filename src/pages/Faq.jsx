@@ -9,8 +9,11 @@ import {
   Divider
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import GloriousButton from "../components/ui/GloriousButton";
+import { useNavigate } from "react-router-dom";
 
 const FAQ = () => {
+  const navigate = useNavigate();
   const faqs = [
     {
       question: "What is Ace Master?",
@@ -115,6 +118,9 @@ const FAQ = () => {
             </AccordionDetails>
           </Accordion>
         ))}
+      </Box>
+      <Box textAlign="center" mt={4}>
+        <GloriousButton text="Contact Us" color="darkblue" onClick={() => navigate("/contact")}/>
       </Box>
     </Container>
   );

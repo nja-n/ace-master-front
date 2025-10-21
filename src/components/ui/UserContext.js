@@ -28,11 +28,17 @@ export function UserProvider({ children }) {
             setUser(res);
 
             if (firstCall.current && res?.notifications && res.notifications.length > 0) {
-                setNotifications(res.notifications);
-                setCurrentNotifIndex(0);
-                setNotifDialogOpen(true);
+                const tutorialSeen = localStorage.getItem('gameTutorialSeen');
+                if (tutorialSeen) {
+                    setNotifications(res.notifications);
+                    setCurrentNotifIndex(0);
+                    setNotifDialogOpen(true);
+                } else {
+                    firstCall.current = true;
+                }
+            } else {
+                firstCall.current = false;
             }
-            firstCall.current = false;
 
         } catch (err) {
             console.error("Failed to load user:", err);

@@ -84,7 +84,7 @@ await controls.start(i => {
     { x: -20, y: 6, rot: -30 },
   ];
 
-  // Basic shard shapes (polygons/paths) positioned inside a circle
+// Basic shard shapes (polygons/paths) positioned inside a circle
   // You can tweak paths to change look.
   const shards = [
     "M32 4 L40 18 L32 28 L26 20 Z", // top small

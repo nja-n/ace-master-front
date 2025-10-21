@@ -83,9 +83,9 @@ export const LedgerDialog = ({ view, setOpenCoin, setOpenGame, user }) => {
 
                                     return (
                                         <>
-                                            <TableRow key={row.id}>
+                                            <TableRow key={row.id} onClick={() => setOpenRow(openRow === row.id ? null : row.id)}>
                                                 <TableCell>{row.sessionId.slice(0, 6)}...</TableCell>
-                                                <TableCell>{row.roomId ? "Room" : "Classic"}</TableCell>
+                                                <TableCell>{row.type}</TableCell>
                                                 <TableCell>{row.startedOn ? formatDate(row.startedOn, true) : "-"}</TableCell>
                                                 <TableCell>{usedCoins ?? 0}</TableCell>
                                                 <TableCell sx={{ color: "gold" }}>{winningCoin ?? 0}</TableCell>

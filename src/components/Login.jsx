@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, TextField, InputAdornment, Button, CircularProgress, Switch, FormControlLabel, styled, Typography } from "@mui/material";
-import { Check, Close, Google, HowToRegSharp, LoginRounded, LoginSharp, SaveAs } from "@mui/icons-material";
-import { guestAuth, sendOtp, signUp, verifyOtp } from "./methods";
+import { Box, TextField, InputAdornment, Button, CircularProgress, Switch, FormControlLabel, styled, Typography, IconButton } from "@mui/material";
+import { ArrowBack, Check, Close, Google, HowToRegSharp, LoginRounded, LoginSharp, SaveAs } from "@mui/icons-material";
+import { duplicateValidation, guestAuth, sendOtp, signUp, verifyOtp } from "./methods";
 import { apiClient } from "./utils/ApIClient";
 import { useNavigate } from "react-router-dom";
 import { tr } from "framer-motion/client";
@@ -28,6 +28,7 @@ const Login = ({ onAuthenticated }) => {
     const [resendTimer, setResendTimer] = useState(0);
     const [annonymous, setAnonymous] = useState(true);
 
+
     useEffect(() => {
         const code = localStorage.getItem("referralCode");
         if (code) {
@@ -43,7 +44,7 @@ const Login = ({ onAuthenticated }) => {
 
     const handleSendOtp = async () => {
         const numberValid = number.length === 10 && /^\d+$/.test(number); // only digits
-  const emailValid = email.includes("@"); // basic email check
+        const emailValid = email.includes("@"); // basic email check
         if (!(numberValid || emailValid)) return;
 
         setIsLoading(true);
@@ -95,20 +96,21 @@ const Login = ({ onAuthenticated }) => {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ password: otpValue, uuid: uid, mobileNumber: number, rememberMe: rememberMe })
+                body: JSON.stringify({ password: otpValue, uuid: uid, mobileNumber: number, rememberMe: rememberMe, email: email }),
             });
 
             const result = await response.json();
 
             if (result.status === "Y") {
                 if (result.userStatus === "N") {
-                    setEmail(result.email || "");
+                    setEmail(result.user.email || "");
                     setNewUser(true);
                     setAnonymous(false);
                 } else {
                     localStorage.setItem("accessToken", result.accessToken);
                     localStorage.setItem("refreshToken", result.refreshToken);
                     onAuthenticated();
+                    emit("user:refresh");
                 }
                 alert("OTP Verified!");
 
@@ -122,6 +124,7 @@ const Login = ({ onAuthenticated }) => {
     };
 
     const saveNewUser = async () => {
+        setIsLoading(true);
         const formData = new FormData(userForm.current);
         const deviceInfo = await getDeviceInfo();
 
@@ -129,8 +132,10 @@ const Login = ({ onAuthenticated }) => {
             ...Object.fromEntries(formData.entries()),
             ...deviceInfo,
             annonymous: annonymous,
+            referralBy: referralCode || "",
         };
-        if (!validateSignUp(payload)) {
+        if (!await validateSignUp(payload)) {
+            setIsLoading(false);
             return
         }
 
@@ -151,6 +156,7 @@ const Login = ({ onAuthenticated }) => {
             onAuthenticated();
             emit("user:refresh");
         }
+        setIsLoading(false);
     }
 
     const handleGuestLogin = async () => {
@@ -177,7 +183,7 @@ const Login = ({ onAuthenticated }) => {
         }
     }
 
-    const validateSignUp = (payload) => {
+    const validateSignUp = async (payload) => {
         const errors = [];
         console.log(payload)
 
@@ -193,6 +199,18 @@ const Login = ({ onAuthenticated }) => {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(payload.email)) {
                 errors.push("Invalid email address");
+            } else {
+                // Check if email already exists
+                try {
+                    const response = await fetch(`${duplicateValidation}?email=${encodeURIComponent(payload.email)}`);
+                    const data = await response.json();
+                    if (data.exists) {
+                        errors.push("Email already in use");
+                    }
+                } catch (error) {
+                    console.error("Email check failed:", error);
+                    errors.push("Failed to validate email");
+                }
             }
         }
 
@@ -203,6 +221,31 @@ const Login = ({ onAuthenticated }) => {
 
         setSignUpError(""); // clear if valid
         return true;
+    };
+
+    const handleResendOtp = () => {
+        if (resendTimer === 0) {
+            handleSendOtp();
+            setResendTimer(30); // 30 seconds cooldown
+            const timerInterval = setInterval(() => {
+                setResendTimer((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timerInterval);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+    }
+
+    const handleBack = () => {
+        if (newUser) {
+            setNewUser(false);
+        } else {
+            setShowOtpScreen(false);
+            setOtp(["", "", "", ""]);
+        }
     };
 
 
@@ -373,6 +416,7 @@ const Login = ({ onAuthenticated }) => {
                                 key={i}
                                 label={field.label}
                                 name={field.name}
+                                value={field.name === 'email' && email !== "" ? email : null}
                                 variant="outlined"
                                 InputLabelProps={{ style: { color: "#FFD700" } }}
                                 InputProps={{
@@ -434,6 +478,33 @@ const Login = ({ onAuthenticated }) => {
             ) : (
                 /* 🔢 OTP Screen */
                 <>
+                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                        <IconButton
+                            onClick={handleBack} // define handleBack() to go back to previous step
+                            sx={{
+                                color: "#FFD700",
+                                "&:hover": { color: "#FFC107", transform: "scale(1.1)" },
+                                transition: "all 0.2s",
+                            }}
+                        >
+                            <ArrowBack />
+                        </IconButton>
+
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                color: "#FFD700",
+                                fontWeight: "bold",
+                                textAlign: "center",
+                                flexGrow: 1,
+                            }}
+                        >
+                            Verify OTP
+                        </Typography>
+
+                        {/* Spacer to keep title centered */}
+                        <Box width={40} />
+                    </Box>
                     <Box display="flex" gap={1}>
                         {otp.map((digit, idx) => (
                             <TextField
@@ -496,6 +567,28 @@ const Login = ({ onAuthenticated }) => {
                         fullWidth
                     >
                         Verify OTP
+                    </Button>
+                    <Button
+                        //disabled={resendTimer > 0}
+                        onClick={() => {
+                            if (resendTimer > 0) {
+                                alert(`Please wait ${resendTimer}s before resending OTP`);
+                                return;
+                            }
+                            handleResendOtp();
+                        }}
+                        sx={{
+                            color: "#FFD700",
+                            fontWeight: "bold",
+                            fontSize: "0.9rem",
+                            textTransform: "none",
+                            "&:hover": {
+                                color: "#FFC107",
+                                textDecoration: "underline",
+                            },
+                        }}
+                    >
+                        {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : "Resend OTP"}
                     </Button>
                 </>
             )}
