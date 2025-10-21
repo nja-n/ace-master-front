@@ -30,7 +30,6 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
 
   const { soundOn, setSoundOn, musicOn, setMusicOn } = useSound();
 
-
   const tabVariants = {
     enter: (direction) => ({
       x: direction > 0 ? 100 : -100,
@@ -87,7 +86,7 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
         console.error("Error saving user:", error);
         setLoading(false);
       }
-      if(setOpenSettings) {
+      if (setOpenSettings) {
         setOpenSettings(false);
       }
       setLoading(false);
@@ -165,14 +164,40 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
                   direction="row"
                   justifyContent="space-between"
                   alignItems="center"
+                  sx={{ width: "100%", mb: 1 }}
                 >
                   <Typography>Name</Typography>
+
                   <TextField
                     value={changedName}
                     onChange={(e) => setChangedName(e.target.value)}
                     size="small"
                     variant="standard"
                     InputProps={{
+                      endAdornment: (
+                        <Button
+                          onClick={handleSave}
+                          variant="outlined"
+                          disabled={!changedName.trim()}
+                          sx={{
+                            border: "2px solid #FFD700",
+                            color: "#FFD700",
+                            fontWeight: "bold",
+                            fontSize: "0.8rem",
+                            ml: 1,
+                            px: 1.5,
+                            borderRadius: "10px",
+                            textTransform: "none",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                              boxShadow: "0 0 8px #FFD700",
+                              background: "rgba(255, 215, 0, 0.1)",
+                            },
+                          }}
+                        >
+                          Save
+                        </Button>
+                      ),
                       style: {
                         color: "white",
                         fontSize: "1.25rem",
@@ -180,8 +205,7 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
                       },
                     }}
                     sx={{
-                      width: "50%",
-                      mb: 1,
+                      width: "60%",
                       "& .MuiInputBase-input": { padding: 0 },
                       "& .MuiInput-underline:before": {
                         borderBottomColor: "gray",
@@ -195,43 +219,33 @@ export const SettingsDialog = ({ setOpenSettings, user }) => {
                     }}
                   />
                 </Stack>
-
                 <Stack
                   direction="row"
                   justifyContent="space-between"
                   alignItems="center"
                 >
                   <Typography>Image</Typography>
-                  <Box sx={{width :"50%"}}><ProfileImageUpload onUpload={setOpenSettings}/></Box>
-                </Stack>
-
-                <Stack
-                  direction="row"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Button
-                    onClick={() => handleSave()}
-                    variant="outlined"
-                    color="info"
+                  <Box
                     sx={{
-                      border: "2px solid #FFD700",
-                      color: "#FFD700",
-                      fontWeight: "bold",
-                      fontSize: "1rem",
-                      padding: "4px 12px",
-                      borderRadius: "12px",
-                      boxShadow:
-                        "inset 0 1px 3px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.3)",
-                      textShadow: "1px 1px 2px #000",
-                      transition: "all 0.3s ease",
+                      width: "60%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      bgcolor: "transparent",
+                      borderBottom: "1px solid gray",
+                      borderRadius: "4px",
+                      py: 0.5,
                       "&:hover": {
-                        boxShadow: "0 0 10px #FFD700",
+                        borderBottomColor: "orange",
                       },
                     }}
                   >
-                    Save
-                  </Button>
+                    <Box sx={{ flex: 1, color: "white", fontSize: "1.1rem" }}>
+                      image.png
+                    </Box>
+                    <ProfileImageUpload onUpload={setOpenSettings} />
+                  </Box>
+                  {/* <Box sx={{width :"50%"}}><ProfileImageUpload onUpload={setOpenSettings}/></Box> */}
                 </Stack>
               </Stack>
             </motion.div>

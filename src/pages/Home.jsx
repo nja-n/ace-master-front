@@ -186,7 +186,7 @@ const Home = () => {
             }}
         >
             {!tutorialSeen && authenticated
-                && <GameTutorial joyrideRef={0} sceneNum={1} />}
+                && <GameTutorial sceneNum={1} />}
 
             {/* User Info */}
             <Box sx={{ textAlign: "center", marginTop: "20px", position: "relative", width: "100%" }}>
@@ -299,7 +299,7 @@ const Home = () => {
                     />
 
                     <GloriousButton
-                        id="quick-play-button"
+                        id="play-quick-button"
                         onClick={!user?.firstName ? null : handleQuickPlay}
                         text="Quick Play"
                         color="orange"
@@ -313,7 +313,7 @@ const Home = () => {
                     />
 
                     <GloriousButton
-                        id="room-session-button"
+                        id="play-room-button"
                         onClick={!user?.firstName ? null : () => setRoomModalOpen(true)}
                         text="Room Session"
                         color="darkblue"

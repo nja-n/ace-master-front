@@ -1,5 +1,5 @@
 import { refreshAuth } from "../methods";
-import { emit } from "./eventBus";
+import { emit, emitLoading } from "./eventBus";
 
 export const apiClient = async (endpoint, {
   method = "GET",
@@ -65,6 +65,7 @@ export const apiClient = async (endpoint, {
   }
 
   try {
+    emitLoading(true, "Server is processing...");
     const result = await doFetch();
     if (refreshOnSuccess) {
       emit("user:refresh"); // 👈 notify UserProvider
@@ -97,6 +98,8 @@ export const apiClient = async (endpoint, {
       }
     }
     throw error;
+  } finally {
+    emitLoading(false);
   }
 
 };

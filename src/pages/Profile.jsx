@@ -15,6 +15,7 @@ import GloriousButton from "../components/ui/GloriousButton";
 import { orange } from "@mui/material/colors";
 import { LedgerDialog } from "./fragments/LedgerDialog";
 import UserCard from "./fragments/UserCard";
+import { EmailConnect } from "./fragments/EmailConnect";
 
 export default function ProfilePage({ isTop10 }) {
   const { user, loading } = useUser();
@@ -60,6 +61,11 @@ export default function ProfilePage({ isTop10 }) {
       value: "Unranked",
       description: "Your position compared to other players.",
     },
+    level: {
+      title: "Level",
+      value: 3,
+      description: "Your overall experience level in the game.",
+    },
   };
 
 
@@ -95,31 +101,6 @@ export default function ProfilePage({ isTop10 }) {
     setLoading(false);
   }
 
-  async function upgradeGuestAccount() {
-    // const provider = new GoogleAuthProvider();
-    setLoading(true);
-    try {
-      const result = await linkWithPopup(auth.currentUser, googleProvider);
-
-      // Get the fresh token (contains updated Firebase claims)
-      const idToken = await result.user.getIdToken(true);
-
-      // Send it to your backend to trigger the upgrade logic
-      /*const res = await apiClient(gConnect, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: idToken }),
-        refreshOnSuccess : true
-      });*/
-      alert("Successfully Connected.")
-
-    } catch (error) {
-      console.error("Upgrade failed:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const handleOpen = (key) => {
     setSelectedKey(key);
     alert(statIdeas[key].description);
@@ -132,15 +113,15 @@ export default function ProfilePage({ isTop10 }) {
   };
 
   const handleAvatarUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAvatar(reader.result);
-    };
-    reader.readAsDataURL(file);
-  }
-};
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAvatar(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
 
   return (
@@ -150,14 +131,13 @@ export default function ProfilePage({ isTop10 }) {
         <Grid>
           {/* Profile Header */}
           <Stack alignItems="center" spacing={1} sx={{ mb: 3 }}>
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: { xs: "column", sm: "row" },
-                alignItems: "center", gap: 2,
-                border: "2px dashed rgba(0,0,0,0.2)", 
-                borderRadius: "20px",
-                p:2,
-                boxShadow:"0 2px 4px rgba(0,0,0,0.6)"
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: "center", gap: 2,
+              border: "2px dashed rgba(0,0,0,0.2)",
+              borderRadius: "20px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.6)"
             }}>
               {/* <Box sx={{ position: "relative", display: "inline-block", flexDirection: { xs: "column", sm: "row" }, alignItems: "center", gap: 2 }}> */}
               <CustomAvatar
@@ -166,37 +146,37 @@ export default function ProfilePage({ isTop10 }) {
                 settings={true}
                 user={user}
               />
-              <UserCard isTop10={false} 
-                upgradeGuestAccount={upgradeGuestAccount}
-                user={user}/>
-            </Box> 
+              <UserCard isTop10={false}
+                user={user} />
+            </Box>
             <Box display={"flex"}
-                  flexDirection={"row"}
-                  justifyContent="space-between"
-                  gap={1} width="100%">
-                  <GloriousButton
-                    color={"green"}
-                    onClick={() => setGameLedger(true)}
-                    text="Last Games"
-                    sx={{width:"100%"}}
-                  />
-                  <GloriousButton
-                    color={"green"}
-                    onClick={() => setCoinLedger(true)}
-                    text="Coin History"
-                    sx={{width:"100%"}}
-                  />
-                </Box>
+              flexDirection={"row"}
+              justifyContent="space-between"
+              gap={1} width="100%">
+              <GloriousButton
+                color={"green"}
+                onClick={() => setGameLedger(true)}
+                text="Last Games"
+                sx={{ width: "100%" }}
+              />
+              <GloriousButton
+                color={"green"}
+                onClick={() => setCoinLedger(true)}
+                text="Coin History"
+                sx={{ width: "100%" }}
+              />
+            </Box>
 
             <Typography variant="body2" color="gray">Level {profile.level || 1}</Typography>
-            <Box sx={{ width: { xs: '80%', sm: '60%' }, mt: 1 }}>
-              <LinearProgress variant="determinate" value={profile.xpPercent || 0} 
+            <Box sx={{ width: { xs: '80%', sm: '60%' }, mt: 1 }}
+                onClick={() => handleOpen('level')}>
+              <LinearProgress variant="determinate" value={profile.xpPercent || 0}
                 sx={{
-            height: 8,
-            borderRadius: 5,
-            backgroundColor: "#333",
-            "& .MuiLinearProgress-bar": { backgroundColor: "gold" },
-          }} />
+                  height: 8,
+                  borderRadius: 5,
+                  backgroundColor: "#333",
+                  "& .MuiLinearProgress-bar": { backgroundColor: "gold" },
+                }} />
             </Box>
           </Stack>
 
@@ -234,7 +214,7 @@ export default function ProfilePage({ isTop10 }) {
           </Grid>
 
           {(gameLedger || coinLedger) &&
-            <LedgerDialog setOpenGame={setGameLedger} user = {user.id}
+            <LedgerDialog setOpenGame={setGameLedger} user={user.id}
               setOpenCoin={setCoinLedger} view={gameLedger ? "game" : "coin"} />}
 
           {/* For small screens, badges */}
@@ -249,7 +229,7 @@ export default function ProfilePage({ isTop10 }) {
         </Grid> */}
       </Grid>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="xs" >
         {selectedKey && (
           <>
             <DialogTitle>

@@ -19,18 +19,21 @@ import ShareIcon from "@mui/icons-material/Share";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import TelegramIcon from "@mui/icons-material/Telegram";
-import { FacebookIcon, InstagramIcon } from "lucide-react";
+import { CheckCircle2Icon, CheckCircleIcon, FacebookIcon, InstagramIcon } from "lucide-react";
 import { apiClient } from "../../components/utils/ApIClient";
 import { useLoading } from "../../components/LoadingContext";
 import { fetchReferalTasks } from "../../components/methods";
+import { ChatBubble, CheckSharp } from "@mui/icons-material";
+import { AnimatePresence, motion } from "framer-motion";
 
 const ReferralUI = ({ code }) => {
-  const [copied, setCopied] = useState(false);
-  const {setLoading} = useLoading();
+  const { setLoading } = useLoading();
   const [task, setTask] = useState({});
 
   const referralLink = "https://playacemaster.online/invite/" + code;
   const referralCode = code;
+
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -48,15 +51,41 @@ const ReferralUI = ({ code }) => {
     loadRefTask();
   }, []);
 
-  const handleCopy = (text) => {
+  const handleCopy = (text, index) => {
     navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   const encodedText = encodeURIComponent(
     `Join with Ace Master card game. You can Earn Referral Bonus! ${referralLink}`
   );
+  const handleMore = async () => {
+    const shareData = {
+      title: "Play Ace Master Online",
+      text: "Join with Ace Master card game. You can Earn Referral Bonus!",
+      url: referralLink, // ✅ must be full https:// link
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        console.log("Shared successfully");
+      } catch (err) {
+        console.warn("Share canceled or failed:", err);
+      }
+    } else {
+      // 💡 Fallback for desktop browsers
+      try {
+        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+        alert("Link copied! You can paste it anywhere to share.");
+      } catch (err) {
+        console.error("Failed to copy link:", err);
+        alert("Your browser doesn't support sharing or clipboard copy.");
+      }
+    }
+  };
+
 
   return (
     <Box>
@@ -65,36 +94,100 @@ const ReferralUI = ({ code }) => {
       </Typography>
 
       {/* Referral Card */}
-      <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 4 }}>
-        <CardContent>
+      <Card sx={{ mb: 3, p: 0, borderRadius: 3, boxShadow: 4 }}>
+        <CardContent >
           <Typography variant="subtitle1">Your Referral Link</Typography>
           <Box
             display="flex"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ mt: 1, p: 1.5, bgcolor: "grey.100", borderRadius: 2 }}
+            sx={{
+              mt: 1,
+              bgcolor: "grey.100",
+              borderRadius: 2,
+              p: 1, // optional padding
+              minWidth: 0, // 🔥 crucial for text truncation inside flex
+            }}
           >
-            <Typography variant="body2" noWrap>
+            <Typography
+              noWrap
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flexGrow: 1,
+                minWidth: 0, // 🔥 allows ellipsis to work properly in flex
+                mr: 1, // space before the icon
+                width: '10px'
+              }}
+            >
               {referralLink}
             </Typography>
-            <Tooltip title={copied ? "Copied!" : "Copy"}>
-              <IconButton onClick={() => handleCopy(referralLink)}>
-                <ContentCopyIcon />
+
+            <Tooltip title={copiedIndex === 1 ? "Copied!" : "Copy"}>
+              <IconButton onClick={() => handleCopy(referralLink, 1)} color="inherit">
+                <AnimatePresence mode="wait">
+                  {copiedIndex === 1 ? (
+                    <motion.div
+                      key="check"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <CheckSharp color="success" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="copy"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ContentCopyIcon />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </IconButton>
             </Tooltip>
           </Box>
+
 
           <Typography sx={{ mt: 2 }}>Referral Code: </Typography>
           <Box
             display="flex"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ mt: 1, p: 1.5, bgcolor: "grey.100", borderRadius: 2 }}
+            sx={{ mt: 1, bgcolor: "grey.100", borderRadius: 2 }}
           >
-            <Typography variant="h6">{referralCode}</Typography>
-            <Tooltip title={copied ? "Copied!" : "Copy"}>
-              <IconButton onClick={() => handleCopy(referralCode)}>
-                <ContentCopyIcon />
+            <Typography variant="h6" sx={{ width: '10px' }}>{referralCode}</Typography>
+
+            <Tooltip title={copiedIndex === 2 ? "Copied!" : "Copy"}>
+              <IconButton onClick={() => handleCopy(referralCode, 2)} color="inherit">
+                <AnimatePresence mode="wait">
+                  {copiedIndex === 2 ? (
+                    <motion.div
+                      key="check"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <CheckSharp color="success" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="copy"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <ContentCopyIcon />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </IconButton>
             </Tooltip>
           </Box>
@@ -138,11 +231,13 @@ const ReferralUI = ({ code }) => {
               variant="contained"
               color="secondary"
               startIcon={<InstagramIcon />}
-              onClick={() =>
+              onClick={() => {
+                handleCopy(encodedText)
                 window.open(
                   `https://www.instagram.com/?url=${referralLink}`,
                   "_blank"
                 )
+              }
               }
               sx={{ flex: "1 1 120px" }}
             >
@@ -164,10 +259,10 @@ const ReferralUI = ({ code }) => {
               Facebook
             </Button>
 
-            {/* <Button
+            <Button
               variant="contained"
               color="warning"
-              startIcon={<SnapchatIcon />}
+              startIcon={<ChatBubble />}
               onClick={() =>
                 window.open(
                   `https://www.snapchat.com/scan?attachmentUrl=${referralLink}`,
@@ -177,9 +272,10 @@ const ReferralUI = ({ code }) => {
               sx={{ flex: "1 1 120px" }}
             >
               Snapchat
-            </Button> */}
+            </Button>
 
             <Button
+              onClick={handleMore}
               variant="outlined"
               startIcon={<ShareIcon />}
               sx={{ flex: "1 1 120px" }}

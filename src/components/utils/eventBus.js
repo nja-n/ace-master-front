@@ -14,3 +14,7 @@ export function off(event, cb) {
 export function emit(event, data) {
   (listeners.get(event) || []).forEach(cb => cb(data));
 }
+
+export const emitLoading = (state, message = "Loading...") => {
+  emit("loading:state", { state, message });
+};

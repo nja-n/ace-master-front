@@ -28,6 +28,7 @@ export const refreshAuth = `${protocol}://${server}/auth/refresh`;
 export const unmountOnline = `${protocol}://${server}/presence/leave`;
 export const googleAuth = `${protocol}://${server}/auth/google`;
 export const guestAuth = `${protocol}://${server}/auth/guest`;
+export const duplicateValidation = `${protocol}://${server}/auth/duplicate`;
 
 export const terms = `${protocol}://${server}/public/terms-pdf`;
 
@@ -44,3 +45,5 @@ export const fetchNotificationHistory = `${protocol}://${server}/profile/fetch-n
 
 export const uploadImage = `${protocol}://${server}/profile/update-image`;
 export const readProfileImage = `${protocol}://${server}/profile/image`;
+
+export const readLastSession = `${protocol}://${server}/cards/last-session`;

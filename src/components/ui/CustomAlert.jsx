@@ -35,7 +35,7 @@ export function AlertProvider({ children }) {
       {children}
 
       {alertData && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-[9999]" zIndex={9999}>
           <div
             className="relative rounded-2xl shadow-xl w-80 p-6 animate-fadeIn"
             style={{
